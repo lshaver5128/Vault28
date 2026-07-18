@@ -2528,14 +2528,70 @@ document.getElementById('contact-form-inquiry').addEventListener('submit', (e) =
             message: {
                 subject: `New Vault 28 Inquiry: ${subject}`,
                 html: `
-                    <div style="font-family: sans-serif; padding: 20px; color: #111827; background-color: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; max-width: 600px;">
-                        <h2 style="color: #dfb750; margin-top: 0; font-family: sans-serif; font-weight: 800; letter-spacing: 0.05em; text-transform: uppercase;">Vault 28 Trading Co.</h2>
-                        <h3 style="border-bottom: 1px solid #e5e7eb; padding-bottom: 10px; color: #374151;">New Contact Inquiry</h3>
-                        <p style="margin: 8px 0; font-size: 0.95rem;"><strong>From:</strong> ${name}</p>
-                        <p style="margin: 8px 0; font-size: 0.95rem;"><strong>Email:</strong> <a href="mailto:${email}" style="color: #dfb750; text-decoration: none; font-weight: 600;">${email}</a></p>
-                        <p style="margin: 8px 0; font-size: 0.95rem;"><strong>Subject:</strong> ${subject}</p>
-                        <div style="margin-top: 20px; padding: 15px; background: #ffffff; border-radius: 6px; border-left: 4px solid #dfb750; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
-                            <p style="margin: 0; line-height: 1.6; white-space: pre-wrap; font-size: 0.95rem; color: #4b5563;">${msg}</p>
+                    <div style="background-color: #0c0f19; padding: 40px 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; text-align: center;">
+                        <!-- Brand Header -->
+                        <div style="max-width: 600px; margin: 0 auto; padding-bottom: 20px; text-align: left; border-bottom: 1px solid rgba(223, 183, 80, 0.25);">
+                            <table style="width: 100%; border-collapse: collapse;">
+                                <tr>
+                                    <td>
+                                        <h1 style="color: #ffffff; font-size: 24px; margin: 0; font-family: inherit; font-weight: 800; letter-spacing: 0.05em; text-transform: uppercase;">
+                                            VAULT <span style="color: #dfb750;">28</span>
+                                        </h1>
+                                        <p style="color: #9ca3af; font-size: 12px; margin: 4px 0 0 0; text-transform: uppercase; letter-spacing: 0.1em; font-weight: 600;">Trading Co.</p>
+                                    </td>
+                                    <td style="text-align: right; vertical-align: middle;">
+                                        <span style="background: rgba(223, 183, 80, 0.1); border: 1px solid #dfb750; color: #dfb750; padding: 6px 14px; border-radius: 20px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; display: inline-block;">New Inquiry</span>
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                        
+                        <!-- Main Email Body Card -->
+                        <div style="max-width: 600px; margin: 20px auto 0 auto; background-color: #121624; border: 1px solid #1f293d; border-radius: 12px; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.5); text-align: left;">
+                            <!-- Card Header Banner -->
+                            <div style="background: linear-gradient(135deg, #0d0f17 0%, #1e2538 100%); padding: 25px 30px; border-bottom: 1px solid #1f293d;">
+                                <p style="color: #dfb750; font-size: 11px; text-transform: uppercase; letter-spacing: 0.15em; font-weight: 700; margin: 0;">Contact Form Submission</p>
+                                <h2 style="color: #ffffff; font-size: 20px; font-weight: 700; margin: 5px 0 0 0;">Inquiry from ${name}</h2>
+                            </div>
+                            
+                            <!-- Contact Details -->
+                            <div style="padding: 30px; color: #cbd5e1; font-size: 14px; line-height: 1.5;">
+                                <table style="width: 100%; border-collapse: collapse; margin-bottom: 25px;">
+                                    <tr style="border-bottom: 1px solid #1f293d;">
+                                        <td style="padding: 12px 0; color: #94a3b8; width: 130px; font-weight: 600;">Customer Name</td>
+                                        <td style="padding: 12px 0; color: #ffffff; font-weight: 500;">${name}</td>
+                                    </tr>
+                                    <tr style="border-bottom: 1px solid #1f293d;">
+                                        <td style="padding: 12px 0; color: #94a3b8; font-weight: 600;">Email Address</td>
+                                        <td style="padding: 12px 0;"><a href="mailto:${email}" style="color: #dfb750; text-decoration: none; font-weight: 600;">${email}</a></td>
+                                    </tr>
+                                    <tr style="border-bottom: 1px solid #1f293d;">
+                                        <td style="padding: 12px 0; color: #94a3b8; font-weight: 600;">Subject Line</td>
+                                        <td style="padding: 12px 0; color: #ffffff; font-weight: 500;">${subject}</td>
+                                    </tr>
+                                    <tr>
+                                        <td style="padding: 12px 0; color: #94a3b8; font-weight: 600;">Submitted At</td>
+                                        <td style="padding: 12px 0; color: #94a3b8; font-size: 13px;">${new Date().toLocaleString('en-US', { timeZone: 'America/New_York' })} EST</td>
+                                    </tr>
+                                </table>
+                                
+                                <!-- Message Header -->
+                                <p style="color: #dfb750; font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; font-weight: 700; margin: 0 0 10px 0;">Customer Message</p>
+                                
+                                <!-- Message Content Block -->
+                                <div style="background-color: #0c0f19; border: 1px solid #1f293d; border-radius: 8px; padding: 20px; color: #e2e8f0; font-size: 14px; line-height: 1.6; min-height: 80px; white-space: pre-wrap; border-left: 4px solid #dfb750; font-family: inherit;">${msg}</div>
+                                
+                                <!-- Action Button -->
+                                <div style="text-align: center; margin-top: 35px;">
+                                    <a href="https://github.com/lshaver5128/Vault28" style="display: inline-block; background: linear-gradient(135deg, #f5d075 0%, #dfb750 100%); color: #0c0f19; font-weight: 700; font-size: 13px; padding: 12px 28px; text-decoration: none; border-radius: 25px; box-shadow: 0 4px 12px rgba(223, 183, 80, 0.25); text-transform: uppercase; letter-spacing: 0.08em;">Open Owner Console</a>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Email Footer -->
+                        <div style="max-width: 600px; margin: 25px auto 0 auto; text-align: center; color: #64748b; font-size: 11px; line-height: 1.5;">
+                            <p style="margin: 0;">This email was automatically generated by the Vault 28 Trading Co. website backend.</p>
+                            <p style="margin: 5px 0 0 0;">© 2026 Vault 28 Trading Co. All rights reserved. • Summerville, SC</p>
                         </div>
                     </div>
                 `
