@@ -562,6 +562,7 @@ function initDatabase() {
             if (reviewsListener) reviewsListener();
             if (settingsListener) settingsListener();
             if (usersListener) usersListener();
+            if (inquiriesListener) inquiriesListener();
             
             if (user) {
                 document.getElementById('auth-widget').style.display = 'none';
@@ -590,6 +591,17 @@ function initDatabase() {
                         });
                         users.sort((a, b) => new Date(b.registeredAt || 0) - new Date(a.registeredAt || 0));
                         renderAdminUsersTable();
+                    });
+
+                    // Listen to inquiries collection
+                    inquiriesListener = db.collection("inquiries").onSnapshot((snapshot) => {
+                        inquiries = [];
+                        snapshot.forEach(doc => {
+                            inquiries.push({ id: doc.id, ...doc.data() });
+                        });
+                        inquiries.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+                        updateInquiriesBadge();
+                        renderAdminInquiriesList();
                     });
                 } else {
                     roleLabel.textContent = "Seller Account";
@@ -715,6 +727,15 @@ function initDatabase() {
             localStorage.setItem('v28_users', JSON.stringify(users));
         }
 
+        // Initialize sandbox inquiries
+        const storedInq = localStorage.getItem('v28_inquiries');
+        if (storedInq) {
+            inquiries = JSON.parse(storedInq);
+        } else {
+            inquiries = [];
+            localStorage.setItem('v28_inquiries', JSON.stringify(inquiries));
+        }
+
         // Mark local tester user as active
         recordUserActivity('sandbox-user', 'lshaver@vault28cards.com', 'Local Tester', false);
 
@@ -734,6 +755,8 @@ function initDatabase() {
         renderAdminInventoryTable();
         renderAdminReviewsList();
         renderSettingsDetails();
+        updateInquiriesBadge();
+        renderAdminInquiriesList();
         handleInitialRouting();
     }
 }
@@ -1500,14 +1523,16 @@ function setAdminTab(tabName) {
     const btnInv = document.getElementById('tab-btn-inventory');
     const btnCon = document.getElementById('tab-btn-content');
     const btnUsr = document.getElementById('tab-btn-users');
+    const btnInq = document.getElementById('tab-btn-inquiries');
     
     const panelSub = document.getElementById('panel-submissions');
     const panelInv = document.getElementById('panel-inventory');
     const panelCon = document.getElementById('panel-content');
     const panelUsr = document.getElementById('panel-users');
+    const panelInq = document.getElementById('panel-inquiries');
     
-    [btnSub, btnInv, btnCon, btnUsr].forEach(btn => btn && btn.classList.remove('active'));
-    [panelSub, panelInv, panelCon, panelUsr].forEach(panel => panel && panel.classList.remove('active'));
+    [btnSub, btnInv, btnCon, btnUsr, btnInq].forEach(btn => btn && btn.classList.remove('active'));
+    [panelSub, panelInv, panelCon, panelUsr, panelInq].forEach(panel => panel && panel.classList.remove('active'));
     
     if (tabName === 'submissions') {
         btnSub.classList.add('active');
@@ -1524,6 +1549,10 @@ function setAdminTab(tabName) {
         if (btnUsr) btnUsr.classList.add('active');
         if (panelUsr) panelUsr.classList.add('active');
         renderAdminUsersTable();
+    } else if (tabName === 'inquiries') {
+        if (btnInq) btnInq.classList.add('active');
+        if (panelInq) panelInq.classList.add('active');
+        renderAdminInquiriesList();
     }
 }
 
@@ -1531,6 +1560,9 @@ document.getElementById('tab-btn-submissions').addEventListener('click', () => s
 document.getElementById('tab-btn-inventory').addEventListener('click', () => setAdminTab('inventory'));
 document.getElementById('tab-btn-content').addEventListener('click', () => setAdminTab('content'));
 document.getElementById('tab-btn-users').addEventListener('click', () => setAdminTab('users'));
+if (document.getElementById('tab-btn-inquiries')) {
+    document.getElementById('tab-btn-inquiries').addEventListener('click', () => setAdminTab('inquiries'));
+}
 
 // HTML Escaper Helper
 function escapeHTML(str) {
@@ -2667,6 +2699,171 @@ function initScrollReveal() {
         });
     }, 200);
 }
+
+// ==================== ADMIN INQUIRIES MANAGEMENT ====================
+
+function updateInquiriesBadge() {
+    const badge = document.getElementById('admin-badge-inquiries');
+    if (badge) {
+        const unreplied = inquiries.filter(inq => !inq.replyText).length;
+        badge.textContent = unreplied;
+        badge.style.display = unreplied > 0 ? 'inline' : 'none';
+    }
+    const statTotal = document.getElementById('admin-stat-inquiries-total');
+    if (statTotal) {
+        statTotal.textContent = inquiries.length;
+    }
+}
+
+function renderAdminInquiriesList() {
+    const container = document.getElementById('admin-inquiries-list');
+    if (!container) return;
+    
+    container.innerHTML = '';
+    
+    if (inquiries.length === 0) {
+        container.innerHTML = `
+            <div style="text-align: center; padding: 3rem 1rem; color: var(--text-muted);">
+                <p style="font-size: 1.1rem; margin: 0;">No inquiries received yet.</p>
+                <p style="font-size: 0.85rem; margin-top: 0.25rem;">Any messages sent through the Contact Us form will appear here.</p>
+            </div>
+        `;
+        return;
+    }
+    
+    inquiries.forEach(inq => {
+        const dateStr = new Date(inq.createdAt).toLocaleString();
+        const hasReplied = !!inq.replyText;
+        
+        const card = document.createElement('div');
+        card.className = 'glass-card';
+        card.style.padding = '1.5rem';
+        card.style.borderLeft = hasReplied ? '4px solid var(--accent-emerald)' : '4px solid var(--accent-gold)';
+        card.style.display = 'flex';
+        card.style.flexDirection = 'column';
+        card.style.gap = '1rem';
+        
+        let replyBlock = '';
+        if (hasReplied) {
+            replyBlock = `
+                <div style="background: rgba(16, 185, 129, 0.05); border: 1px solid rgba(16, 185, 129, 0.15); border-radius: 6px; padding: 1rem; margin-top: 0.5rem;">
+                    <p style="color: var(--accent-emerald); font-size: 0.8rem; text-transform: uppercase; font-weight: 700; margin: 0 0 0.5rem 0;">Your Reply (Sent via Email):</p>
+                    <p style="color: var(--text-primary); font-size: 0.9rem; margin: 0; line-height: 1.5; white-space: pre-wrap;">${escapeHTML(inq.replyText)}</p>
+                    <p style="color: var(--text-muted); font-size: 0.75rem; margin-top: 0.5rem; margin-bottom: 0;">Replied at: ${new Date(inq.repliedAt).toLocaleString()}</p>
+                </div>
+            `;
+        } else {
+            replyBlock = `
+                <div id="reply-form-${inq.id}" style="display: none; margin-top: 0.5rem; flex-direction: column; gap: 0.75rem;">
+                    <textarea id="reply-text-${inq.id}" placeholder="Type your email response here..." rows="4" style="width: 100%; padding: 0.75rem; background: rgba(0,0,0,0.3); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-primary); font-family: inherit; font-size: 0.9rem; line-height: 1.5; resize: vertical;"></textarea>
+                    <div style="display: flex; gap: 0.5rem;">
+                        <button class="btn btn-primary btn-sm" onclick="sendInquiryReply('${inq.id}')">Send Email Reply</button>
+                        <button class="btn btn-secondary btn-sm" onclick="toggleReplyForm('${inq.id}', false)">Cancel</button>
+                    </div>
+                </div>
+                <button class="btn btn-secondary btn-sm" id="btn-show-reply-${inq.id}" onclick="toggleReplyForm('${inq.id}', true)" style="align-self: flex-start; margin-top: 0.5rem;">Reply to Message</button>
+            `;
+        }
+        
+        card.innerHTML = `
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 0.5rem;">
+                <div>
+                    <h4 style="margin: 0; font-size: 1.1rem; color: var(--text-primary);">${escapeHTML(inq.name)} 
+                        <span style="font-weight: normal; font-size: 0.85rem; color: var(--text-muted); margin-left: 0.5rem;">(${escapeHTML(inq.email)})</span>
+                    </h4>
+                    <p style="color: var(--accent-gold); font-size: 0.88rem; margin: 4px 0 0 0; font-weight: 500;">Subject: ${escapeHTML(inq.subject)}</p>
+                </div>
+                <div style="text-align: right;">
+                    <span style="font-size: 0.8rem; color: var(--text-muted);">${dateStr}</span>
+                    <div style="margin-top: 4px;">
+                        ${hasReplied ? 
+                            '<span class="badge badge-success" style="font-size: 0.7rem; padding: 2px 6px;">Replied</span>' : 
+                            '<span class="badge badge-pending" style="font-size: 0.7rem; padding: 2px 6px; color: var(--accent-gold); background: rgba(223,183,80,0.1); border-color: rgba(223,183,80,0.2);">Pending</span>'
+                        }
+                    </div>
+                </div>
+            </div>
+            <div style="background: rgba(0,0,0,0.2); border: 1px solid var(--border-color); border-radius: 6px; padding: 1rem; color: var(--text-secondary); font-size: 0.92rem; line-height: 1.5; white-space: pre-wrap;">${escapeHTML(inq.message)}</div>
+            ${replyBlock}
+        `;
+        container.appendChild(card);
+    });
+}
+
+window.toggleReplyForm = function(inqId, show) {
+    const form = document.getElementById(`reply-form-${inqId}`);
+    const btn = document.getElementById(`btn-show-reply-${inqId}`);
+    if (form) form.style.display = show ? 'flex' : 'none';
+    if (btn) btn.style.display = show ? 'none' : 'block';
+};
+
+window.sendInquiryReply = function(inqId) {
+    const replyText = document.getElementById(`reply-text-${inqId}`).value.trim();
+    if (!replyText) {
+        showToast("Please enter a response message.", "error");
+        return;
+    }
+    
+    const inq = inquiries.find(i => i.id === inqId);
+    if (!inq) return;
+    
+    const replyData = {
+        replyText,
+        repliedAt: new Date().toISOString()
+    };
+    
+    if (isFirebaseActive) {
+        db.collection("inquiries").doc(inqId).update(replyData)
+            .then(() => {
+                const replyMail = {
+                    to: inq.email,
+                    replyTo: 'lshaver@vault28cards.com',
+                    message: {
+                        subject: `Re: [Vault 28] ${inq.subject}`,
+                        html: `
+                            <div style="background-color: #0c0f19; padding: 40px 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; text-align: center;">
+                                <div style="max-width: 600px; margin: 0 auto; padding-bottom: 20px; text-align: left; border-bottom: 1px solid rgba(223, 183, 80, 0.25);">
+                                    <h1 style="color: #ffffff; font-size: 22px; margin: 0; font-weight: 800; letter-spacing: 0.05em; text-transform: uppercase;">
+                                        VAULT <span style="color: #dfb750;">28</span>
+                                    </h1>
+                                    <p style="color: #9ca3af; font-size: 11px; margin: 2px 0 0 0; text-transform: uppercase; letter-spacing: 0.1em; font-weight: 600;">Trading Co.</p>
+                                </div>
+                                <div style="max-width: 600px; margin: 20px auto 0 auto; background-color: #121624; border: 1px solid #1f293d; border-radius: 12px; overflow: hidden; text-align: left; color: #cbd5e1; font-size: 14px; line-height: 1.6; padding: 30px;">
+                                    <p style="color: #ffffff; font-weight: 600; font-size: 16px; margin-top: 0;">Hi ${inq.name},</p>
+                                    <p>Thanks for contacting Vault 28 Trading Co. Here is our response to your inquiry:</p>
+                                    <div style="background-color: #0c0f19; border-left: 4px solid #dfb750; padding: 15px; border-radius: 6px; margin: 20px 0; color: #ffffff;">
+                                        ${replyText.replace(/\\n/g, '<br>')}
+                                    </div>
+                                    <p style="border-top: 1px solid #1f293d; padding-top: 20px; margin-top: 20px; font-size: 13px; color: #94a3b8;">
+                                        Original Message:<br>
+                                        <span style="font-style: italic;">"${inq.message}"</span>
+                                    </p>
+                                </div>
+                                <div style="max-width: 600px; margin: 25px auto 0 auto; text-align: center; color: #64748b; font-size: 11px;">
+                                    <p>© 2026 Vault 28 Trading Co. • Summerville, SC</p>
+                                </div>
+                            </div>
+                        `
+                    }
+                };
+                
+                return db.collection("mail").add(replyMail);
+            })
+            .then(() => {
+                showToast("Reply sent successfully via email!", "success");
+            })
+            .catch(err => {
+                console.error("Error sending inquiry reply:", err);
+                showToast("Could not send reply.", "error");
+            });
+    } else {
+        Object.assign(inq, replyData);
+        localStorage.setItem('v28_inquiries', JSON.stringify(inquiries));
+        showToast("Reply simulated in sandbox mode!", "success");
+        updateInquiriesBadge();
+        renderAdminInquiriesList();
+    }
+};
 
 // DOM Init
 document.addEventListener('DOMContentLoaded', () => {

@@ -751,6 +751,7 @@
                     <button class="admin-tab-btn" id="tab-btn-inventory">Shop Inventory (<span id="admin-badge-inventory">0</span>)</button>
                     <button class="admin-tab-btn" id="tab-btn-content">Page Content</button>
                     <button class="admin-tab-btn" id="tab-btn-users">Registered Users (<span id="admin-badge-users">0</span>)</button>
+                    <button class="admin-tab-btn" id="tab-btn-inquiries">Inquiries (<span id="admin-badge-inquiries">0</span>)</button>
                 </div>
 
                 <!-- Admin Tab 1: Submissions Manager -->
@@ -992,6 +993,28 @@
                                     <!-- Dynamic rows loaded from db -->
                                 </tbody>
                             </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Admin Tab 5: Contact Inquiries Panel -->
+                <div class="admin-tab-panel" id="panel-inquiries" style="display: none;">
+                    <div class="glass-card" style="padding: 2rem;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+                            <div>
+                                <h3 style="font-size: 1.3rem; margin: 0;">Contact Inquiries</h3>
+                                <p style="color: var(--text-secondary); font-size: 0.85rem; margin-top: 0.25rem;">View and reply to general inquiries submitted via the Contact Us form.</p>
+                            </div>
+                            <div style="display: flex; gap: 0.75rem;">
+                                <div style="display: flex; align-items: center; gap: 0.5rem; background: rgba(0,0,0,0.25); border: 1px solid var(--border-color); padding: 6px 12px; border-radius: 6px; font-size: 0.82rem;">
+                                    <span>Total Messages: <strong id="admin-stat-inquiries-total">0</strong></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Inquiries List -->
+                        <div id="admin-inquiries-list" style="display: flex; flex-direction: column; gap: 1.5rem;">
+                            <!-- Dynamic inquiry cards loaded via app.js -->
                         </div>
                     </div>
                 </div>
