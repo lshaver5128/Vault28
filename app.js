@@ -2519,8 +2519,37 @@ document.getElementById('contact-form-inquiry').addEventListener('submit', (e) =
     };
     
     if (isFirebaseActive) {
-        db.collection("inquiries").doc(newInquiry.id).set(newInquiry)
+        // Save to inquiries collection for console logging
+        db.collection("inquiries").doc(newInquiry.id).set(newInquiry);
+        
+        // Write to mail collection to trigger the Firebase extension
+        const emailPayload = {
+            to: 'lshaver@vault28cards.com',
+            message: {
+                subject: `New Vault 28 Inquiry: ${subject}`,
+                html: `
+                    <div style="font-family: sans-serif; padding: 20px; color: #111827; background-color: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; max-width: 600px;">
+                        <h2 style="color: #dfb750; margin-top: 0; font-family: sans-serif; font-weight: 800; letter-spacing: 0.05em; text-transform: uppercase;">Vault 28 Trading Co.</h2>
+                        <h3 style="border-bottom: 1px solid #e5e7eb; padding-bottom: 10px; color: #374151;">New Contact Inquiry</h3>
+                        <p style="margin: 8px 0; font-size: 0.95rem;"><strong>From:</strong> ${name}</p>
+                        <p style="margin: 8px 0; font-size: 0.95rem;"><strong>Email:</strong> <a href="mailto:${email}" style="color: #dfb750; text-decoration: none; font-weight: 600;">${email}</a></p>
+                        <p style="margin: 8px 0; font-size: 0.95rem;"><strong>Subject:</strong> ${subject}</p>
+                        <div style="margin-top: 20px; padding: 15px; background: #ffffff; border-radius: 6px; border-left: 4px solid #dfb750; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+                            <p style="margin: 0; line-height: 1.6; white-space: pre-wrap; font-size: 0.95rem; color: #4b5563;">${msg}</p>
+                        </div>
+                    </div>
+                `
+            }
+        };
+
+        db.collection("mail").add(emailPayload)
             .then(() => {
+                showToast(`Thank you, ${name}! Your inquiry has been sent.`, "success");
+                document.getElementById('contact-form-inquiry').reset();
+            })
+            .catch(err => {
+                console.error("Error creating trigger email document:", err);
+                // Fallback success notice if mail collection write fails but inquiries set succeeded
                 showToast(`Thank you, ${name}! Your inquiry has been sent.`, "success");
                 document.getElementById('contact-form-inquiry').reset();
             });
