@@ -1,6 +1,7 @@
 // Vault 28 - Application Logic Engine
 
 // --- FIREBASE CONFIGURATION ---
+// To connect a real-time cloud database, paste your Firebase Web API config here:
 const FIREBASE_CONFIG = {
     apiKey: "AIzaSyDGtZv3LXchFGTQuTPDRIF0UDk_G46hTz4",
     authDomain: "vault28-ba268.firebaseapp.com",
@@ -14,6 +15,7 @@ const FIREBASE_CONFIG = {
 // Check if Firebase keys are provided
 const isFirebaseActive = !!(FIREBASE_CONFIG && FIREBASE_CONFIG.apiKey && FIREBASE_CONFIG.apiKey.trim() !== "");
 let db = null;
+let collectionsListener = null; // Store Firestore collection listener reference
 
 if (isFirebaseActive) {
     try {
@@ -30,6 +32,7 @@ let tempCards = []; // Temporary inventory for the submission wizard
 let currentActiveRole = 'seller'; // 'seller' or 'buyer'
 let selectedCollectionId = null;
 let uploadedCardImageBase64 = null;
+let authModalMode = 'login'; // 'login' or 'signup'
 
 // Default Mock Data
 const DEFAULT_COLLECTIONS = [
@@ -39,6 +42,8 @@ const DEFAULT_COLLECTIONS = [
         description: "This is a collection of classic 1980s basketball cards. Includes the legendary 1986 Fleer Michael Jordan Rookie Card in amazing condition, plus Spud Webb and Johnny Moore rookies. Looking to negotiate a fair deal!",
         sport: "Basketball",
         sellerName: "Luke S.",
+        sellerEmail: "luke.s@gmail.com",
+        sellerUid: "sandbox-luke-uid",
         askingPrice: 5400,
         offerPrice: 4800,
         status: "Offer Made",
@@ -105,6 +110,8 @@ const DEFAULT_COLLECTIONS = [
         description: "High-grade Patrick Mahomes cards, including his 2017 Donruss Optic Rookie Card. Kept in a secure environment. Selling to downsize my NFL collection.",
         sport: "Football",
         sellerName: "Marcus T.",
+        sellerEmail: "marcus.t@gmail.com",
+        sellerUid: "sandbox-marcus-uid",
         askingPrice: 2100,
         offerPrice: 0,
         status: "Pending Review",
@@ -129,7 +136,7 @@ const DEFAULT_COLLECTIONS = [
             {
                 sender: "seller",
                 senderName: "Marcus T.",
-                text: "Hey, let me know what you think of this Mahomes lot. The Optic Rookie is in pristine condition.",
+                text: "Hey, let know what you think of this Mahomes lot. The Optic Rookie is in pristine condition.",
                 timestamp: new Date(Date.now() - 3600000 * 2).toISOString()
             },
             {
@@ -279,33 +286,88 @@ function generateCardMockupImage(player, year, brand, sport) {
     return canvas.toDataURL();
 }
 
+// Database Seeding function for Cloud Firestore
+function seedCloudDatabase() {
+    DEFAULT_COLLECTIONS.forEach(col => {
+        col.cards = col.cards.map(card => {
+            card.image = generateCardMockupImage(card.player, card.year, card.brand, col.sport);
+            return card;
+        });
+        db.collection("collections").doc(col.id).set(col);
+    });
+}
+
 // Database Sync and Initialization
 function initDatabase() {
     if (isFirebaseActive) {
-        // Setup real-time listener for collections on cloud DB
-        db.collection("collections").orderBy("createdAt", "desc").onSnapshot((snapshot) => {
-            if (snapshot.empty) {
-                // Pre-populate cloud database with mock cards
-                DEFAULT_COLLECTIONS.forEach(col => {
-                    col.cards = col.cards.map(card => {
-                        card.image = generateCardMockupImage(card.player, card.year, card.brand, col.sport);
-                        return card;
-                    });
-                    db.collection("collections").doc(col.id).set(col);
-                });
-                return;
+        // Setup Firebase Authentication listener
+        firebase.auth().onAuthStateChanged((user) => {
+            // Unsubscribe from previous collection listeners if active
+            if (collectionsListener) {
+                collectionsListener();
+                collectionsListener = null;
             }
-            
-            collections = [];
-            snapshot.forEach(doc => {
-                collections.push({ id: doc.id, ...doc.data() });
-            });
-            
-            // Re-render whatever view is currently open
-            triggerUIRefresh();
-        }, (error) => {
-            console.error("Firestore sync error:", error);
-            showToast("Database access error. Verify security rules.", "error");
+
+            if (user) {
+                // Logged in UI Setup
+                document.getElementById('auth-widget').style.display = 'none';
+                document.getElementById('user-profile-widget').style.display = 'flex';
+                document.getElementById('user-display-name').textContent = user.displayName || user.email.split('@')[0];
+                
+                // Role-based UI updates
+                const roleLabel = document.getElementById('user-display-role');
+                const roleSwitcher = document.getElementById('role-switcher-wrapper');
+                
+                if (user.email === 'lshaver.5128@gmail.com') {
+                    roleLabel.textContent = "Vault 28 Owner";
+                    roleLabel.style.color = "var(--accent-emerald)";
+                    roleSwitcher.style.display = 'flex'; // Expose Valuation admin switcher
+                } else {
+                    roleLabel.textContent = "Seller Account";
+                    roleLabel.style.color = "var(--accent-cyan)";
+                    roleSwitcher.style.display = 'none'; // Lock out standard sellers
+                    setRole('seller'); // Safeguard
+                }
+
+                // Query collections based on user credentials
+                let query = db.collection("collections");
+                if (user.email !== 'lshaver.5128@gmail.com') {
+                    // Filter in Firestore by UID
+                    query = query.where("sellerUid", "==", user.uid);
+                }
+
+                collectionsListener = query.onSnapshot((snapshot) => {
+                    if (snapshot.empty && user.email === 'lshaver.5128@gmail.com') {
+                        // Seed database if owner logs in and Firestore is empty
+                        seedCloudDatabase();
+                        return;
+                    }
+
+                    collections = [];
+                    snapshot.forEach(doc => {
+                        collections.push({ id: doc.id, ...doc.data() });
+                    });
+                    
+                    // Sort collections by date locally to avoid requiring complex Firestore composite indexes
+                    collections.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+                    
+                    triggerUIRefresh();
+                }, (error) => {
+                    console.error("Firestore sync error:", error);
+                    showToast("Database access error. Verify permissions.", "error");
+                });
+
+            } else {
+                // Logged Out UI state
+                document.getElementById('auth-widget').style.display = 'flex';
+                document.getElementById('user-profile-widget').style.display = 'none';
+                document.getElementById('role-switcher-wrapper').style.display = 'none';
+                
+                collections = [];
+                setRole('seller');
+                switchView('seller-landing');
+                triggerUIRefresh();
+            }
         });
     } else {
         // Fallback to local storage (Sandbox Mode)
@@ -322,6 +384,14 @@ function initDatabase() {
             });
             saveDatabase();
         }
+        
+        // Expose switcher in Sandbox mode for local evaluation
+        document.getElementById('auth-widget').style.display = 'none';
+        document.getElementById('user-profile-widget').style.display = 'flex';
+        document.getElementById('user-display-name').textContent = "Local Tester";
+        document.getElementById('user-display-role').textContent = "Sandbox Mode";
+        document.getElementById('role-switcher-wrapper').style.display = 'flex';
+        triggerUIRefresh();
     }
 }
 
@@ -359,6 +429,15 @@ const VIEWS = {
 };
 
 function switchView(viewId) {
+    // Auth Guard check: prevent entering submit or dashboard views if logged out in Cloud Mode
+    if (isFirebaseActive && !firebase.auth().currentUser) {
+        if (viewId === 'seller-submit' || viewId === 'seller-dashboard' || viewId === 'seller-detail') {
+            openAuthModal('login');
+            showToast("Please log in or create an account to view and submit collections.", "error");
+            return;
+        }
+    }
+
     Object.values(VIEWS).forEach(view => {
         if (view) view.classList.remove('active');
     });
@@ -431,6 +510,16 @@ function setRole(role) {
             switchView('seller-landing');
         }
     } else {
+        // Owner Guard check
+        if (isFirebaseActive) {
+            const user = firebase.auth().currentUser;
+            if (!user || user.email !== 'lshaver.5128@gmail.com') {
+                showToast("Access Denied: Owner account permissions required.", "error");
+                setRole('seller');
+                return;
+            }
+        }
+
         btnBuyer.classList.add('active');
         btnSeller.classList.remove('active');
         
@@ -465,27 +554,119 @@ function showToast(message, type = 'info') {
     }, 3500);
 }
 
-// ==================== SELLER logic ====================
 
-// Form Wizard: Step switches
-document.getElementById('btn-step1-next').addEventListener('click', () => {
-    const name = document.getElementById('collection-name').value.trim();
-    const desc = document.getElementById('collection-desc').value.trim();
-    const asking = document.getElementById('collection-asking').value;
+// ==================== AUTHENTICATION ACTIONS ====================
+
+// Open Auth Modal
+function openAuthModal(mode = 'login') {
+    authModalMode = mode;
+    const modal = document.getElementById('auth-modal');
+    modal.style.display = 'flex';
     
-    if (!name || !desc || !asking) {
-        showToast('Please fill in all collection details', 'error');
-        return;
+    const tabLogin = document.getElementById('tab-login');
+    const tabSignup = document.getElementById('tab-signup');
+    const nameGroup = document.getElementById('auth-name-group');
+    const btnSubmit = document.getElementById('btn-auth-submit');
+    
+    document.getElementById('auth-form').reset();
+    
+    if (mode === 'login') {
+        tabLogin.style.color = 'var(--text-primary)';
+        tabLogin.style.borderBottom = '2px solid var(--accent-cyan)';
+        tabSignup.style.color = 'var(--text-secondary)';
+        tabSignup.style.borderBottom = 'none';
+        nameGroup.style.display = 'none';
+        btnSubmit.textContent = 'Log In';
+    } else {
+        tabSignup.style.color = 'var(--text-primary)';
+        tabSignup.style.borderBottom = '2px solid var(--accent-cyan)';
+        tabLogin.style.color = 'var(--text-secondary)';
+        tabLogin.style.borderBottom = 'none';
+        nameGroup.style.display = 'block';
+        btnSubmit.textContent = 'Create Account';
     }
-    
-    document.getElementById('step-1').classList.remove('active');
-    document.getElementById('step-2').classList.add('active');
+}
+
+function closeAuthModal() {
+    document.getElementById('auth-modal').style.display = 'none';
+}
+
+// Auth Tabs click bindings
+document.getElementById('tab-login').addEventListener('click', () => openAuthModal('login'));
+document.getElementById('tab-signup').addEventListener('click', () => openAuthModal('signup'));
+document.getElementById('btn-close-auth-modal').addEventListener('click', closeAuthModal);
+
+// Header Auth button bindings
+document.getElementById('btn-header-signin').addEventListener('click', () => openAuthModal('login'));
+document.getElementById('btn-header-signup').addEventListener('click', () => openAuthModal('signup'));
+document.getElementById('btn-header-signout').addEventListener('click', () => {
+    if (isFirebaseActive) {
+        firebase.auth().signOut().then(() => {
+            showToast("Successfully signed out.");
+        });
+    }
 });
 
-document.getElementById('btn-step2-prev').addEventListener('click', () => {
-    document.getElementById('step-2').classList.remove('active');
-    document.getElementById('step-1').classList.add('active');
+// Auth form submit
+document.getElementById('auth-form').addEventListener('submit', (e) => {
+    e.preventDefault();
+    if (!isFirebaseActive) return;
+    
+    const email = document.getElementById('auth-email').value.trim();
+    const password = document.getElementById('auth-password').value;
+    const name = document.getElementById('auth-name').value.trim();
+    
+    const btnSubmit = document.getElementById('btn-auth-submit');
+    btnSubmit.disabled = true;
+    btnSubmit.textContent = "Processing...";
+    
+    if (authModalMode === 'login') {
+        firebase.auth().signInWithEmailAndPassword(email, password)
+            .then(() => {
+                closeAuthModal();
+                showToast("Welcome back!", "success");
+            })
+            .catch(err => {
+                console.error("Login failed:", err);
+                showToast(err.message || "Login failed.", "error");
+            })
+            .finally(() => {
+                btnSubmit.disabled = false;
+                btnSubmit.textContent = "Log In";
+            });
+    } else {
+        if (!name) {
+            showToast("Please enter your name", "error");
+            btnSubmit.disabled = false;
+            btnSubmit.textContent = "Create Account";
+            return;
+        }
+        
+        firebase.auth().createUserWithEmailAndPassword(email, password)
+            .then((credential) => {
+                // Update User Display Name Profile
+                credential.user.updateProfile({
+                    displayName: name
+                }).then(() => {
+                    closeAuthModal();
+                    showToast(`Account created, welcome ${name}!`, "success");
+                    // Force profile display refresh
+                    initDatabase();
+                });
+            })
+            .catch(err => {
+                console.error("Signup failed:", err);
+                showToast(err.message || "Account creation failed.", "error");
+            })
+            .finally(() => {
+                btnSubmit.disabled = false;
+                btnSubmit.textContent = "Create Account";
+            });
+    }
 });
+
+
+// ==================== SELLER logic ====================
 
 // Dropzone Image upload
 const dropzone = document.getElementById('card-dropzone');
@@ -635,6 +816,12 @@ function resetSubmissionFormState() {
 document.getElementById('submission-form').addEventListener('submit', (e) => {
     e.preventDefault();
     
+    if (isFirebaseActive && !firebase.auth().currentUser) {
+        openAuthModal('login');
+        showToast("Please sign in or create an account to submit your card collection.", "error");
+        return;
+    }
+
     const name = document.getElementById('collection-name').value.trim();
     const desc = document.getElementById('collection-desc').value.trim();
     const sport = document.getElementById('collection-sport').value;
@@ -645,12 +832,16 @@ document.getElementById('submission-form').addEventListener('submit', (e) => {
         return;
     }
     
+    const user = isFirebaseActive ? firebase.auth().currentUser : null;
+    
     const newCollection = {
         id: 'col-' + Math.random().toString(36).substr(2, 9),
         title: name,
         description: desc,
         sport,
-        sellerName: 'Luke S.',
+        sellerName: user ? (user.displayName || user.email.split('@')[0]) : 'Luke S.',
+        sellerEmail: user ? user.email : 'luke.s@gmail.com',
+        sellerUid: user ? user.uid : 'sandbox-luke-uid',
         askingPrice: asking,
         offerPrice: 0,
         status: 'Pending Review',
@@ -702,9 +893,7 @@ function renderSellerDashboard() {
         return;
     }
     
-    const sorted = [...collections].sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt));
-    
-    sorted.forEach(col => {
+    collections.forEach(col => {
         const card = document.createElement('div');
         card.className = 'glass-card collection-card';
         card.addEventListener('click', () => {
@@ -919,42 +1108,6 @@ function renderSellerDetail(id) {
     renderChatMessages('seller-chat-messages', col.messages, 'seller');
 }
 
-// Render Chat Messages Helper
-function renderChatMessages(elementId, messages, perspective) {
-    const chatBox = document.getElementById(elementId);
-    chatBox.innerHTML = '';
-    
-    messages.forEach(msg => {
-        const wrapper = document.createElement('div');
-        wrapper.className = 'chat-bubble-wrapper';
-        
-        if (msg.sender === 'system') {
-            wrapper.classList.add('system');
-            wrapper.innerHTML = `
-                <div class="chat-bubble">
-                    📢 ${msg.text}
-                </div>
-            `;
-        } else {
-            const isMe = msg.sender === perspective;
-            wrapper.classList.add(isMe ? 'sent' : 'received');
-            
-            const time = new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-            
-            wrapper.innerHTML = `
-                <span class="chat-sender-name">${msg.senderName}</span>
-                <div class="chat-bubble">
-                    ${msg.text}
-                </div>
-                <span class="chat-bubble-time">${time}</span>
-            `;
-        }
-        chatBox.appendChild(wrapper);
-    });
-    
-    chatBox.scrollTop = chatBox.scrollHeight;
-}
-
 // Chat Suggestions Chips
 document.getElementById('seller-chat-suggestions').addEventListener('click', (e) => {
     if (e.target.classList.contains('chat-suggestion-chip')) {
@@ -973,9 +1126,12 @@ document.getElementById('seller-chat-form').addEventListener('submit', (e) => {
     const col = collections.find(c => c.id === selectedCollectionId);
     if (!col) return;
     
+    const user = isFirebaseActive ? firebase.auth().currentUser : null;
+    const sellerName = user ? (user.displayName || user.email.split('@')[0]) : col.sellerName;
+    
     const newMsg = {
         sender: 'seller',
-        senderName: col.sellerName,
+        senderName: sellerName,
         text: text,
         timestamp: new Date().toISOString()
     };
@@ -990,7 +1146,7 @@ document.getElementById('seller-chat-form').addEventListener('submit', (e) => {
             input.value = '';
         }).catch(err => {
             console.error("Cloud chat failed:", err);
-            showToast("Failed to sync message to cloud.", "error");
+            showToast("Failed to sync message.", "error");
         });
     } else {
         col.messages.push(newMsg);
@@ -1005,7 +1161,7 @@ document.getElementById('seller-chat-form').addEventListener('submit', (e) => {
 function notifyBuyerOfMessage(colTitle) {
     if (currentActiveRole === 'seller') {
         document.getElementById('buyer-update-dot').style.display = 'block';
-        showToast(`Buyer Desk: New message received on collection "${colTitle}"`);
+        showToast(`Buyer Desk: New message received on "${colTitle}"`);
     }
 }
 
@@ -1300,7 +1456,7 @@ document.getElementById('buyer-chat-form').addEventListener('submit', (e) => {
             input.value = '';
         }).catch(err => {
             console.error("Cloud chat failed:", err);
-            showToast("Failed to sync message to cloud.", "error");
+            showToast("Failed to sync message.", "error");
         });
     } else {
         col.messages.push(newMsg);
@@ -1314,7 +1470,7 @@ document.getElementById('buyer-chat-form').addEventListener('submit', (e) => {
 
 function notifySellerOfMessage(colTitle) {
     if (currentActiveRole === 'seller') {
-        showToast(`Buying Desk: New message received on collection "${colTitle}"`);
+        showToast(`Buying Desk: New message received on "${colTitle}"`);
         if (selectedCollectionId) {
             renderSellerDetail(selectedCollectionId);
         }
@@ -1489,13 +1645,12 @@ document.getElementById('btn-dashboard-new').addEventListener('click', () => {
     switchView('seller-submit');
 });
 
-// Role buttons
+// Role switcher bindings
 document.getElementById('btn-role-seller').addEventListener('click', () => setRole('seller'));
 document.getElementById('btn-role-buyer').addEventListener('click', () => setRole('buyer'));
 
 // Page Init
 document.addEventListener('DOMContentLoaded', () => {
-    // Setup instruction controls for Sandbox Mode
     const banner = document.getElementById('sandbox-banner');
     if (isFirebaseActive) {
         if (banner) banner.style.display = 'none';

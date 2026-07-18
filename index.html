@@ -30,7 +30,7 @@
             </nav>
 
             <!-- Role Switcher -->
-            <div class="role-switcher-container" title="Switch between Seller and Vault 28 Buyer view to test the application">
+            <div class="role-switcher-container" id="role-switcher-wrapper" style="display: none;" title="Switch between Seller and Vault 28 Buyer view to test the application">
                 <button class="role-btn active" data-role="seller" id="btn-role-seller">
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20.38 3.46L16 7.84M2 22l4.84-4.84M15 2.5a2.5 2.5 0 1 1 5 5L7 20l-5 2 2-5z"/></svg>
                     Seller View
@@ -40,6 +40,20 @@
                     Buyer (Owner) View
                     <span class="badge-dot" id="buyer-update-dot"></span>
                 </button>
+            </div>
+
+            <!-- Authentication Widget -->
+            <div id="auth-widget" style="display: flex; align-items: center; gap: 0.75rem;">
+                <button class="btn btn-secondary btn-sm" id="btn-header-signin">Sign In</button>
+                <button class="btn btn-primary btn-sm" id="btn-header-signup">Register</button>
+            </div>
+            
+            <div id="user-profile-widget" style="display: none; align-items: center; gap: 0.75rem;">
+                <div style="text-align: right; line-height: 1.2;">
+                    <div id="user-display-name" style="font-size: 0.85rem; font-weight: 600; color: var(--text-primary);">User Name</div>
+                    <div id="user-display-role" style="font-size: 0.72rem; color: var(--accent-cyan); font-weight: 500;">Seller Account</div>
+                </div>
+                <button class="btn btn-secondary btn-sm" id="btn-header-signout" style="padding: 4px 8px; font-size: 0.75rem;">Sign Out</button>
             </div>
         </div>
     </header>
@@ -559,8 +573,42 @@ const firebaseConfig = {
         </div>
     </div>
 
+    <!-- Auth Modal -->
+    <div id="auth-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.85); z-index: 1001; align-items: center; justify-content: center; backdrop-filter: blur(4px);">
+        <div class="glass-card" style="max-width: 400px; width: 90%; position: relative; border-color: var(--accent-cyan); box-shadow: var(--shadow-neon-cyan);">
+            <button id="btn-close-auth-modal" style="position: absolute; top: 16px; right: 16px; background: none; border: none; color: var(--text-secondary); font-size: 1.5rem; cursor: pointer; line-height: 1;">×</button>
+            
+            <!-- Auth Tabs -->
+            <div style="display: flex; gap: 1rem; margin-bottom: 1.5rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">
+                <h3 id="tab-login" style="font-size: 1.25rem; color: var(--text-primary); cursor: pointer; position: relative; padding-bottom: 4px; font-family: var(--font-title); border-bottom: 2px solid var(--accent-cyan);">Log In</h3>
+                <h3 id="tab-signup" style="font-size: 1.25rem; color: var(--text-secondary); cursor: pointer; position: relative; padding-bottom: 4px; font-family: var(--font-title);">Create Account</h3>
+            </div>
+            
+            <form id="auth-form">
+                <!-- Name field (Signup only) -->
+                <div class="form-group" id="auth-name-group" style="display: none;">
+                    <label for="auth-name">Full Name</label>
+                    <input type="text" id="auth-name" placeholder="e.g. John Doe">
+                </div>
+                
+                <div class="form-group">
+                    <label for="auth-email">Email Address</label>
+                    <input type="email" id="auth-email" placeholder="e.g. name@domain.com" required>
+                </div>
+                
+                <div class="form-group" style="margin-bottom: 1.5rem;">
+                    <label for="auth-password">Password</label>
+                    <input type="password" id="auth-password" placeholder="••••••••" required minlength="6">
+                </div>
+                
+                <button type="submit" class="btn btn-primary" id="btn-auth-submit" style="width: 100%;">Log In</button>
+            </form>
+        </div>
+    </div>
+
     <!-- Firebase Compatibility SDK (v10 compat) from CDNs -->
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 
     <script src="app.js"></script>
