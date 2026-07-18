@@ -136,10 +136,10 @@ const DEFAULT_COLLECTIONS = [
         ]
     },
     {
-        id: "col-pokemon-vintage",
-        title: "1999 Pokémon Binder Collection",
-        description: "Old childhood binder from 1999. Features Base Set Charizard Holo, Blastoise, and Venusaur. Most cards were placed in pages immediately, looking for a fair offer.",
-        sport: "Pokémon & TCG",
+        id: "col-kobe-vintage",
+        title: "1996 Topps Basketball Binder Collection",
+        description: "Old childhood binder from 1996. Features Topps Kobe Bryant Rookie card, Allen Iverson Rookie, and Michael Jordan inserts. Most cards were placed in binder pages immediately, looking for a fair offer.",
+        sport: "Basketball Cards",
         sellerName: "Marcus T.",
         sellerEmail: "marcus.t@gmail.com",
         sellerPhone: "(843) 555-4321",
@@ -155,9 +155,9 @@ const DEFAULT_COLLECTIONS = [
         createdAt: new Date(Date.now() - 3600000 * 2).toISOString(),
         cards: [
             {
-                player: "Charizard",
-                brand: "Holo Base Set #4",
-                year: 1999,
+                player: "Kobe Bryant",
+                brand: "Topps Rookie #138",
+                year: 1996,
                 grade: "Raw (Near Mint or Better)",
                 image: ""
             }
@@ -167,7 +167,7 @@ const DEFAULT_COLLECTIONS = [
             {
                 sender: "seller",
                 senderName: "Marcus T.",
-                text: "Submitted my old Pokemon binder. Let me know what you guys think of the Charizard condition.",
+                text: "Submitted my old basketball binder. Let me know what you guys think of the Kobe condition.",
                 timestamp: new Date(Date.now() - 3600000 * 2).toISOString()
             },
             {
@@ -188,19 +188,19 @@ const DEFAULT_PRODUCTS = [
         description: "The Holy Grail of modern basketball cards. A beautiful PSA 8 specimen. Excellent centering, sharp corners, and deep colors. Fully certified.",
         price: 4800,
         condition: "PSA 8 Near-Mint/Mint",
-        category: "Sports Cards",
+        category: "Basketball Cards",
         availability: "Available",
         shipping: "$5.00 Insured Shipping / Free Summerville SC Pickup",
         image: "",
         createdAt: new Date(Date.now() - 3600000 * 48).toISOString()
     },
     {
-        id: "prod-charizard-1999",
-        title: "1999 Pokémon Base Set Charizard Holo #4",
-        description: "Vintage Base Set Charizard holographic card in PSA 9 Mint condition. Perfect swirl in the holographic foil, zero silvering on borders.",
-        price: 1250,
+        id: "prod-lebron-2003",
+        title: "2003 Topps Chrome LeBron James Rookie Card #111",
+        description: "Immaculate rookie card of King James. A beautiful PSA 9 Mint card from Topps Chrome. Pristine surface and clean edges. Highly sought after collectible.",
+        price: 3200,
         condition: "PSA 9 Mint",
-        category: "Pokémon & TCG",
+        category: "Basketball Cards",
         availability: "Available",
         shipping: "Free Insured Shipping / Local Pickup Available",
         image: "",
@@ -212,7 +212,7 @@ const DEFAULT_PRODUCTS = [
         description: "Original factory sealed 2017 Donruss Optic Football blaster box. Hunt for Patrick Mahomes rookie cards and holographic parallels.",
         price: 350,
         condition: "Factory Sealed",
-        category: "Sealed Product",
+        category: "Sealed Boxes & Packs",
         availability: "Available",
         shipping: "$8.00 Shipping / Free Local Pickup",
         image: "",
@@ -224,7 +224,7 @@ const DEFAULT_PRODUCTS = [
         description: "The definitive modern baseball rookie card. Graded PSA 10 Gem Mint. Immaculate centering, pristine edges, and crisp registration.",
         price: 1500,
         condition: "PSA 10 Gem Mint",
-        category: "Sports Cards",
+        category: "Baseball Cards",
         availability: "Sold",
         shipping: "Sold - Local Pickup Summerville SC",
         image: "",
@@ -246,7 +246,7 @@ const DEFAULT_REVIEWS = [
         name: "Sarah L.",
         location: "Charleston, SC",
         stars: 5,
-        text: "Best Pokémon card buyer in South Carolina. Met locally near Summerville for a safe handoff. Got a very fair cash offer for my binders without the eBay seller fees."
+        text: "Best sports card buyer in South Carolina. Met locally near Summerville for a safe handoff. Got a very fair cash offer for my raw basketball card binders without the eBay seller fees."
     },
     {
         id: "rev-3",
