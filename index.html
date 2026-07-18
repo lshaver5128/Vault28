@@ -20,8 +20,8 @@
     <!-- Header & Navigation -->
     <header>
         <div class="container navbar">
-            <a href="#" class="logo" id="brand-logo">
-                <div class="logo-icon">V</div>
+            <a href="#" class="logo" id="brand-logo" style="display: flex; align-items: center; gap: 0.75rem;">
+                <img src="assets/logo.png" alt="Vault 28 Logo" style="height: 38px; width: auto; border-radius: 8px;" onerror="this.style.display='none';">
                 VAULT <span>28</span>
             </a>
             
@@ -104,6 +104,80 @@
                         </div>
                         <h3>3. Quick Payouts</h3>
                         <p>Once you accept our custom purchase offer, we handle the logistics and transfer your funds instantly via PayPal, Wire, or Venmo.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recently Purchased Gallery Section -->
+            <div style="padding: 4rem 0; border-top: 1px solid var(--border-color); margin-top: 4rem;">
+                <h2 class="section-title">Recently Purchased <span>Collections</span></h2>
+                <p style="text-align: center; color: var(--text-secondary); max-width: 600px; margin: -2rem auto 3rem auto; font-size: 1.05rem;">
+                    We buy collections of all sizes, from single high-end graded cards to massive multi-box warehouse lots. Here are some real collections we've recently purchased from collectors like you:
+                </p>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; text-align: left;">
+                    <!-- Card 1 -->
+                    <div class="glass-card" style="display: flex; flex-direction: column; gap: 0.75rem; padding: 1rem;">
+                        <img src="assets/inventory3.jpg" alt="1989 Bowman Baseball Cards Collection" style="width: 100%; height: 200px; object-fit: cover; border-radius: 8px; border: 1px solid var(--border-color);">
+                        <h3 style="font-size: 1.1rem; margin-top: 0.5rem; font-family: var(--font-title); font-weight: 600;">1989 Bowman & Vintage Baseball Lot</h3>
+                        <p style="color: var(--text-secondary); font-size: 0.85rem; line-height: 1.5; flex-grow: 1;">
+                            Purchased a set of unopened 1989 Bowman Baseball picture card boxes along with multiple sorted boxes of 70s-90s vintage baseball cards.
+                        </p>
+                        <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border-color); padding-top: 0.75rem; font-size: 0.8rem; color: var(--text-muted);">
+                            <span>📍 Summerville, SC</span>
+                            <span class="badge badge-bought">Purchased</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Card 2 -->
+                    <div class="glass-card" style="display: flex; flex-direction: column; gap: 0.75rem; padding: 1rem;">
+                        <img src="assets/inventory2.jpg" alt="Vintage Binders Collection" style="width: 100%; height: 200px; object-fit: cover; border-radius: 8px; border: 1px solid var(--border-color);">
+                        <h3 style="font-size: 1.1rem; margin-top: 0.5rem; font-family: var(--font-title); font-weight: 600;">Classic Baseball Binders Lot</h3>
+                        <p style="color: var(--text-secondary); font-size: 0.85rem; line-height: 1.5; flex-grow: 1;">
+                            Acquired two comprehensive collectors' binders filled with 1970s and 1980s Topps, featuring team sets, rookies, and Hall of Famers.
+                        </p>
+                        <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border-color); padding-top: 0.75rem; font-size: 0.8rem; color: var(--text-muted);">
+                            <span>📍 Charleston, SC</span>
+                            <span class="badge badge-bought">Purchased</span>
+                        </div>
+                    </div>
+
+                    <!-- Card 3 -->
+                    <div class="glass-card" style="display: flex; flex-direction: column; gap: 0.75rem; padding: 1rem;">
+                        <img src="assets/inventory4.jpg" alt="90s Sports Treasures & Banners" style="width: 100%; height: 200px; object-fit: cover; border-radius: 8px; border: 1px solid var(--border-color);">
+                        <h3 style="font-size: 1.1rem; margin-top: 0.5rem; font-family: var(--font-title); font-weight: 600;">90s Basketball & Memorabilia Lot</h3>
+                        <p style="color: var(--text-secondary); font-size: 0.85rem; line-height: 1.5; flex-grow: 1;">
+                            Bought a tub of 90s basketball sets, hobby boxes, vintage Future Stars magazines, and classic team banners (Magic, Blue Jays).
+                        </p>
+                        <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border-color); padding-top: 0.75rem; font-size: 0.8rem; color: var(--text-muted);">
+                            <span>📍 Mt. Pleasant, SC</span>
+                            <span class="badge badge-bought">Purchased</span>
+                        </div>
+                    </div>
+
+                    <!-- Card 4 -->
+                    <div class="glass-card" style="display: flex; flex-direction: column; gap: 0.75rem; padding: 1rem;">
+                        <img src="assets/inventory5.jpg" alt="Sorted Cardboard Long-Boxes" style="width: 100%; height: 200px; object-fit: cover; border-radius: 8px; border: 1px solid var(--border-color);">
+                        <h3 style="font-size: 1.1rem; margin-top: 0.5rem; font-family: var(--font-title); font-weight: 600;">Bulk Sorted Cardboard Storage</h3>
+                        <p style="color: var(--text-secondary); font-size: 0.85rem; line-height: 1.5; flex-grow: 1;">
+                            Purchased multiple organized cardboard row boxes containing thousands of sorted vintage cards, cataloged and ready for valuation.
+                        </p>
+                        <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border-color); padding-top: 0.75rem; font-size: 0.8rem; color: var(--text-muted);">
+                            <span>📍 Columbia, SC</span>
+                            <span class="badge badge-bought">Purchased</span>
+                        </div>
+                    </div>
+
+                    <!-- Card 5 -->
+                    <div class="glass-card" style="display: flex; flex-direction: column; gap: 0.75rem; padding: 1rem;">
+                        <img src="assets/inventory1.jpg" alt="Miscellaneous Binder Lot" style="width: 100%; height: 200px; object-fit: cover; border-radius: 8px; border: 1px solid var(--border-color);">
+                        <h3 style="font-size: 1.1rem; margin-top: 0.5rem; font-family: var(--font-title); font-weight: 600;">Multi-Sport Tub & Binder Set</h3>
+                        <p style="color: var(--text-secondary); font-size: 0.85rem; line-height: 1.5; flex-grow: 1;">
+                            Acquired a storage tub of loose pages and binders containing comic cards (Marvel), basketball inserts, and vintage baseball sets.
+                        </p>
+                        <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border-color); padding-top: 0.75rem; font-size: 0.8rem; color: var(--text-muted);">
+                            <span>📍 Greenville, SC</span>
+                            <span class="badge badge-bought">Purchased</span>
+                        </div>
                     </div>
                 </div>
             </div>
