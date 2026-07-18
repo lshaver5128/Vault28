@@ -2522,6 +2522,8 @@ document.getElementById('contact-form-inquiry').addEventListener('submit', (e) =
         // Save to inquiries collection for console logging
         db.collection("inquiries").doc(newInquiry.id).set(newInquiry);
         
+        const logoUrl = `${window.location.origin}/assets/logo_transparent.png`;
+
         // Write to mail collection to trigger the Firebase extension
         const emailPayload = {
             to: 'lshaver@vault28cards.com',
@@ -2533,11 +2535,14 @@ document.getElementById('contact-form-inquiry').addEventListener('submit', (e) =
                         <div style="max-width: 600px; margin: 0 auto; padding-bottom: 20px; text-align: left; border-bottom: 1px solid rgba(223, 183, 80, 0.25);">
                             <table style="width: 100%; border-collapse: collapse;">
                                 <tr>
-                                    <td>
-                                        <h1 style="color: #ffffff; font-size: 24px; margin: 0; font-family: inherit; font-weight: 800; letter-spacing: 0.05em; text-transform: uppercase;">
+                                    <td style="vertical-align: middle; width: 60px; padding-right: 15px;">
+                                        <img src="${logoUrl}" alt="Vault 28 Logo" style="width: 50px; height: 50px; border-radius: 50%; display: block; border: 1px solid rgba(223, 183, 80, 0.3);" onerror="this.style.display='none';" />
+                                    </td>
+                                    <td style="vertical-align: middle;">
+                                        <h1 style="color: #ffffff; font-size: 22px; margin: 0; font-family: inherit; font-weight: 800; letter-spacing: 0.05em; text-transform: uppercase;">
                                             VAULT <span style="color: #dfb750;">28</span>
                                         </h1>
-                                        <p style="color: #9ca3af; font-size: 12px; margin: 4px 0 0 0; text-transform: uppercase; letter-spacing: 0.1em; font-weight: 600;">Trading Co.</p>
+                                        <p style="color: #9ca3af; font-size: 11px; margin: 2px 0 0 0; text-transform: uppercase; letter-spacing: 0.1em; font-weight: 600;">Trading Co.</p>
                                     </td>
                                     <td style="text-align: right; vertical-align: middle;">
                                         <span style="background: rgba(223, 183, 80, 0.1); border: 1px solid #dfb750; color: #dfb750; padding: 6px 14px; border-radius: 20px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; display: inline-block;">New Inquiry</span>
@@ -2558,20 +2563,20 @@ document.getElementById('contact-form-inquiry').addEventListener('submit', (e) =
                             <div style="padding: 30px; color: #cbd5e1; font-size: 14px; line-height: 1.5;">
                                 <table style="width: 100%; border-collapse: collapse; margin-bottom: 25px;">
                                     <tr style="border-bottom: 1px solid #1f293d;">
-                                        <td style="padding: 12px 0; color: #94a3b8; width: 130px; font-weight: 600;">Customer Name</td>
-                                        <td style="padding: 12px 0; color: #ffffff; font-weight: 500;">${name}</td>
+                                        <td style="padding: 14px 0; color: #94a3b8; width: 140px; font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em;">Sender</td>
+                                        <td style="padding: 14px 0; color: #ffffff; font-weight: 600; font-size: 14px;">${name}</td>
                                     </tr>
                                     <tr style="border-bottom: 1px solid #1f293d;">
-                                        <td style="padding: 12px 0; color: #94a3b8; font-weight: 600;">Email Address</td>
-                                        <td style="padding: 12px 0;"><a href="mailto:${email}" style="color: #dfb750; text-decoration: none; font-weight: 600;">${email}</a></td>
+                                        <td style="padding: 14px 0; color: #94a3b8; font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em;">Email</td>
+                                        <td style="padding: 14px 0; font-size: 14px;"><a href="mailto:${email}" style="color: #dfb750; text-decoration: none; font-weight: 600; border-bottom: 1px dashed #dfb750; padding-bottom: 1px;">${email}</a></td>
                                     </tr>
                                     <tr style="border-bottom: 1px solid #1f293d;">
-                                        <td style="padding: 12px 0; color: #94a3b8; font-weight: 600;">Subject Line</td>
-                                        <td style="padding: 12px 0; color: #ffffff; font-weight: 500;">${subject}</td>
+                                        <td style="padding: 14px 0; color: #94a3b8; font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em;">Subject</td>
+                                        <td style="padding: 14px 0; color: #ffffff; font-weight: 500; font-size: 14px;">${subject}</td>
                                     </tr>
                                     <tr>
-                                        <td style="padding: 12px 0; color: #94a3b8; font-weight: 600;">Submitted At</td>
-                                        <td style="padding: 12px 0; color: #94a3b8; font-size: 13px;">${new Date().toLocaleString('en-US', { timeZone: 'America/New_York' })} EST</td>
+                                        <td style="padding: 14px 0; color: #94a3b8; font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em;">Received</td>
+                                        <td style="padding: 14px 0; color: #94a3b8; font-size: 13px;">${new Date().toLocaleString('en-US', { timeZone: 'America/New_York', dateStyle: 'medium', timeStyle: 'short' })} EST</td>
                                     </tr>
                                 </table>
                                 
@@ -2583,7 +2588,7 @@ document.getElementById('contact-form-inquiry').addEventListener('submit', (e) =
                                 
                                 <!-- Action Button -->
                                 <div style="text-align: center; margin-top: 35px;">
-                                    <a href="https://github.com/lshaver5128/Vault28" style="display: inline-block; background: linear-gradient(135deg, #f5d075 0%, #dfb750 100%); color: #0c0f19; font-weight: 700; font-size: 13px; padding: 12px 28px; text-decoration: none; border-radius: 25px; box-shadow: 0 4px 12px rgba(223, 183, 80, 0.25); text-transform: uppercase; letter-spacing: 0.08em;">Open Owner Console</a>
+                                    <a href="${window.location.origin}" style="display: inline-block; background: linear-gradient(135deg, #f5d075 0%, #dfb750 100%); color: #0c0f19; font-weight: 700; font-size: 13px; padding: 12px 28px; text-decoration: none; border-radius: 25px; box-shadow: 0 4px 12px rgba(223, 183, 80, 0.25); text-transform: uppercase; letter-spacing: 0.08em;">Open Owner Console</a>
                                 </div>
                             </div>
                         </div>
