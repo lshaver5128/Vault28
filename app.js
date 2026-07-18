@@ -450,6 +450,19 @@ function switchView(viewId) {
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
+window.scrollToSection = function(id) {
+    if (!VIEWS['seller-landing'].classList.contains('active')) {
+        switchView('seller-landing');
+        setTimeout(() => {
+            const el = document.getElementById(id);
+            if (el) el.scrollIntoView({ behavior: 'smooth' });
+        }, 300); // Wait for view transition
+    } else {
+        const el = document.getElementById(id);
+        if (el) el.scrollIntoView({ behavior: 'smooth' });
+    }
+};
+
 function updateNavigationLinks(activeViewId) {
     const navContainer = document.getElementById('nav-links');
     navContainer.innerHTML = '';
@@ -457,6 +470,8 @@ function updateNavigationLinks(activeViewId) {
     if (currentActiveRole === 'seller') {
         const links = [
             { label: 'Home', view: 'seller-landing' },
+            { label: 'About Us', scrollId: 'about-section' },
+            { label: 'Contact', scrollId: 'contact-section' },
             { label: 'Submit Collection', view: 'seller-submit' },
             { label: 'My Collections', view: 'seller-dashboard' }
         ];
@@ -467,10 +482,14 @@ function updateNavigationLinks(activeViewId) {
             el.textContent = link.label;
             el.addEventListener('click', (e) => {
                 e.preventDefault();
-                if (link.view !== 'seller-submit') {
-                    resetSubmissionFormState();
+                if (link.scrollId) {
+                    scrollToSection(link.scrollId);
+                } else {
+                    if (link.view !== 'seller-submit') {
+                        resetSubmissionFormState();
+                    }
+                    switchView(link.view);
                 }
-                switchView(link.view);
             });
             navContainer.appendChild(el);
         });
@@ -1649,6 +1668,47 @@ document.getElementById('btn-dashboard-new').addEventListener('click', () => {
 document.getElementById('btn-role-seller').addEventListener('click', () => setRole('seller'));
 document.getElementById('btn-role-buyer').addEventListener('click', () => setRole('buyer'));
 
+// Contact Form Submission Handling
+function initContactForm() {
+    const contactForm = document.getElementById('contact-form');
+    if (contactForm) {
+        contactForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const name = document.getElementById('contact-name').value.trim();
+            showToast(`Thank you, ${name}! Your message has been sent.`, "success");
+            contactForm.reset();
+        });
+    }
+}
+
+// Scroll Reveal Observer
+function initScrollReveal() {
+    const reveals = document.querySelectorAll('.reveal');
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('active');
+                observer.unobserve(entry.target); // Animation runs once
+            }
+        });
+    }, {
+        threshold: 0.08,
+        rootMargin: '0px 0px -40px 0px'
+    });
+    
+    reveals.forEach(el => observer.observe(el));
+    
+    // Immediately reveal hero elements if viewport loads on them
+    setTimeout(() => {
+        reveals.forEach(el => {
+            const rect = el.getBoundingClientRect();
+            if (rect.top >= 0 && rect.top <= window.innerHeight) {
+                el.classList.add('active');
+            }
+        });
+    }, 200);
+}
+
 // Page Init
 document.addEventListener('DOMContentLoaded', () => {
     const banner = document.getElementById('sandbox-banner');
@@ -1670,4 +1730,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     initDatabase();
     setRole('seller');
+    initScrollReveal();
+    initContactForm();
 });
