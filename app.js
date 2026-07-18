@@ -2320,21 +2320,34 @@ function renderShopCatalog() {
 }
 
 // Shop search and filters event listeners
-document.getElementById('shop-search').addEventListener('input', renderShopCatalog);
+if (document.getElementById('shop-search')) {
+    document.getElementById('shop-search').addEventListener('input', renderShopCatalog);
+}
 document.querySelectorAll('.shop-category-filter').forEach(chk => chk.addEventListener('change', renderShopCatalog));
-document.getElementById('shop-price-slider').addEventListener('input', (e) => {
-    document.getElementById('shop-price-display').textContent = `$${parseFloat(e.target.value).toLocaleString()}`;
-    renderShopCatalog();
-});
-document.getElementById('shop-sort').addEventListener('change', renderShopCatalog);
-document.getElementById('btn-reset-shop-filters').addEventListener('click', () => {
-    document.getElementById('shop-search').value = '';
-    document.querySelectorAll('.shop-category-filter').forEach(chk => chk.checked = false);
-    document.getElementById('shop-price-slider').value = 5000;
-    document.getElementById('shop-price-display').textContent = '$5,000';
-    document.getElementById('shop-sort').value = 'recent';
-    renderShopCatalog();
-});
+if (document.getElementById('shop-price-slider')) {
+    document.getElementById('shop-price-slider').addEventListener('input', (e) => {
+        const display = document.getElementById('shop-price-display');
+        if (display) display.textContent = `$${parseFloat(e.target.value).toLocaleString()}`;
+        renderShopCatalog();
+    });
+}
+if (document.getElementById('shop-sort')) {
+    document.getElementById('shop-sort').addEventListener('change', renderShopCatalog);
+}
+if (document.getElementById('btn-reset-shop-filters')) {
+    document.getElementById('btn-reset-shop-filters').addEventListener('click', () => {
+        const search = document.getElementById('shop-search');
+        if (search) search.value = '';
+        document.querySelectorAll('.shop-category-filter').forEach(chk => chk.checked = false);
+        const slider = document.getElementById('shop-price-slider');
+        if (slider) slider.value = 5000;
+        const display = document.getElementById('shop-price-display');
+        if (display) display.textContent = '$5,000';
+        const sort = document.getElementById('shop-sort');
+        if (sort) sort.value = 'recent';
+        renderShopCatalog();
+    });
+}
 
 // Product Modal Viewer
 function openProductModal(id) {
