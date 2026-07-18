@@ -469,11 +469,20 @@ function handleInitialRouting() {
     const path = window.location.pathname;
     const searchParams = new URLSearchParams(window.location.search);
     const id = searchParams.get('id');
+    const adminTabParam = searchParams.get('adminTab');
     
     let targetView = PATH_MAP[path] || 'seller-landing';
     
     if (id) {
         selectedCollectionId = id;
+    }
+    
+    if (adminTabParam) {
+        targetView = 'buyer-dashboard';
+        setTimeout(() => {
+            setRole('buyer');
+            setAdminTab(adminTabParam);
+        }, 150);
     }
     
     switchView(targetView, false);
@@ -2620,7 +2629,7 @@ document.getElementById('contact-form-inquiry').addEventListener('submit', (e) =
                                 
                                 <!-- Action Button -->
                                 <div style="text-align: center; margin-top: 35px;">
-                                    <a href="${window.location.origin}" style="display: inline-block; background: linear-gradient(135deg, #f5d075 0%, #dfb750 100%); color: #0c0f19; font-weight: 700; font-size: 13px; padding: 12px 28px; text-decoration: none; border-radius: 25px; box-shadow: 0 4px 12px rgba(223, 183, 80, 0.25); text-transform: uppercase; letter-spacing: 0.08em;">Open Owner Console</a>
+                                    <a href="${window.location.origin}/?adminTab=inquiries" style="display: inline-block; background: linear-gradient(135deg, #f5d075 0%, #dfb750 100%); color: #0c0f19; font-weight: 700; font-size: 13px; padding: 12px 28px; text-decoration: none; border-radius: 25px; box-shadow: 0 4px 12px rgba(223, 183, 80, 0.25); text-transform: uppercase; letter-spacing: 0.08em;">Open Owner Console</a>
                                 </div>
                             </div>
                         </div>
