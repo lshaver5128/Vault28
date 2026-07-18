@@ -1,14 +1,14 @@
 // Vault 28 - Application Logic Engine
 
 // --- FIREBASE CONFIGURATION ---
-// To connect a real-time cloud database, paste your Firebase Web API config here:
 const FIREBASE_CONFIG = {
-    apiKey: "",
-    authDomain: "",
-    projectId: "",
-    storageBucket: "",
-    messagingSenderId: "",
-    appId: ""
+    apiKey: "AIzaSyDGtZv3LXchFGTQuTPDRIF0UDk_G46hTz4",
+    authDomain: "vault28-ba268.firebaseapp.com",
+    projectId: "vault28-ba268",
+    storageBucket: "vault28-ba268.firebasestorage.app",
+    messagingSenderId: "343002100571",
+    appId: "1:343002100571:web:28c955ba5c4e997ad6a07e",
+    measurementId: "G-X2FL2Y1GTS"
 };
 
 // Check if Firebase keys are provided
