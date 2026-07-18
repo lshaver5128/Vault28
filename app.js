@@ -51,12 +51,14 @@ if (isFirebaseActive) {
     }
 }
 
+const OWNER_EMAILS = ['lshaver.5128@gmail.com', 'lshaver@vault28cards.com'];
+
 // Global state variables
 let collections = [];
 let products = [];
 let reviews = [];
 let settings = {
-    email: "info@vault28cards.com",
+    email: "lshaver@vault28cards.com",
     area: "Summerville, Charleston, and surrounding SC areas (Or secure nationwide shipping)"
 };
 let inquiries = [];
@@ -76,6 +78,8 @@ let productsListener = null;
 let reviewsListener = null;
 let settingsListener = null;
 let inquiriesListener = null;
+let usersListener = null;
+let users = [];
 
 // Default Mock Collections Data
 const DEFAULT_COLLECTIONS = [
@@ -257,6 +261,34 @@ const DEFAULT_REVIEWS = [
     }
 ];
 
+// Default Mock Registered Users
+const DEFAULT_USERS = [
+    {
+        uid: "user-1",
+        email: "john.doe@gmail.com",
+        displayName: "John Doe",
+        registeredAt: new Date(Date.now() - 3600000 * 24 * 18).toISOString(),
+        lastSeenAt: new Date(Date.now() - 3600000 * 1.5).toISOString(),
+        isOnline: true
+    },
+    {
+        uid: "user-2",
+        email: "sarah.smith@yahoo.com",
+        displayName: "Sarah Smith",
+        registeredAt: new Date(Date.now() - 3600000 * 24 * 32).toISOString(),
+        lastSeenAt: new Date(Date.now() - 3600000 * 24 * 2).toISOString(),
+        isOnline: false
+    },
+    {
+        uid: "user-3",
+        email: "michael.b@hotmail.com",
+        displayName: "Michael Brown",
+        registeredAt: new Date(Date.now() - 3600000 * 24 * 8).toISOString(),
+        lastSeenAt: new Date(Date.now() - 60000 * 12).toISOString(),
+        isOnline: true
+    }
+];
+
 // Helper to generate dynamic canvas card mockup image
 function generateCardMockupImage(player, year, brand, sport) {
     const canvas = document.createElement('canvas');
@@ -387,7 +419,7 @@ function switchView(viewId, pushState = true) {
     if (viewId === 'buyer-dashboard' || viewId === 'buyer-detail') {
         if (isFirebaseActive) {
             const user = firebase.auth().currentUser;
-            if (!user || user.email !== 'lshaver.5128@gmail.com') {
+            if (!user || !OWNER_EMAILS.includes(user.email)) {
                 switchView('seller-landing', false);
                 return;
             }
@@ -529,29 +561,49 @@ function initDatabase() {
             if (productsListener) productsListener();
             if (reviewsListener) reviewsListener();
             if (settingsListener) settingsListener();
+            if (usersListener) usersListener();
             
             if (user) {
                 document.getElementById('auth-widget').style.display = 'none';
                 document.getElementById('user-profile-widget').style.display = 'flex';
                 document.getElementById('user-display-name').textContent = user.displayName || user.email.split('@')[0];
                 
+                // Record user activity
+                recordUserActivity(user.uid, user.email, user.displayName, false);
+                
                 const roleLabel = document.getElementById('user-display-role');
                 const roleSwitcher = document.getElementById('role-switcher-wrapper');
                 
-                if (user.email === 'lshaver.5128@gmail.com') {
+                if (OWNER_EMAILS.includes(user.email)) {
                     roleLabel.textContent = "Vault 28 Owner";
                     roleLabel.style.color = "var(--accent-cyan)";
                     roleSwitcher.style.display = 'flex';
+                    document.body.classList.add('has-admin-bar');
+                    const toolbar = document.getElementById('admin-toolbar');
+                    if (toolbar) toolbar.style.display = 'block';
+                    
+                    // Listen to users collection
+                    usersListener = db.collection("users").onSnapshot((snapshot) => {
+                        users = [];
+                        snapshot.forEach(doc => {
+                            users.push({ id: doc.id, ...doc.data() });
+                        });
+                        users.sort((a, b) => new Date(b.registeredAt || 0) - new Date(a.registeredAt || 0));
+                        renderAdminUsersTable();
+                    });
                 } else {
                     roleLabel.textContent = "Seller Account";
                     roleLabel.style.color = "var(--text-secondary)";
                     roleSwitcher.style.display = 'none';
+                    document.body.classList.remove('has-admin-bar');
+                    const toolbar = document.getElementById('admin-toolbar');
+                    if (toolbar) toolbar.style.display = 'none';
                     setRole('seller');
                 }
 
                 // Query collections based on user
                 let query = db.collection("collections");
-                if (user.email !== 'lshaver.5128@gmail.com') {
+                if (!OWNER_EMAILS.includes(user.email)) {
                     query = query.where("sellerUid", "==", user.uid);
                 }
 
@@ -563,7 +615,7 @@ function initDatabase() {
                     collections.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
                     
                     // Seed if database is completely empty
-                    if (snapshot.empty && user.email === 'lshaver.5128@gmail.com') {
+                    if (snapshot.empty && OWNER_EMAILS.includes(user.email)) {
                         seedCloudDatabase();
                     }
                     
@@ -574,8 +626,12 @@ function initDatabase() {
                 document.getElementById('auth-widget').style.display = 'flex';
                 document.getElementById('user-profile-widget').style.display = 'none';
                 document.getElementById('role-switcher-wrapper').style.display = 'none';
+                document.body.classList.remove('has-admin-bar');
+                const toolbar = document.getElementById('admin-toolbar');
+                if (toolbar) toolbar.style.display = 'none';
                 
                 collections = [];
+                users = [];
                 setRole('seller');
                 handleInitialRouting();
                 triggerUIRefresh();
@@ -650,11 +706,26 @@ function initDatabase() {
             saveLocalSettings();
         }
 
+        // Initialize sandbox users
+        let storedUsers = localStorage.getItem('v28_users');
+        if (storedUsers) {
+            users = JSON.parse(storedUsers);
+        } else {
+            users = [...DEFAULT_USERS];
+            localStorage.setItem('v28_users', JSON.stringify(users));
+        }
+
+        // Mark local tester user as active
+        recordUserActivity('sandbox-user', 'lshaver@vault28cards.com', 'Local Tester', false);
+
         document.getElementById('auth-widget').style.display = 'none';
         document.getElementById('user-profile-widget').style.display = 'flex';
         document.getElementById('user-display-name').textContent = "Local Tester";
         document.getElementById('user-display-role').textContent = "Sandbox Mode";
         document.getElementById('role-switcher-wrapper').style.display = 'flex';
+        document.body.classList.add('has-admin-bar');
+        const toolbar = document.getElementById('admin-toolbar');
+        if (toolbar) toolbar.style.display = 'block';
 
         triggerUIRefresh();
         renderShopCatalog();
@@ -677,9 +748,13 @@ function triggerUIRefresh() {
     document.getElementById('admin-badge-submissions').textContent = collections.length;
     document.getElementById('admin-badge-inventory').textContent = products.length;
     
+    const badgeUsers = document.getElementById('admin-badge-users');
+    if (badgeUsers) badgeUsers.textContent = users.length;
+    
     renderSellerDashboard();
     renderBuyerDashboard();
     renderRecentlyPurchasedGallery();
+    renderAdminUsersTable();
     
     if (selectedCollectionId) {
         const viewSeller = document.getElementById('seller-detail');
@@ -707,7 +782,7 @@ function setRole(role) {
     } else {
         if (isFirebaseActive) {
             const user = firebase.auth().currentUser;
-            if (!user || user.email !== 'lshaver.5128@gmail.com') {
+            if (!user || !OWNER_EMAILS.includes(user.email)) {
                 showToast("Owner authorization required.", "error");
                 setRole('seller');
                 return;
@@ -782,47 +857,146 @@ document.getElementById('btn-header-signin').addEventListener('click', () => ope
 document.getElementById('btn-header-signup').addEventListener('click', () => openAuthModal('signup'));
 document.getElementById('btn-header-signout').addEventListener('click', () => {
     if (isFirebaseActive) {
+        const user = firebase.auth().currentUser;
+        if (user) {
+            setUserOffline(user.uid);
+        }
         firebase.auth().signOut().then(() => showToast("Signed out successfully."));
+    } else {
+        setUserOffline('sandbox-user');
+        document.getElementById('auth-widget').style.display = 'flex';
+        document.getElementById('user-profile-widget').style.display = 'none';
+        document.getElementById('role-switcher-wrapper').style.display = 'none';
+        document.body.classList.remove('has-admin-bar');
+        const toolbar = document.getElementById('admin-toolbar');
+        if (toolbar) toolbar.style.display = 'none';
+        
+        users.forEach(u => u.isOnline = false);
+        localStorage.setItem('v28_users', JSON.stringify(users));
+        
+        setRole('seller');
+        showToast("Signed out successfully.");
     }
 });
 
 document.getElementById('auth-form').addEventListener('submit', (e) => {
     e.preventDefault();
-    if (!isFirebaseActive) return;
     
     const email = document.getElementById('auth-email').value.trim();
     const password = document.getElementById('auth-password').value;
     const name = document.getElementById('auth-name').value.trim();
     const btnSubmit = document.getElementById('btn-auth-submit');
     
+    // Check form fields match validation requirements
+    if (authModalMode === 'signup' && !name) {
+        showToast("Please fill in your full name.", "error");
+        return;
+    }
+    if (!email || !email.includes('@') || email.indexOf('.') === -1) {
+        showToast("Please enter a valid email address.", "error");
+        return;
+    }
+    if (!password || password.length < 6) {
+        showToast("Password must be at least 6 characters.", "error");
+        return;
+    }
+
     btnSubmit.disabled = true;
     btnSubmit.textContent = "Processing...";
     
-    if (authModalMode === 'login') {
-        firebase.auth().signInWithEmailAndPassword(email, password)
-            .then(() => {
-                closeAuthModal();
-                showToast("Welcome back!", "success");
-            })
-            .catch(err => showToast(err.message, "error"))
-            .finally(() => {
-                btnSubmit.disabled = false;
-                btnSubmit.textContent = 'Log In';
-            });
-    } else {
-        firebase.auth().createUserWithEmailAndPassword(email, password)
-            .then(cred => {
-                cred.user.updateProfile({ displayName: name }).then(() => {
+    if (isFirebaseActive) {
+        if (authModalMode === 'login') {
+            firebase.auth().signInWithEmailAndPassword(email, password)
+                .then(() => {
                     closeAuthModal();
-                    showToast(`Welcome, ${name}!`, "success");
-                    initDatabase();
+                    showToast("Welcome back!", "success");
+                })
+                .catch(err => showToast(err.message, "error"))
+                .finally(() => {
+                    btnSubmit.disabled = false;
+                    btnSubmit.textContent = 'Log In';
                 });
-            })
-            .catch(err => showToast(err.message, "error"))
-            .finally(() => {
-                btnSubmit.disabled = false;
-                btnSubmit.textContent = 'Create Account';
-            });
+        } else {
+            firebase.auth().createUserWithEmailAndPassword(email, password)
+                .then(cred => {
+                    cred.user.updateProfile({ displayName: name }).then(() => {
+                        recordUserActivity(cred.user.uid, cred.user.email, name, true);
+                        closeAuthModal();
+                        showToast(`Welcome, ${name}!`, "success");
+                        initDatabase();
+                    });
+                })
+                .catch(err => showToast(err.message, "error"))
+                .finally(() => {
+                    btnSubmit.disabled = false;
+                    btnSubmit.textContent = 'Create Account';
+                });
+        }
+    } else {
+        // Sandbox mode mock registration and login simulation
+        setTimeout(() => {
+            btnSubmit.disabled = false;
+            
+            if (authModalMode === 'login') {
+                let localUsers = [];
+                const stored = localStorage.getItem('v28_users');
+                if (stored) localUsers = JSON.parse(stored);
+                else localUsers = [...DEFAULT_USERS];
+                
+                // Allow logging back in as the owner
+                if (OWNER_EMAILS.includes(email.toLowerCase())) {
+                    document.getElementById('auth-widget').style.display = 'none';
+                    document.getElementById('user-profile-widget').style.display = 'flex';
+                    document.getElementById('user-display-name').textContent = "Lucas Shaver";
+                    document.getElementById('user-display-role').textContent = "Vault 28 Owner";
+                    document.getElementById('role-switcher-wrapper').style.display = 'flex';
+                    document.body.classList.add('has-admin-bar');
+                    const toolbar = document.getElementById('admin-toolbar');
+                    if (toolbar) toolbar.style.display = 'block';
+                    
+                    recordUserActivity('owner-uid', email, 'Lucas Shaver', false);
+                    closeAuthModal();
+                    showToast("Welcome back, Lucas!", "success");
+                    triggerUIRefresh();
+                    return;
+                }
+                
+                const foundUser = localUsers.find(u => u.email.toLowerCase() === email.toLowerCase());
+                if (foundUser) {
+                    document.getElementById('auth-widget').style.display = 'none';
+                    document.getElementById('user-profile-widget').style.display = 'flex';
+                    document.getElementById('user-display-name').textContent = foundUser.displayName;
+                    document.getElementById('user-display-role').textContent = "Seller Account";
+                    document.getElementById('role-switcher-wrapper').style.display = 'none';
+                    document.body.classList.remove('has-admin-bar');
+                    const toolbar = document.getElementById('admin-toolbar');
+                    if (toolbar) toolbar.style.display = 'none';
+                    
+                    recordUserActivity(foundUser.uid, foundUser.email, foundUser.displayName, false);
+                    closeAuthModal();
+                    showToast("Welcome back!", "success");
+                    triggerUIRefresh();
+                } else {
+                    showToast("Account not found. Please register in sandbox mode.", "error");
+                }
+            } else {
+                const mockUid = 'mock-user-' + Math.random().toString(36).substr(2, 9);
+                
+                document.getElementById('auth-widget').style.display = 'none';
+                document.getElementById('user-profile-widget').style.display = 'flex';
+                document.getElementById('user-display-name').textContent = name;
+                document.getElementById('user-display-role').textContent = "Seller Account";
+                document.getElementById('role-switcher-wrapper').style.display = 'none';
+                document.body.classList.remove('has-admin-bar');
+                const toolbar = document.getElementById('admin-toolbar');
+                if (toolbar) toolbar.style.display = 'none';
+                
+                recordUserActivity(mockUid, email, name, true);
+                closeAuthModal();
+                showToast(`Welcome, ${name}!`, "success");
+                triggerUIRefresh();
+            }
+        }, 500);
     }
 });
 
@@ -1325,13 +1499,15 @@ function setAdminTab(tabName) {
     const btnSub = document.getElementById('tab-btn-submissions');
     const btnInv = document.getElementById('tab-btn-inventory');
     const btnCon = document.getElementById('tab-btn-content');
+    const btnUsr = document.getElementById('tab-btn-users');
     
     const panelSub = document.getElementById('panel-submissions');
     const panelInv = document.getElementById('panel-inventory');
     const panelCon = document.getElementById('panel-content');
+    const panelUsr = document.getElementById('panel-users');
     
-    [btnSub, btnInv, btnCon].forEach(btn => btn.classList.remove('active'));
-    [panelSub, panelInv, panelCon].forEach(panel => panel.classList.remove('active'));
+    [btnSub, btnInv, btnCon, btnUsr].forEach(btn => btn && btn.classList.remove('active'));
+    [panelSub, panelInv, panelCon, panelUsr].forEach(panel => panel && panel.classList.remove('active'));
     
     if (tabName === 'submissions') {
         btnSub.classList.add('active');
@@ -1340,16 +1516,169 @@ function setAdminTab(tabName) {
         btnInv.classList.add('active');
         panelInv.classList.add('active');
         renderAdminInventoryTable();
-    } else {
+    } else if (tabName === 'content') {
         btnCon.classList.add('active');
         panelCon.classList.add('active');
         renderAdminReviewsList();
+    } else if (tabName === 'users') {
+        if (btnUsr) btnUsr.classList.add('active');
+        if (panelUsr) panelUsr.classList.add('active');
+        renderAdminUsersTable();
     }
 }
 
 document.getElementById('tab-btn-submissions').addEventListener('click', () => setAdminTab('submissions'));
 document.getElementById('tab-btn-inventory').addEventListener('click', () => setAdminTab('inventory'));
 document.getElementById('tab-btn-content').addEventListener('click', () => setAdminTab('content'));
+document.getElementById('tab-btn-users').addEventListener('click', () => setAdminTab('users'));
+
+// HTML Escaper Helper
+function escapeHTML(str) {
+    if (!str) return '';
+    return str.replace(/[&<>'"]/g, 
+        tag => ({
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            "'": '&#39;',
+            '"': '&quot;'
+        }[tag] || tag)
+    );
+}
+
+// User Session Presence Presence Management
+function recordUserActivity(uid, email, displayName, isRegistering = false) {
+    const timestamp = new Date().toISOString();
+    
+    if (isFirebaseActive) {
+        const userDocRef = db.collection("users").doc(uid);
+        const data = {
+            uid: uid,
+            email: email,
+            displayName: displayName || email.split('@')[0],
+            lastSeenAt: timestamp,
+            isOnline: true
+        };
+        if (isRegistering) {
+            data.registeredAt = timestamp;
+        }
+        userDocRef.set(data, { merge: true }).catch(err => console.error("Error recording user activity:", err));
+    } else {
+        // Local Sandbox Mode
+        let localUsers = [];
+        const stored = localStorage.getItem('v28_users');
+        if (stored) localUsers = JSON.parse(stored);
+        else localUsers = [...DEFAULT_USERS];
+        
+        let existingUser = localUsers.find(u => u.uid === uid);
+        if (existingUser) {
+            existingUser.lastSeenAt = timestamp;
+            existingUser.isOnline = true;
+            if (displayName) existingUser.displayName = displayName;
+        } else {
+            existingUser = {
+                uid: uid,
+                email: email,
+                displayName: displayName || email.split('@')[0],
+                registeredAt: timestamp,
+                lastSeenAt: timestamp,
+                isOnline: true
+            };
+            localUsers.push(existingUser);
+        }
+        
+        localStorage.setItem('v28_users', JSON.stringify(localUsers));
+        users = localUsers;
+        renderAdminUsersTable();
+    }
+}
+
+function setUserOffline(uid) {
+    if (!uid) return;
+    if (isFirebaseActive) {
+        db.collection("users").doc(uid).update({
+            isOnline: false,
+            lastSeenAt: new Date().toISOString()
+        }).catch(err => console.error(err));
+    } else {
+        let localUsers = [];
+        const stored = localStorage.getItem('v28_users');
+        if (stored) localUsers = JSON.parse(stored);
+        else localUsers = [...DEFAULT_USERS];
+        
+        const u = localUsers.find(u => u.uid === uid);
+        if (u) {
+            u.isOnline = false;
+            u.lastSeenAt = new Date().toISOString();
+        }
+        localStorage.setItem('v28_users', JSON.stringify(localUsers));
+        users = localUsers;
+        renderAdminUsersTable();
+    }
+}
+
+// Render Admin registered users table
+function renderAdminUsersTable() {
+    const tableBody = document.getElementById('admin-users-table-body');
+    if (!tableBody) return;
+    
+    tableBody.innerHTML = '';
+    
+    // Update stats
+    const totalUsers = users.length;
+    const onlineUsers = users.filter(u => u.isOnline).length;
+    
+    const statTotal = document.getElementById('admin-stat-users-total');
+    const statOnline = document.getElementById('admin-stat-users-online');
+    const badgeUsers = document.getElementById('admin-badge-users');
+    
+    if (statTotal) statTotal.textContent = totalUsers;
+    if (statOnline) statOnline.textContent = onlineUsers;
+    if (badgeUsers) badgeUsers.textContent = totalUsers;
+    
+    if (totalUsers === 0) {
+        tableBody.innerHTML = `
+            <tr>
+                <td colspan="5" style="text-align: center; padding: 3rem; color: var(--text-muted);">
+                    <div style="font-size: 1.5rem; margin-bottom: 0.5rem;">👥</div>
+                    No registered user accounts found.
+                </td>
+            </tr>
+        `;
+        return;
+    }
+    
+    users.forEach(user => {
+        const regDate = user.registeredAt ? new Date(user.registeredAt).toLocaleString() : 'N/A';
+        const lastSeen = user.lastSeenAt ? new Date(user.lastSeenAt).toLocaleString() : 'N/A';
+        
+        const statusBadge = user.isOnline 
+            ? `<span class="badge badge-success" style="box-shadow: 0 0 8px rgba(16,185,129,0.3); font-weight:600;"><span class="pulse-dot" style="display:inline-block; width: 6px; height: 6px; background:#fff; border-radius:50%; margin-right:5px; vertical-align:middle; animation: adminPulse 1.5s infinite alternate;"></span>Online</span>` 
+            : `<span class="badge badge-muted" style="color: var(--text-muted); background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05);">Offline</span>`;
+            
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td style="font-weight: 600; color: var(--text-primary);">${escapeHTML(user.displayName || 'No Name')}</td>
+            <td style="font-family: monospace; font-size: 0.85rem; color: var(--accent-cyan);">${escapeHTML(user.email)}</td>
+            <td style="color: var(--text-secondary); font-size: 0.85rem;">${regDate}</td>
+            <td style="color: var(--text-secondary); font-size: 0.85rem;">${lastSeen}</td>
+            <td>${statusBadge}</td>
+        `;
+        tableBody.appendChild(tr);
+    });
+}
+
+// Window Unload Presence Updater
+window.addEventListener('beforeunload', () => {
+    if (isFirebaseActive) {
+        const user = firebase.auth().currentUser;
+        if (user) {
+            db.collection("users").doc(user.uid).update({ isOnline: false });
+        }
+    } else {
+        setUserOffline('sandbox-user');
+    }
+});
 
 // Render Admin submissions list
 function renderBuyerDashboard() {
@@ -1922,8 +2251,9 @@ document.getElementById('btn-admin-reset-db').addEventListener('click', () => {
     collections = [];
     products = [];
     reviews = [];
+    users = [];
     settings = {
-        email: "info@vault28cards.com",
+        email: "lshaver@vault28cards.com",
         area: "Summerville, Charleston, and surrounding SC areas (Or secure nationwide shipping)"
     };
     
@@ -2199,6 +2529,7 @@ document.getElementById('brand-logo').addEventListener('click', (e) => {
 document.getElementById('btn-nav-free-offer').addEventListener('click', () => switchView('seller-submit'));
 document.getElementById('btn-hero-sell').addEventListener('click', () => switchView('seller-submit'));
 document.getElementById('btn-hero-browse').addEventListener('click', () => switchView('shop'));
+document.getElementById('btn-shop-coming-soon-sell').addEventListener('click', () => switchView('seller-submit'));
 
 document.getElementById('btn-dashboard-new').addEventListener('click', () => switchView('seller-submit'));
 document.getElementById('btn-seller-back-dashboard').addEventListener('click', () => switchView('seller-dashboard'));
