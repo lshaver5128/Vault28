@@ -2581,19 +2581,26 @@ function initScrollReveal() {
 // DOM Init
 document.addEventListener('DOMContentLoaded', () => {
     const banner = document.getElementById('sandbox-banner');
-    if (isFirebaseActive) {
-        if (banner) banner.style.display = 'none';
-    } else {
-        if (banner) banner.style.display = 'flex';
-        
-        document.getElementById('btn-setup-db').addEventListener('click', () => {
+    if (banner) banner.style.display = 'none';
+    
+    const btnSetup = document.getElementById('btn-setup-db');
+    if (btnSetup) {
+        btnSetup.addEventListener('click', () => {
             document.getElementById('db-setup-modal').style.display = 'flex';
         });
-        document.getElementById('btn-close-db-modal').addEventListener('click', () => {
-            document.getElementById('db-setup-modal').style.display = 'none';
+    }
+    const btnCloseDb = document.getElementById('btn-close-db-modal');
+    if (btnCloseDb) {
+        btnCloseDb.addEventListener('click', () => {
+            const modal = document.getElementById('db-setup-modal');
+            if (modal) modal.style.display = 'none';
         });
-        document.getElementById('btn-close-db-modal-ok').addEventListener('click', () => {
-            document.getElementById('db-setup-modal').style.display = 'none';
+    }
+    const btnCloseDbOk = document.getElementById('btn-close-db-modal-ok');
+    if (btnCloseDbOk) {
+        btnCloseDbOk.addEventListener('click', () => {
+            const modal = document.getElementById('db-setup-modal');
+            if (modal) modal.style.display = 'none';
         });
     }
 
