@@ -1,28 +1,28 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap');
 
 :root {
-    --bg-primary: #060913;
-    --bg-secondary: #0b0f1d;
-    --bg-tertiary: #13182b;
-    --bg-card: rgba(19, 24, 43, 0.7);
-    --border-color: rgba(255, 255, 255, 0.07);
-    --border-hover: rgba(255, 255, 255, 0.15);
+    --bg-primary: #0a0b0e;
+    --bg-secondary: #111216;
+    --bg-tertiary: #181a1f;
+    --bg-card: rgba(24, 26, 31, 0.7);
+    --border-color: rgba(223, 183, 80, 0.08);
+    --border-hover: rgba(223, 183, 80, 0.2);
     
-    /* Neon gradients / Accent colors */
-    --accent-emerald: #0df3a3;
-    --accent-emerald-glow: rgba(13, 243, 163, 0.15);
-    --accent-cyan: #06b6d4;
-    --accent-cyan-glow: rgba(6, 182, 212, 0.15);
-    --accent-blue: #3b82f6;
-    --accent-purple: #8b5cf6;
-    --accent-orange: #f97316;
-    --accent-orange-glow: rgba(249, 115, 22, 0.15);
+    /* Gold & Bronze gradients / Accent colors */
+    --accent-emerald: #f5d075;
+    --accent-emerald-glow: rgba(245, 208, 117, 0.15);
+    --accent-cyan: #dfb750;
+    --accent-cyan-glow: rgba(223, 183, 80, 0.15);
+    --accent-blue: #8a6d25;
+    --accent-purple: #ab8b35;
+    --accent-orange: #dfb750;
+    --accent-orange-glow: rgba(223, 183, 80, 0.15);
     --accent-red: #ef4444;
-    --accent-gold: #fbbf24;
+    --accent-gold: #dfb750;
     
     --text-primary: #f8fafc;
-    --text-secondary: #94a3b8;
-    --text-muted: #64748b;
+    --text-secondary: #a3a8b3;
+    --text-muted: #6b7280;
     
     --font-main: 'Inter', system-ui, -apple-system, sans-serif;
     --font-title: 'Outfit', system-ui, -apple-system, sans-serif;
@@ -31,9 +31,9 @@
     --transition-normal: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     --transition-slow: 0.5s cubic-bezier(0.4, 0, 0.2, 1);
     
-    --shadow-neon-cyan: 0 0 20px rgba(6, 182, 212, 0.25);
-    --shadow-neon-emerald: 0 0 20px rgba(13, 243, 163, 0.25);
-    --shadow-neon-orange: 0 0 20px rgba(249, 115, 22, 0.25);
+    --shadow-neon-cyan: 0 0 20px rgba(223, 183, 80, 0.25);
+    --shadow-neon-emerald: 0 0 20px rgba(245, 208, 117, 0.25);
+    --shadow-neon-orange: 0 0 20px rgba(223, 183, 80, 0.25);
     --shadow-card: 0 10px 30px -10px rgba(0, 0, 0, 0.7);
 }
 
@@ -50,8 +50,8 @@ body {
     line-height: 1.5;
     overflow-x: hidden;
     background-image: 
-        radial-gradient(circle at 10% 20%, rgba(6, 182, 212, 0.05) 0%, transparent 40%),
-        radial-gradient(circle at 90% 80%, rgba(139, 92, 246, 0.05) 0%, transparent 45%);
+        radial-gradient(circle at 10% 20%, rgba(223, 183, 80, 0.04) 0%, transparent 40%),
+        radial-gradient(circle at 90% 80%, rgba(171, 139, 53, 0.03) 0%, transparent 45%);
     background-attachment: fixed;
 }
 
@@ -263,13 +263,13 @@ header {
 
 .btn-primary {
     background: linear-gradient(135deg, var(--accent-cyan), var(--accent-blue));
-    color: #fff;
+    color: #0a0b0e;
     box-shadow: var(--shadow-neon-cyan);
 }
 
 .btn-primary:hover {
     transform: translateY(-2px);
-    box-shadow: 0 0 25px rgba(6, 182, 212, 0.45);
+    box-shadow: 0 0 25px rgba(223, 183, 80, 0.45);
 }
 
 .btn-secondary {
@@ -284,14 +284,14 @@ header {
 }
 
 .btn-success {
-    background: linear-gradient(135deg, var(--accent-emerald), #059669);
-    color: #060913;
+    background: linear-gradient(135deg, var(--accent-emerald), #a6842b);
+    color: #0a0b0e;
     box-shadow: var(--shadow-neon-emerald);
 }
 
 .btn-success:hover {
     transform: translateY(-2px);
-    box-shadow: 0 0 25px rgba(13, 243, 163, 0.45);
+    box-shadow: 0 0 25px rgba(245, 208, 117, 0.45);
 }
 
 .btn-outline-cyan {
@@ -301,7 +301,7 @@ header {
 }
 
 .btn-outline-cyan:hover {
-    background: rgba(6, 182, 212, 0.1);
+    background: rgba(223, 183, 80, 0.1);
     box-shadow: var(--shadow-neon-cyan);
 }
 
@@ -593,8 +593,8 @@ header {
     width: 48px;
     height: 48px;
     border-radius: 12px;
-    background: rgba(6, 182, 212, 0.1);
-    border: 1px solid rgba(6, 182, 212, 0.2);
+    background: rgba(223, 183, 80, 0.1);
+    border: 1px solid rgba(223, 183, 80, 0.2);
     color: var(--accent-cyan);
     display: flex;
     align-items: center;
@@ -604,14 +604,14 @@ header {
 }
 
 .feature-card:nth-child(2) .feature-icon-wrapper {
-    background: rgba(139, 92, 246, 0.1);
-    border: 1px solid rgba(139, 92, 246, 0.2);
+    background: rgba(171, 139, 53, 0.1);
+    border: 1px solid rgba(171, 139, 53, 0.2);
     color: var(--accent-purple);
 }
 
 .feature-card:nth-child(3) .feature-icon-wrapper {
-    background: rgba(13, 243, 163, 0.1);
-    border: 1px solid rgba(13, 243, 163, 0.2);
+    background: rgba(245, 208, 117, 0.1);
+    border: 1px solid rgba(245, 208, 117, 0.2);
     color: var(--accent-emerald);
 }
 
