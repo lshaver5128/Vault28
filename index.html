@@ -8,6 +8,13 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
+    <!-- Database Sandbox Alert Banner -->
+    <div id="sandbox-banner" class="sandbox-banner" style="background: linear-gradient(90deg, #1e293b, #0f172a); border-bottom: 1px solid rgba(6, 182, 212, 0.3); padding: 8px 16px; font-size: 0.82rem; text-align: center; display: flex; align-items: center; justify-content: center; gap: 8px; color: var(--text-secondary);">
+        <span>🔒 Running in <strong>Local Sandbox Mode</strong> (All data stays in this browser).</span>
+        <button class="btn btn-primary btn-sm" id="btn-setup-db" style="padding: 2px 8px; font-size: 0.75rem; border-radius: 4px; background: rgba(6, 182, 212, 0.15); border: 1px solid var(--accent-cyan); color: var(--accent-cyan); cursor: pointer; box-shadow: none;">
+            Setup Real-time Cloud Sync
+        </button>
+    </div>
 
     <!-- Header & Navigation -->
     <header>
@@ -500,6 +507,61 @@
 
     <!-- Toast Notifications Container -->
     <div class="toast-container" id="toast-container"></div>
+
+    <!-- Database Setup Modal -->
+    <div id="db-setup-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.85); z-index: 1000; align-items: center; justify-content: center; backdrop-filter: blur(4px);">
+        <div class="glass-card" style="max-width: 600px; width: 90%; max-height: 85vh; overflow-y: auto; position: relative; border-color: var(--accent-cyan); box-shadow: var(--shadow-neon-cyan);">
+            <button id="btn-close-db-modal" style="position: absolute; top: 16px; right: 16px; background: none; border: none; color: var(--text-secondary); font-size: 1.5rem; cursor: pointer; line-height: 1;">×</button>
+            
+            <h2 style="font-size: 1.5rem; margin-bottom: 1rem; color: var(--accent-cyan); font-family: var(--font-title);">Connect Real-time Cloud Database</h2>
+            
+            <p style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 1rem; line-height: 1.5;">
+                By default, Vault 28 runs in a local sandbox mode. Follow these steps to connect a free Google Firebase Database so users on other computers can submit cards and chat with you in real-time.
+            </p>
+            
+            <div style="font-size: 0.85rem; display: flex; flex-direction: column; gap: 1rem; line-height: 1.6; text-align: left;">
+                <div>
+                    <strong style="color: var(--text-primary); display: block;">Step 1: Create a Firebase Project</strong>
+                    <span style="color: var(--text-secondary);">Go to <a href="https://console.firebase.google.com" target="_blank" style="color: var(--accent-cyan); text-decoration: underline;">firebase.google.com</a>, sign in, and click <strong>Create a Project</strong>. Name it "Vault28".</span>
+                </div>
+                
+                <div>
+                    <strong style="color: var(--text-primary); display: block;">Step 2: Create Firestore Database</strong>
+                    <span style="color: var(--text-secondary);">In the Firebase Console sidebar, click <strong>Firestore Database</strong>, then click <strong>Create Database</strong>. Choose <strong>Start in Test Mode</strong> (so read/write rules are open for testing) and select your database location.</span>
+                </div>
+                
+                <div>
+                    <strong style="color: var(--text-primary); display: block;">Step 3: Register a Web App</strong>
+                    <span style="color: var(--text-secondary);">On your project overview page, click the web icon (<code>&lt;/&gt;</code>) to register a web app. Name it "Vault28 Web".</span>
+                </div>
+                
+                <div>
+                    <strong style="color: var(--text-primary); display: block;">Step 4: Copy API Config keys</strong>
+                    <span style="color: var(--text-secondary);">Firebase will show you a configuration script. Copy <strong>only</strong> the <code>firebaseConfig</code> object. It looks like this:</span>
+                    <pre style="background: rgba(0,0,0,0.4); padding: 8px; border-radius: 6px; font-size: 0.75rem; color: #fda4af; overflow-x: auto; margin-top: 4px; border: 1px solid var(--border-color); font-family: monospace;">
+const firebaseConfig = {
+  apiKey: "AIzaSy...",
+  authDomain: "vault28.firebaseapp.com",
+  projectId: "vault28",
+  storageBucket: "vault28.appspot.com",
+  messagingSenderId: "123456...",
+  appId: "1:123456..."
+};</pre>
+                </div>
+                
+                <div>
+                    <strong style="color: var(--text-primary); display: block;">Step 5: Paste in <code>app.js</code></strong>
+                    <span style="color: var(--text-secondary);">Open <a href="file:///c:/Users/luke5/Downloads/Vault28/Vault28Project/app.js" style="color: var(--accent-cyan);">app.js</a> in VS Code and paste your config into the <code>FIREBASE_CONFIG</code> variable at the very top of the file. Save and push the change to your GitHub repo!</span>
+                </div>
+            </div>
+            
+            <button class="btn btn-primary" id="btn-close-db-modal-ok" style="width: 100%; margin-top: 1.5rem;">Got It</button>
+        </div>
+    </div>
+
+    <!-- Firebase Compatibility SDK (v10 compat) from CDNs -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 
     <script src="app.js"></script>
 </body>
