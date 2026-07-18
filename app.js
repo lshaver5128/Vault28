@@ -1,7 +1,6 @@
-// Vault 28 - Application Logic Engine
+// Vault 28 Trading Co. - Application Logic Engine
 
 // --- FIREBASE CONFIGURATION ---
-// To connect a real-time cloud database, paste your Firebase Web API config here:
 const FIREBASE_CONFIG = {
     apiKey: "AIzaSyDGtZv3LXchFGTQuTPDRIF0UDk_G46hTz4",
     authDomain: "vault28-ba268.firebaseapp.com",
@@ -15,7 +14,33 @@ const FIREBASE_CONFIG = {
 // Check if Firebase keys are provided
 const isFirebaseActive = !!(FIREBASE_CONFIG && FIREBASE_CONFIG.apiKey && FIREBASE_CONFIG.apiKey.trim() !== "");
 let db = null;
-let collectionsListener = null; // Store Firestore collection listener reference
+
+// Routing maps
+const ROUTE_MAP = {
+    'seller-landing': '/',
+    'seller-submit': '/sell',
+    'seller-dashboard': '/my-collections',
+    'seller-detail': '/collection',
+    'shop': '/shop',
+    'how-it-works': '/how-it-works',
+    'about': '/about',
+    'contact': '/contact',
+    'buyer-dashboard': '/admin',
+    'buyer-detail': '/admin/review'
+};
+
+const PATH_MAP = {
+    '/': 'seller-landing',
+    '/sell': 'seller-submit',
+    '/my-collections': 'seller-dashboard',
+    '/collection': 'seller-detail',
+    '/shop': 'shop',
+    '/how-it-works': 'how-it-works',
+    '/about': 'about',
+    '/contact': 'contact',
+    '/admin': 'buyer-dashboard',
+    '/admin/review': 'buyer-detail'
+};
 
 if (isFirebaseActive) {
     try {
@@ -26,74 +51,80 @@ if (isFirebaseActive) {
     }
 }
 
-// Local variables
+// Global state variables
 let collections = [];
-let tempCards = []; // Temporary inventory for the submission wizard
-let currentActiveRole = 'seller'; // 'seller' or 'buyer'
+let products = [];
+let reviews = [];
+let settings = {
+    email: "info@vault28cards.com",
+    area: "Summerville, Charleston, and surrounding SC areas (Or secure nationwide shipping)"
+};
+let inquiries = [];
+
+let tempCards = []; // Highlights list during Sell wizard
 let selectedCollectionId = null;
 let uploadedCardImageBase64 = null;
-let authModalMode = 'login'; // 'login' or 'signup'
+let uploadedGeneralFiles = []; // Base64 strings of uploaded files
+let currentActiveRole = 'seller'; // 'seller' or 'buyer' (admin)
+let activeAdminTab = 'submissions'; // 'submissions', 'inventory', 'content'
+let currentEditingProductId = null;
+let selectedProductId = null; // Shop modal product ID
 
-// Default Mock Data
+// Database listeners
+let collectionsListener = null;
+let productsListener = null;
+let reviewsListener = null;
+let settingsListener = null;
+let inquiriesListener = null;
+
+// Default Mock Collections Data
 const DEFAULT_COLLECTIONS = [
     {
         id: "col-jordan-1986",
         title: "1986 Fleer NBA Rookie Hunt",
-        description: "This is a collection of classic 1980s basketball cards. Includes the legendary 1986 Fleer Michael Jordan Rookie Card in amazing condition, plus Spud Webb and Johnny Moore rookies. Looking to negotiate a fair deal!",
-        sport: "Basketball",
+        description: "This is a collection of classic 1980s basketball cards. Includes the legendary 1986 Fleer Michael Jordan Rookie Card in amazing condition, plus Spud Webb and Johnny Moore rookies.",
+        sport: "Sports Cards",
         sellerName: "Luke S.",
         sellerEmail: "luke.s@gmail.com",
+        sellerPhone: "(843) 555-9876",
+        sellerPref: "Text Message",
+        sellerLocation: "Summerville, SC",
         sellerUid: "sandbox-luke-uid",
+        qty: 150,
+        estVal: 5400,
         askingPrice: 5400,
         offerPrice: 4800,
+        deliveryPref: "Local Pickup",
         status: "Offer Made",
-        createdAt: new Date(Date.now() - 3600000 * 24).toISOString(), // 1 day ago
+        createdAt: new Date(Date.now() - 3600000 * 24).toISOString(),
         cards: [
             {
                 player: "Michael Jordan",
                 brand: "Fleer Rookie #57",
                 year: 1986,
                 grade: "PSA 8 Near-Mint/Mint",
-                image: "" // Generated dynamically
+                image: ""
             },
             {
                 player: "Spud Webb",
                 brand: "Fleer Rookie #120",
                 year: 1986,
                 grade: "PSA 9 Mint",
-                image: "" // Generated dynamically
-            },
-            {
-                player: "Johnny Moore",
-                brand: "Fleer Rookie #77",
-                year: 1986,
-                grade: "PSA 8 Near-Mint/Mint",
-                image: "" // Generated dynamically
+                image: ""
             }
         ],
+        generalImages: [],
         messages: [
             {
                 sender: "seller",
                 senderName: "Luke S.",
-                text: "Hey there! Submitted my 86 Fleer basketball lot. That Jordan is exceptionally clean.",
+                text: "Hey! Submitted my 86 Fleer basketball lot. That Jordan is exceptionally clean.",
                 timestamp: new Date(Date.now() - 3600000 * 20).toISOString()
             },
             {
                 sender: "buyer",
                 senderName: "V28 Buying Desk",
-                text: "Hi Luke, thanks for submitting this awesome Michael Jordan rookie. The centering looks slightly off-center (around 65/35), but the corners are extremely sharp. No chipping on the borders.",
-                timestamp: new Date(Date.now() - 3600000 * 18).toISOString()
-            },
-            {
-                sender: "seller",
-                senderName: "Luke S.",
-                text: "Appreciate the honest review. Yes, it has been in a soft sleeve and top loader since the late 80s.",
-                timestamp: new Date(Date.now() - 3600000 * 17).toISOString()
-            },
-            {
-                sender: "buyer",
-                senderName: "V28 Buying Desk",
-                text: "Based on recent auction prices for a PSA 8 Jordan, we can make you a package offer of $4,800 for the whole collection including Webb and Moore.",
+                text: "Hi Luke, thanks for submitting. Based on recent auction prices for a PSA 8 Jordan, we can make you a package offer of $4,800 for the whole collection including Webb.",
                 timestamp: new Date(Date.now() - 3600000 * 16).toISOString()
             },
             {
@@ -105,38 +136,38 @@ const DEFAULT_COLLECTIONS = [
         ]
     },
     {
-        id: "col-mahomes-modern",
-        title: "Modern Patrick Mahomes Gridiron Gems",
-        description: "High-grade Patrick Mahomes cards, including his 2017 Donruss Optic Rookie Card. Kept in a secure environment. Selling to downsize my NFL collection.",
-        sport: "Football",
+        id: "col-pokemon-vintage",
+        title: "1999 Pokémon Binder Collection",
+        description: "Old childhood binder from 1999. Features Base Set Charizard Holo, Blastoise, and Venusaur. Most cards were placed in pages immediately, looking for a fair offer.",
+        sport: "Pokémon & TCG",
         sellerName: "Marcus T.",
         sellerEmail: "marcus.t@gmail.com",
+        sellerPhone: "(843) 555-4321",
+        sellerPref: "Email",
+        sellerLocation: "Charleston, SC",
         sellerUid: "sandbox-marcus-uid",
-        askingPrice: 2100,
+        qty: 240,
+        estVal: 2000,
+        askingPrice: 1800,
         offerPrice: 0,
+        deliveryPref: "Shipping Accepted",
         status: "Pending Review",
-        createdAt: new Date(Date.now() - 3600000 * 2).toISOString(), // 2 hours ago
+        createdAt: new Date(Date.now() - 3600000 * 2).toISOString(),
         cards: [
             {
-                player: "Patrick Mahomes II",
-                brand: "Donruss Optic Rookie #177",
-                year: 2017,
-                grade: "PSA 10 Gem Mint",
-                image: "" // Generated dynamically
-            },
-            {
-                player: "Patrick Mahomes II",
-                brand: "Panini Prizm Soph Year #1",
-                year: 2018,
-                grade: "PSA 9 Mint",
-                image: "" // Generated dynamically
+                player: "Charizard",
+                brand: "Holo Base Set #4",
+                year: 1999,
+                grade: "Raw (Near Mint or Better)",
+                image: ""
             }
         ],
+        generalImages: [],
         messages: [
             {
                 sender: "seller",
                 senderName: "Marcus T.",
-                text: "Hey, let know what you think of this Mahomes lot. The Optic Rookie is in pristine condition.",
+                text: "Submitted my old Pokemon binder. Let me know what you guys think of the Charizard condition.",
                 timestamp: new Date(Date.now() - 3600000 * 2).toISOString()
             },
             {
@@ -149,6 +180,83 @@ const DEFAULT_COLLECTIONS = [
     }
 ];
 
+// Default Mock Shop Products Data
+const DEFAULT_PRODUCTS = [
+    {
+        id: "prod-jordan-1986",
+        title: "1986 Fleer Michael Jordan Rookie Card #57",
+        description: "The Holy Grail of modern basketball cards. A beautiful PSA 8 specimen. Excellent centering, sharp corners, and deep colors. Fully certified.",
+        price: 4800,
+        condition: "PSA 8 Near-Mint/Mint",
+        category: "Sports Cards",
+        availability: "Available",
+        shipping: "$5.00 Insured Shipping / Free Summerville SC Pickup",
+        image: "",
+        createdAt: new Date(Date.now() - 3600000 * 48).toISOString()
+    },
+    {
+        id: "prod-charizard-1999",
+        title: "1999 Pokémon Base Set Charizard Holo #4",
+        description: "Vintage Base Set Charizard holographic card in PSA 9 Mint condition. Perfect swirl in the holographic foil, zero silvering on borders.",
+        price: 1250,
+        condition: "PSA 9 Mint",
+        category: "Pokémon & TCG",
+        availability: "Available",
+        shipping: "Free Insured Shipping / Local Pickup Available",
+        image: "",
+        createdAt: new Date(Date.now() - 3600000 * 36).toISOString()
+    },
+    {
+        id: "prod-mahomes-sealed",
+        title: "2017 NFL Donruss Optic Retail Blaster Box Sealed",
+        description: "Original factory sealed 2017 Donruss Optic Football blaster box. Hunt for Patrick Mahomes rookie cards and holographic parallels.",
+        price: 350,
+        condition: "Factory Sealed",
+        category: "Sealed Product",
+        availability: "Available",
+        shipping: "$8.00 Shipping / Free Local Pickup",
+        image: "",
+        createdAt: new Date(Date.now() - 3600000 * 12).toISOString()
+    },
+    {
+        id: "prod-trout-2011",
+        title: "2011 Topps Update Mike Trout Rookie Card #US175",
+        description: "The definitive modern baseball rookie card. Graded PSA 10 Gem Mint. Immaculate centering, pristine edges, and crisp registration.",
+        price: 1500,
+        condition: "PSA 10 Gem Mint",
+        category: "Sports Cards",
+        availability: "Sold",
+        shipping: "Sold - Local Pickup Summerville SC",
+        image: "",
+        createdAt: new Date(Date.now() - 3600000 * 96).toISOString()
+    }
+];
+
+// Default Mock Testimonial Reviews Data
+const DEFAULT_REVIEWS = [
+    {
+        id: "rev-1",
+        name: "Mike T.",
+        location: "Summerville, SC",
+        stars: 5,
+        text: "Sold my childhood sports card collection to Vault 28 Trading Co. The online submission took 5 minutes, we negotiated in the live chat, and I got paid cash immediately. Simple, honest, and easy!"
+    },
+    {
+        id: "rev-2",
+        name: "Sarah L.",
+        location: "Charleston, SC",
+        stars: 5,
+        text: "Best Pokémon card buyer in South Carolina. Met locally near Summerville for a safe handoff. Got a very fair cash offer for my binders without the eBay seller fees."
+    },
+    {
+        id: "rev-3",
+        name: "David K.",
+        location: "Columbia, SC",
+        stars: 5,
+        text: "Had a massive bulk collection of vintage cards. Vault 28 made a solid package offer and coordinated shipping. Great communication and no pressure to sell."
+    }
+];
+
 // Helper to generate dynamic canvas card mockup image
 function generateCardMockupImage(player, year, brand, sport) {
     const canvas = document.createElement('canvas');
@@ -156,38 +264,27 @@ function generateCardMockupImage(player, year, brand, sport) {
     canvas.height = 420;
     const ctx = canvas.getContext('2d');
     
-    // Determine gradient colors based on player name (sports team themed colors)
+    // Determine colors
     let colors = ['#1e293b', '#0f172a'];
-    let accentColor = '#3b82f6';
+    let accentColor = '#dfb750';
     const p = player.toLowerCase();
+    const s = sport.toLowerCase();
     
     if (p.includes('jordan')) {
-        colors = ['#ce1141', '#000000']; // Bulls Red/Black
-        accentColor = '#fcd34d'; // Gold highlight
+        colors = ['#ce1141', '#000000']; // Bulls
+        accentColor = '#dfb750';
     } else if (p.includes('mahomes')) {
-        colors = ['#e31837', '#ffb612']; // Chiefs Red/Yellow
+        colors = ['#e31837', '#ffb612']; // Chiefs
         accentColor = '#ffffff';
-    } else if (p.includes('webb')) {
-        colors = ['#c8102e', '#27251f']; // Hawks Red/Black
-        accentColor = '#fdb927';
-    } else if (p.includes('moore')) {
-        colors = ['#06b6d4', '#0f172a']; // Cyan/Dark Navy
-        accentColor = '#0df3a3';
-    } else if (p.includes('lebron') || p.includes('james')) {
-        colors = ['#552583', '#fdb927']; // Lakers Purple/Gold
-        accentColor = '#ffffff';
-    } else if (sport === 'Baseball') {
-        colors = ['#0a2351', '#002d62']; // Baseball Blue
-        accentColor = '#fbbf24';
-    } else if (sport === 'Soccer') {
-        colors = ['#004d98', '#a50044']; // Barcelona Blue/Red
-        accentColor = '#edbb00';
-    } else if (sport.includes('Pokemon')) {
-        colors = ['#ffcb05', '#2a75d3']; // Pokemon Yellow/Blue
+    } else if (s.includes('pokemon') || s.includes('tcg') || p.includes('charizard')) {
+        colors = ['#2a75d3', '#ffcb05']; // Pokemon Blue/Yellow
         accentColor = '#ff1f1f';
+    } else if (sport.includes('Sports')) {
+        colors = ['#0a2351', '#002d62']; // Baseball Blue
+        accentColor = '#dfb750';
     } else {
-        colors = ['#1e1b4b', '#4c1d95'];
-        accentColor = '#0df3a3';
+        colors = ['#1a1d24', '#282b35'];
+        accentColor = '#dfb750';
     }
     
     // Background gradient
@@ -197,46 +294,17 @@ function generateCardMockupImage(player, year, brand, sport) {
     ctx.fillStyle = grad;
     ctx.fillRect(0, 0, 300, 420);
     
-    // Draw visual textures
-    ctx.strokeStyle = 'rgba(255,255,255,0.06)';
-    ctx.lineWidth = 2;
+    // Inner textures
+    ctx.strokeStyle = 'rgba(255,255,255,0.05)';
+    ctx.lineWidth = 1;
     ctx.beginPath();
-    ctx.arc(150, 180, 100, 0, Math.PI * 2);
+    ctx.arc(150, 180, 90, 0, Math.PI * 2);
     ctx.stroke();
     
-    ctx.beginPath();
-    ctx.arc(150, 180, 70, 0, Math.PI * 2);
-    ctx.stroke();
-    
-    ctx.beginPath();
-    ctx.moveTo(30, 290);
-    ctx.lineTo(270, 290);
-    ctx.stroke();
-
-    // Stadium lighting effects
-    const glowGrad = ctx.createRadialGradient(150, 100, 10, 150, 100, 150);
-    glowGrad.addColorStop(0, 'rgba(255,255,255,0.15)');
-    glowGrad.addColorStop(1, 'rgba(255,255,255,0)');
-    ctx.fillStyle = glowGrad;
-    ctx.beginPath();
-    ctx.arc(150, 100, 150, 0, Math.PI*2);
-    ctx.fill();
-    
-    // Outer Metallic Frame
+    // Outer border
     ctx.strokeStyle = accentColor;
     ctx.lineWidth = 4;
     ctx.strokeRect(15, 15, 270, 390);
-    
-    ctx.strokeStyle = 'rgba(255,255,255,0.2)';
-    ctx.lineWidth = 1;
-    ctx.strokeRect(20, 20, 260, 380);
-    
-    // Holographic background text/number
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.03)';
-    ctx.font = 'bold 150px "Outfit"';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText('28', 150, 180);
     
     // Brand header
     ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
@@ -244,199 +312,101 @@ function generateCardMockupImage(player, year, brand, sport) {
     ctx.textAlign = 'center';
     ctx.fillText(brand.toUpperCase(), 150, 42);
     
-    // Inner card art border
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
-    ctx.strokeRect(30, 60, 240, 220);
-    
-    // Draw abstract player avatar shape
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.12)';
+    // Avatar shape placeholder
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.08)';
     ctx.beginPath();
-    ctx.arc(150, 150, 40, 0, Math.PI * 2); // Head
+    ctx.arc(150, 150, 42, 0, Math.PI * 2);
     ctx.fill();
-    
     ctx.beginPath();
-    ctx.moveTo(100, 260);
-    ctx.quadraticCurveTo(100, 200, 150, 200);
-    ctx.quadraticCurveTo(200, 200, 200, 260);
+    ctx.moveTo(110, 240);
+    ctx.quadraticCurveTo(110, 190, 150, 190);
+    ctx.quadraticCurveTo(190, 190, 190, 240);
     ctx.closePath();
     ctx.fill();
 
-    // Player metadata text boxes
-    ctx.fillStyle = 'rgba(6, 9, 19, 0.85)';
-    ctx.fillRect(30, 305, 240, 75);
+    // Box details
+    ctx.fillStyle = 'rgba(10, 11, 14, 0.85)';
+    ctx.fillRect(30, 300, 240, 80);
     ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
-    ctx.strokeRect(30, 305, 240, 75);
+    ctx.strokeRect(30, 300, 240, 80);
     
-    // Player Name
     ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 16px "Outfit"';
+    ctx.font = 'bold 15px "Outfit"';
     ctx.textAlign = 'center';
-    ctx.fillText(player, 150, 328);
+    ctx.fillText(player, 150, 325);
     
-    // Set Year & Sport
     ctx.fillStyle = accentColor;
     ctx.font = '600 11px "Inter"';
-    ctx.fillText(year + ' • ' + sport.toUpperCase(), 150, 348);
+    ctx.fillText(year + ' • ' + sport.toUpperCase(), 150, 345);
     
-    // Grad details
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
-    ctx.font = '500 10px "Inter"';
-    ctx.fillText('VAULT 28 ORIGINAL SLAB MOCKUP', 150, 366);
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
+    ctx.font = '500 9px "Inter"';
+    ctx.fillText('VAULT 28 ORIGINAL SLAB MOCKUP', 150, 363);
     
     return canvas.toDataURL();
 }
 
 // Database Seeding function for Cloud Firestore
 function seedCloudDatabase() {
+    // Seed collections
     DEFAULT_COLLECTIONS.forEach(col => {
         col.cards = col.cards.map(card => {
-            card.image = generateCardMockupImage(card.player, card.year, card.brand, col.sport);
+            if (!card.image) card.image = generateCardMockupImage(card.player, card.year, card.brand, col.sport);
             return card;
         });
         db.collection("collections").doc(col.id).set(col);
     });
+
+    // Seed products
+    DEFAULT_PRODUCTS.forEach(prod => {
+        if (!prod.image) prod.image = generateCardMockupImage(prod.title.split(' ').slice(4).join(' ') || prod.title, 1999, prod.category, prod.category);
+        db.collection("products").doc(prod.id).set(prod);
+    });
+
+    // Seed reviews
+    DEFAULT_REVIEWS.forEach(rev => {
+        db.collection("reviews").doc(rev.id).set(rev);
+    });
+
+    // Seed config settings
+    db.collection("settings").doc("config").set(settings);
 }
 
-// Database Sync and Initialization
-function initDatabase() {
-    if (isFirebaseActive) {
-        // Setup Firebase Authentication listener
-        firebase.auth().onAuthStateChanged((user) => {
-            // Unsubscribe from previous collection listeners if active
-            if (collectionsListener) {
-                collectionsListener();
-                collectionsListener = null;
-            }
-
-            if (user) {
-                // Logged in UI Setup
-                document.getElementById('auth-widget').style.display = 'none';
-                document.getElementById('user-profile-widget').style.display = 'flex';
-                document.getElementById('user-display-name').textContent = user.displayName || user.email.split('@')[0];
-                
-                // Role-based UI updates
-                const roleLabel = document.getElementById('user-display-role');
-                const roleSwitcher = document.getElementById('role-switcher-wrapper');
-                
-                if (user.email === 'lshaver.5128@gmail.com') {
-                    roleLabel.textContent = "Vault 28 Owner";
-                    roleLabel.style.color = "var(--accent-emerald)";
-                    roleSwitcher.style.display = 'flex'; // Expose Valuation admin switcher
-                } else {
-                    roleLabel.textContent = "Seller Account";
-                    roleLabel.style.color = "var(--accent-cyan)";
-                    roleSwitcher.style.display = 'none'; // Lock out standard sellers
-                    setRole('seller'); // Safeguard
-                }
-
-                // Query collections based on user credentials
-                let query = db.collection("collections");
-                if (user.email !== 'lshaver.5128@gmail.com') {
-                    // Filter in Firestore by UID
-                    query = query.where("sellerUid", "==", user.uid);
-                }
-
-                collectionsListener = query.onSnapshot((snapshot) => {
-                    if (snapshot.empty && user.email === 'lshaver.5128@gmail.com') {
-                        // Seed database if owner logs in and Firestore is empty
-                        seedCloudDatabase();
-                        return;
-                    }
-
-                    collections = [];
-                    snapshot.forEach(doc => {
-                        collections.push({ id: doc.id, ...doc.data() });
-                    });
-                    
-                    // Sort collections by date locally to avoid requiring complex Firestore composite indexes
-                    collections.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-                    
-                    triggerUIRefresh();
-                }, (error) => {
-                    console.error("Firestore sync error:", error);
-                    showToast("Database access error. Verify permissions.", "error");
-                });
-
-            } else {
-                // Logged Out UI state
-                document.getElementById('auth-widget').style.display = 'flex';
-                document.getElementById('user-profile-widget').style.display = 'none';
-                document.getElementById('role-switcher-wrapper').style.display = 'none';
-                
-                collections = [];
-                setRole('seller');
-                switchView('seller-landing');
-                triggerUIRefresh();
-            }
-        });
-    } else {
-        // Fallback to local storage (Sandbox Mode)
-        const stored = localStorage.getItem('v28_collections');
-        if (stored) {
-            collections = JSON.parse(stored);
-        } else {
-            collections = DEFAULT_COLLECTIONS.map(col => {
-                col.cards = col.cards.map(card => {
-                    card.image = generateCardMockupImage(card.player, card.year, card.brand, col.sport);
-                    return card;
-                });
-                return col;
-            });
-            saveDatabase();
-        }
-        
-        // Expose switcher in Sandbox mode for local evaluation
-        document.getElementById('auth-widget').style.display = 'none';
-        document.getElementById('user-profile-widget').style.display = 'flex';
-        document.getElementById('user-display-name').textContent = "Local Tester";
-        document.getElementById('user-display-role').textContent = "Sandbox Mode";
-        document.getElementById('role-switcher-wrapper').style.display = 'flex';
-        triggerUIRefresh();
-    }
-}
-
-function saveDatabase() {
-    if (!isFirebaseActive) {
-        localStorage.setItem('v28_collections', JSON.stringify(collections));
-    }
-}
-
-// Helper to refresh the active UI panels when database updates occur
-function triggerUIRefresh() {
-    if (currentActiveRole === 'seller') {
-        if (VIEWS['seller-dashboard'].classList.contains('active')) {
-            renderSellerDashboard();
-        } else if (selectedCollectionId && VIEWS['seller-detail'].classList.contains('active')) {
-            renderSellerDetail(selectedCollectionId);
-        }
-    } else {
-        if (VIEWS['buyer-dashboard'].classList.contains('active')) {
-            renderBuyerDashboard();
-        } else if (selectedCollectionId && VIEWS['buyer-detail'].classList.contains('active')) {
-            renderBuyerDetail(selectedCollectionId);
-        }
-    }
-}
-
-// Navigation & Routing System
-const VIEWS = {
-    'seller-landing': document.getElementById('seller-landing'),
-    'seller-submit': document.getElementById('seller-submit'),
-    'seller-dashboard': document.getElementById('seller-dashboard'),
-    'seller-detail': document.getElementById('seller-detail'),
-    'buyer-dashboard': document.getElementById('buyer-dashboard'),
-    'buyer-detail': document.getElementById('buyer-detail')
-};
-
-function switchView(viewId) {
-    // Auth Guard check: prevent entering submit or dashboard views if logged out in Cloud Mode
+// Router Implementation
+function switchView(viewId, pushState = true) {
+    // Auth Guard check for seller dashboard access
     if (isFirebaseActive && !firebase.auth().currentUser) {
-        if (viewId === 'seller-submit' || viewId === 'seller-dashboard' || viewId === 'seller-detail') {
+        if (viewId === 'seller-dashboard' || viewId === 'seller-detail') {
             openAuthModal('login');
-            showToast("Please log in or create an account to view and submit collections.", "error");
+            showToast("Please log in or create an account to view your submissions.", "error");
             return;
         }
     }
+
+    // Role-based view lockout
+    if (viewId === 'buyer-dashboard' || viewId === 'buyer-detail') {
+        if (isFirebaseActive) {
+            const user = firebase.auth().currentUser;
+            if (!user || user.email !== 'lshaver.5128@gmail.com') {
+                switchView('seller-landing', false);
+                return;
+            }
+        }
+    }
+
+    // Toggle active classes
+    const VIEWS = {
+        'seller-landing': document.getElementById('seller-landing'),
+        'seller-submit': document.getElementById('seller-submit'),
+        'seller-dashboard': document.getElementById('seller-dashboard'),
+        'seller-detail': document.getElementById('seller-detail'),
+        'shop': document.getElementById('shop'),
+        'how-it-works': document.getElementById('how-it-works'),
+        'about': document.getElementById('about'),
+        'contact': document.getElementById('contact'),
+        'buyer-dashboard': document.getElementById('buyer-dashboard'),
+        'buyer-detail': document.getElementById('buyer-detail')
+    };
 
     Object.values(VIEWS).forEach(view => {
         if (view) view.classList.remove('active');
@@ -447,22 +417,61 @@ function switchView(viewId) {
     }
     
     updateNavigationLinks(viewId);
+    
+    // HTML5 History pushState URL update
+    if (pushState) {
+        let url = ROUTE_MAP[viewId] || '/';
+        if (viewId === 'seller-detail' && selectedCollectionId) {
+            url += `?id=${selectedCollectionId}`;
+        } else if (viewId === 'buyer-detail' && selectedCollectionId) {
+            url += `?id=${selectedCollectionId}`;
+        }
+        window.history.pushState({ viewId, collectionId: selectedCollectionId }, "", url);
+    }
+    
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-window.scrollToSection = function(id) {
-    if (!VIEWS['seller-landing'].classList.contains('active')) {
-        switchView('seller-landing');
-        setTimeout(() => {
-            const el = document.getElementById(id);
-            if (el) el.scrollIntoView({ behavior: 'smooth' });
-        }, 300); // Wait for view transition
-    } else {
-        const el = document.getElementById(id);
-        if (el) el.scrollIntoView({ behavior: 'smooth' });
+// Parse current URL and route cleanly
+function handleInitialRouting() {
+    const path = window.location.pathname;
+    const searchParams = new URLSearchParams(window.location.search);
+    const id = searchParams.get('id');
+    
+    let targetView = PATH_MAP[path] || 'seller-landing';
+    
+    if (id) {
+        selectedCollectionId = id;
     }
-};
+    
+    switchView(targetView, false);
+}
 
+// Back/Forward listener
+window.addEventListener('popstate', (e) => {
+    if (e.state && e.state.viewId) {
+        if (e.state.collectionId) {
+            selectedCollectionId = e.state.collectionId;
+        }
+        switchView(e.state.viewId, false);
+    } else {
+        handleInitialRouting();
+    }
+});
+
+// Intercept clicks on links for routing
+document.addEventListener('click', (e) => {
+    const target = e.target.closest('a');
+    if (target && target.getAttribute('href') && target.getAttribute('href').startsWith('/')) {
+        const href = target.getAttribute('href');
+        if (PATH_MAP[href]) {
+            e.preventDefault();
+            switchView(PATH_MAP[href]);
+        }
+    }
+});
+
+// Update navbar links based on role
 function updateNavigationLinks(activeViewId) {
     const navContainer = document.getElementById('nav-links');
     navContainer.innerHTML = '';
@@ -470,37 +479,36 @@ function updateNavigationLinks(activeViewId) {
     if (currentActiveRole === 'seller') {
         const links = [
             { label: 'Home', view: 'seller-landing' },
-            { label: 'About Us', scrollId: 'about-section' },
-            { label: 'Contact', scrollId: 'contact-section' },
-            { label: 'Submit Collection', view: 'seller-submit' },
-            { label: 'My Collections', view: 'seller-dashboard' }
+            { label: 'Sell Your Collection', view: 'seller-submit' },
+            { label: 'Shop', view: 'shop' },
+            { label: 'How It Works', view: 'how-it-works' },
+            { label: 'About Us', view: 'about' },
+            { label: 'Contact', view: 'contact' }
         ];
         
         links.forEach(link => {
             const el = document.createElement('a');
             el.className = `nav-link ${activeViewId === link.view ? 'active' : ''}`;
+            el.href = ROUTE_MAP[link.view];
             el.textContent = link.label;
             el.addEventListener('click', (e) => {
                 e.preventDefault();
-                if (link.scrollId) {
-                    scrollToSection(link.scrollId);
-                } else {
-                    if (link.view !== 'seller-submit') {
-                        resetSubmissionFormState();
-                    }
-                    switchView(link.view);
+                if (link.view !== 'seller-submit') {
+                    resetSubmissionFormState();
                 }
+                switchView(link.view);
             });
             navContainer.appendChild(el);
         });
     } else {
         const links = [
-            { label: 'Valuation Desk', view: 'buyer-dashboard' }
+            { label: 'Admin Dashboard', view: 'buyer-dashboard' }
         ];
         
         links.forEach(link => {
             const el = document.createElement('a');
             el.className = `nav-link ${activeViewId === link.view ? 'active' : ''}`;
+            el.href = ROUTE_MAP[link.view];
             el.textContent = link.label;
             el.addEventListener('click', (e) => {
                 e.preventDefault();
@@ -511,10 +519,183 @@ function updateNavigationLinks(activeViewId) {
     }
 }
 
-// Role Switcher Management
+// Database Synchronization & Initializers
+function initDatabase() {
+    if (isFirebaseActive) {
+        // Setup Firebase Authentication listener
+        firebase.auth().onAuthStateChanged((user) => {
+            // Unsubscribe existing listeners
+            if (collectionsListener) collectionsListener();
+            if (productsListener) productsListener();
+            if (reviewsListener) reviewsListener();
+            if (settingsListener) settingsListener();
+            
+            if (user) {
+                document.getElementById('auth-widget').style.display = 'none';
+                document.getElementById('user-profile-widget').style.display = 'flex';
+                document.getElementById('user-display-name').textContent = user.displayName || user.email.split('@')[0];
+                
+                const roleLabel = document.getElementById('user-display-role');
+                const roleSwitcher = document.getElementById('role-switcher-wrapper');
+                
+                if (user.email === 'lshaver.5128@gmail.com') {
+                    roleLabel.textContent = "Vault 28 Owner";
+                    roleLabel.style.color = "var(--accent-cyan)";
+                    roleSwitcher.style.display = 'flex';
+                } else {
+                    roleLabel.textContent = "Seller Account";
+                    roleLabel.style.color = "var(--text-secondary)";
+                    roleSwitcher.style.display = 'none';
+                    setRole('seller');
+                }
+
+                // Query collections based on user
+                let query = db.collection("collections");
+                if (user.email !== 'lshaver.5128@gmail.com') {
+                    query = query.where("sellerUid", "==", user.uid);
+                }
+
+                collectionsListener = query.onSnapshot((snapshot) => {
+                    collections = [];
+                    snapshot.forEach(doc => {
+                        collections.push({ id: doc.id, ...doc.data() });
+                    });
+                    collections.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+                    
+                    // Seed if database is completely empty
+                    if (snapshot.empty && user.email === 'lshaver.5128@gmail.com') {
+                        seedCloudDatabase();
+                    }
+                    
+                    triggerUIRefresh();
+                });
+
+            } else {
+                document.getElementById('auth-widget').style.display = 'flex';
+                document.getElementById('user-profile-widget').style.display = 'none';
+                document.getElementById('role-switcher-wrapper').style.display = 'none';
+                
+                collections = [];
+                setRole('seller');
+                handleInitialRouting();
+                triggerUIRefresh();
+            }
+
+            // Sync public products
+            productsListener = db.collection("products").onSnapshot(snapshot => {
+                products = [];
+                snapshot.forEach(doc => {
+                    products.push({ id: doc.id, ...doc.data() });
+                });
+                products.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+                renderShopCatalog();
+                renderFeaturedInventory();
+                renderAdminInventoryTable();
+            });
+
+            // Sync public reviews
+            reviewsListener = db.collection("reviews").onSnapshot(snapshot => {
+                reviews = [];
+                snapshot.forEach(doc => {
+                    reviews.push({ id: doc.id, ...doc.data() });
+                });
+                renderPublicReviews();
+                renderAdminReviewsList();
+            });
+
+            // Sync settings
+            settingsListener = db.collection("settings").doc("config").onSnapshot(doc => {
+                if (doc.exists) {
+                    settings = doc.data();
+                    renderSettingsDetails();
+                }
+            });
+        });
+    } else {
+        // Local Sandbox Fallback
+        const storedCol = localStorage.getItem('v28_collections');
+        const storedProd = localStorage.getItem('v28_products');
+        const storedRev = localStorage.getItem('v28_reviews');
+        const storedSet = localStorage.getItem('v28_settings');
+        
+        if (storedCol) collections = JSON.parse(storedCol);
+        else {
+            collections = DEFAULT_COLLECTIONS.map(col => {
+                col.cards = col.cards.map(card => {
+                    card.image = generateCardMockupImage(card.player, card.year, card.brand, col.sport);
+                    return card;
+                });
+                return col;
+            });
+            saveLocalCollections();
+        }
+
+        if (storedProd) products = JSON.parse(storedProd);
+        else {
+            products = DEFAULT_PRODUCTS.map(prod => {
+                prod.image = generateCardMockupImage(prod.title.split(' ').slice(4).join(' ') || prod.title, 2026, prod.category, prod.category);
+                return prod;
+            });
+            saveLocalProducts();
+        }
+
+        if (storedRev) reviews = JSON.parse(storedRev);
+        else {
+            reviews = DEFAULT_REVIEWS;
+            saveLocalReviews();
+        }
+
+        if (storedSet) settings = JSON.parse(storedSet);
+        else {
+            saveLocalSettings();
+        }
+
+        document.getElementById('auth-widget').style.display = 'none';
+        document.getElementById('user-profile-widget').style.display = 'flex';
+        document.getElementById('user-display-name').textContent = "Local Tester";
+        document.getElementById('user-display-role').textContent = "Sandbox Mode";
+        document.getElementById('role-switcher-wrapper').style.display = 'flex';
+
+        triggerUIRefresh();
+        renderShopCatalog();
+        renderFeaturedInventory();
+        renderPublicReviews();
+        renderAdminInventoryTable();
+        renderAdminReviewsList();
+        renderSettingsDetails();
+        handleInitialRouting();
+    }
+}
+
+// Database save helpers (Local sandbox mode)
+function saveLocalCollections() { localStorage.setItem('v28_collections', JSON.stringify(collections)); }
+function saveLocalProducts() { localStorage.setItem('v28_products', JSON.stringify(products)); }
+function saveLocalReviews() { localStorage.setItem('v28_reviews', JSON.stringify(reviews)); }
+function saveLocalSettings() { localStorage.setItem('v28_settings', JSON.stringify(settings)); }
+
+function triggerUIRefresh() {
+    document.getElementById('admin-badge-submissions').textContent = collections.length;
+    document.getElementById('admin-badge-inventory').textContent = products.length;
+    
+    renderSellerDashboard();
+    renderBuyerDashboard();
+    renderRecentlyPurchasedGallery();
+    
+    if (selectedCollectionId) {
+        const viewSeller = document.getElementById('seller-detail');
+        const viewAdmin = document.getElementById('buyer-detail');
+        if (viewSeller && viewSeller.classList.contains('active')) {
+            renderSellerDetail(selectedCollectionId);
+        }
+        if (viewAdmin && viewAdmin.classList.contains('active')) {
+            renderBuyerDetail(selectedCollectionId);
+        }
+    }
+}
+
+// Role Switcher
 function setRole(role) {
     currentActiveRole = role;
-    
     const btnSeller = document.getElementById('btn-role-seller');
     const btnBuyer = document.getElementById('btn-role-buyer');
     
@@ -522,61 +703,47 @@ function setRole(role) {
         btnSeller.classList.add('active');
         btnBuyer.classList.remove('active');
         document.getElementById('buyer-update-dot').style.display = 'none';
-        
-        if (selectedCollectionId && VIEWS['seller-detail'].classList.contains('active')) {
-            renderSellerDetail(selectedCollectionId);
-        } else {
-            switchView('seller-landing');
-        }
+        switchView('seller-landing');
     } else {
-        // Owner Guard check
         if (isFirebaseActive) {
             const user = firebase.auth().currentUser;
             if (!user || user.email !== 'lshaver.5128@gmail.com') {
-                showToast("Access Denied: Owner account permissions required.", "error");
+                showToast("Owner authorization required.", "error");
                 setRole('seller');
                 return;
             }
         }
-
         btnBuyer.classList.add('active');
         btnSeller.classList.remove('active');
-        
-        renderBuyerDashboard();
-        
-        if (selectedCollectionId && VIEWS['buyer-detail'].classList.contains('active')) {
-            renderBuyerDetail(selectedCollectionId);
-        } else {
-            switchView('buyer-dashboard');
-        }
+        switchView('buyer-dashboard');
     }
 }
 
-// Toast Notification Manager
+// Toast Manager
 function showToast(message, type = 'info') {
-    const container = document.getElementById('toast-container');
+    const container = document.body;
+    let toastContainer = document.getElementById('toast-container');
+    if (!toastContainer) {
+        toastContainer = document.createElement('div');
+        toastContainer.id = 'toast-container';
+        toastContainer.className = 'toast-container';
+        container.appendChild(toastContainer);
+    }
+    
     const toast = document.createElement('div');
     toast.className = `toast ${type === 'success' ? 'success' : ''}`;
-    
-    let icon = '🔔';
-    if (type === 'success') icon = '✅';
-    if (type === 'error') icon = '❌';
-    
-    toast.innerHTML = `<span>${icon}</span> ${message}`;
-    container.appendChild(toast);
+    toast.innerHTML = `<span>${type === 'success' ? '✅' : '🔔'}</span> ${message}`;
+    toastContainer.appendChild(toast);
     
     setTimeout(() => {
-        toast.style.animation = 'fadeIn 0.3s ease reverse forwards';
-        setTimeout(() => {
-            toast.remove();
-        }, 300);
+        toast.style.animation = 'slideIn 0.3s ease reverse forwards';
+        setTimeout(() => toast.remove(), 300);
     }, 3500);
 }
 
 
-// ==================== AUTHENTICATION ACTIONS ====================
-
-// Open Auth Modal
+// ==================== AUTH CONTROLLERS ====================
+let authModalMode = 'login';
 function openAuthModal(mode = 'login') {
     authModalMode = mode;
     const modal = document.getElementById('auth-modal');
@@ -606,27 +773,19 @@ function openAuthModal(mode = 'login') {
     }
 }
 
-function closeAuthModal() {
-    document.getElementById('auth-modal').style.display = 'none';
-}
+function closeAuthModal() { document.getElementById('auth-modal').style.display = 'none'; }
 
-// Auth Tabs click bindings
 document.getElementById('tab-login').addEventListener('click', () => openAuthModal('login'));
 document.getElementById('tab-signup').addEventListener('click', () => openAuthModal('signup'));
 document.getElementById('btn-close-auth-modal').addEventListener('click', closeAuthModal);
-
-// Header Auth button bindings
 document.getElementById('btn-header-signin').addEventListener('click', () => openAuthModal('login'));
 document.getElementById('btn-header-signup').addEventListener('click', () => openAuthModal('signup'));
 document.getElementById('btn-header-signout').addEventListener('click', () => {
     if (isFirebaseActive) {
-        firebase.auth().signOut().then(() => {
-            showToast("Successfully signed out.");
-        });
+        firebase.auth().signOut().then(() => showToast("Signed out successfully."));
     }
 });
 
-// Auth form submit
 document.getElementById('auth-form').addEventListener('submit', (e) => {
     e.preventDefault();
     if (!isFirebaseActive) return;
@@ -634,8 +793,8 @@ document.getElementById('auth-form').addEventListener('submit', (e) => {
     const email = document.getElementById('auth-email').value.trim();
     const password = document.getElementById('auth-password').value;
     const name = document.getElementById('auth-name').value.trim();
-    
     const btnSubmit = document.getElementById('btn-auth-submit');
+    
     btnSubmit.disabled = true;
     btnSubmit.textContent = "Processing...";
     
@@ -645,112 +804,59 @@ document.getElementById('auth-form').addEventListener('submit', (e) => {
                 closeAuthModal();
                 showToast("Welcome back!", "success");
             })
-            .catch(err => {
-                console.error("Login failed:", err);
-                showToast(err.message || "Login failed.", "error");
-            })
+            .catch(err => showToast(err.message, "error"))
             .finally(() => {
                 btnSubmit.disabled = false;
-                btnSubmit.textContent = "Log In";
+                btnSubmit.textContent = 'Log In';
             });
     } else {
-        if (!name) {
-            showToast("Please enter your name", "error");
-            btnSubmit.disabled = false;
-            btnSubmit.textContent = "Create Account";
-            return;
-        }
-        
         firebase.auth().createUserWithEmailAndPassword(email, password)
-            .then((credential) => {
-                // Update User Display Name Profile
-                credential.user.updateProfile({
-                    displayName: name
-                }).then(() => {
+            .then(cred => {
+                cred.user.updateProfile({ displayName: name }).then(() => {
                     closeAuthModal();
-                    showToast(`Account created, welcome ${name}!`, "success");
-                    // Force profile display refresh
+                    showToast(`Welcome, ${name}!`, "success");
                     initDatabase();
                 });
             })
-            .catch(err => {
-                console.error("Signup failed:", err);
-                showToast(err.message || "Account creation failed.", "error");
-            })
+            .catch(err => showToast(err.message, "error"))
             .finally(() => {
                 btnSubmit.disabled = false;
-                btnSubmit.textContent = "Create Account";
+                btnSubmit.textContent = 'Create Account';
             });
     }
 });
 
 
-// ==================== SELLER logic ====================
+// ==================== SELLER WIZARD SUBMISSIONS ====================
 
-// Dropzone Image upload
-const dropzone = document.getElementById('card-dropzone');
-const fileInput = document.getElementById('card-file-input');
-const previewContainer = document.getElementById('card-images-preview');
+// Highlight Dropzone Image uploads
+const cardDropzone = document.getElementById('card-dropzone');
+const cardFileInput = document.getElementById('card-file-input');
+const cardPreview = document.getElementById('card-images-preview');
 
-dropzone.addEventListener('click', () => fileInput.click());
-
-dropzone.addEventListener('dragover', (e) => {
-    e.preventDefault();
-    dropzone.style.borderColor = 'var(--accent-cyan)';
-    dropzone.style.background = 'rgba(6, 182, 212, 0.05)';
-});
-
-dropzone.addEventListener('dragleave', () => {
-    dropzone.style.borderColor = 'var(--border-color)';
-    dropzone.style.background = 'rgba(255, 255, 255, 0.01)';
-});
-
-dropzone.addEventListener('drop', (e) => {
-    e.preventDefault();
-    dropzone.style.borderColor = 'var(--border-color)';
-    dropzone.style.background = 'rgba(255, 255, 255, 0.01)';
-    
-    if (e.dataTransfer.files.length > 0) {
-        handleImageFile(e.dataTransfer.files[0]);
-    }
-});
-
-fileInput.addEventListener('change', (e) => {
+cardDropzone.addEventListener('click', () => cardFileInput.click());
+cardFileInput.addEventListener('change', (e) => {
     if (e.target.files.length > 0) {
-        handleImageFile(e.target.files[0]);
+        const file = e.target.files[0];
+        const reader = new FileReader();
+        reader.onload = (el) => {
+            uploadedCardImageBase64 = el.target.result;
+            cardPreview.innerHTML = `
+                <div class="uploaded-preview-item">
+                    <img src="${uploadedCardImageBase64}">
+                    <button type="button" class="uploaded-preview-remove" id="btn-remove-card-img">×</button>
+                </div>
+            `;
+            document.getElementById('btn-remove-card-img').addEventListener('click', () => {
+                uploadedCardImageBase64 = null;
+                cardPreview.innerHTML = '';
+            });
+        };
+        reader.readAsDataURL(file);
     }
 });
 
-function handleImageFile(file) {
-    if (!file.type.startsWith('image/')) {
-        showToast('Only image files are supported', 'error');
-        return;
-    }
-    
-    const reader = new FileReader();
-    reader.onload = (e) => {
-        uploadedCardImageBase64 = e.target.result;
-        previewContainer.innerHTML = `
-            <div class="uploaded-preview-item">
-                <img src="${uploadedCardImageBase64}">
-                <button type="button" class="uploaded-preview-remove" id="btn-remove-uploaded">×</button>
-            </div>
-        `;
-        document.getElementById('btn-remove-uploaded').addEventListener('click', (e) => {
-            e.stopPropagation();
-            removeUploadedImage();
-        });
-    };
-    reader.readAsDataURL(file);
-}
-
-function removeUploadedImage() {
-    uploadedCardImageBase64 = null;
-    previewContainer.innerHTML = '';
-    fileInput.value = '';
-}
-
-// Add Card to Temp Inventory List
+// Add card highlight to submission list
 document.getElementById('btn-add-card-to-list').addEventListener('click', () => {
     const player = document.getElementById('card-player').value.trim();
     const brand = document.getElementById('card-brand').value.trim();
@@ -759,43 +865,30 @@ document.getElementById('btn-add-card-to-list').addEventListener('click', () => 
     const sport = document.getElementById('collection-sport').value;
     
     if (!player || !brand || !year) {
-        showToast('Please enter Player Name, Brand/Set, and Card Year', 'error');
+        showToast("Please enter player, set, and year details.", "error");
         return;
     }
     
-    const cardImage = uploadedCardImageBase64 || generateCardMockupImage(player, year, brand, sport);
+    const image = uploadedCardImageBase64 || generateCardMockupImage(player, year, brand, sport);
+    tempCards.push({ player, brand, year: parseInt(year), grade, image });
     
-    const cardObj = {
-        player,
-        brand,
-        year: parseInt(year),
-        grade,
-        image: cardImage
-    };
-    
-    tempCards.push(cardObj);
     renderTempCardsList();
     
     document.getElementById('card-player').value = '';
     document.getElementById('card-brand').value = '';
     document.getElementById('card-year').value = '';
-    removeUploadedImage();
+    uploadedCardImageBase64 = null;
+    cardPreview.innerHTML = '';
     
-    showToast(`Added ${player} to list!`);
+    showToast(`Added ${player} highlight!`);
 });
 
 function renderTempCardsList() {
     const container = document.getElementById('temp-cards-list');
-    const badge = document.getElementById('cards-count-badge');
-    
-    badge.textContent = tempCards.length;
+    document.getElementById('cards-count-badge').textContent = tempCards.length;
     
     if (tempCards.length === 0) {
-        container.innerHTML = `
-            <div style="text-align: center; padding: 2rem; color: var(--text-muted); border: 1px dashed var(--border-color); border-radius: 8px;">
-                No cards added yet. Add at least one card detail above.
-            </div>
-        `;
+        container.innerHTML = `<div style="text-align: center; padding: 1.5rem; color: var(--text-muted); border: 1px dashed var(--border-color); border-radius: 8px; font-size: 0.9rem;">No specific highlights cataloged yet.</div>`;
         return;
     }
     
@@ -804,68 +897,124 @@ function renderTempCardsList() {
         const row = document.createElement('div');
         row.className = 'card-item-row';
         row.innerHTML = `
-            <img class="card-item-img" src="${card.image}" alt="Card image">
+            <img class="card-item-img" src="${card.image}">
             <div class="card-item-details">
                 <div class="card-item-name">${card.player}</div>
-                <div class="card-item-meta">${card.year} ${card.brand} • <span style="color: var(--accent-cyan); font-weight: 500;">${card.grade}</span></div>
+                <div class="card-item-meta">${card.year} ${card.brand} • <span style="color:var(--accent-cyan); font-weight:500;">${card.grade}</span></div>
             </div>
-            <button type="button" class="btn btn-secondary btn-sm" style="color: var(--accent-red); border-color: rgba(239,68,68,0.2); padding: 0.25rem 0.5rem;" onclick="removeTempCard(${idx})">
-                Remove
-            </button>
+            <button type="button" class="btn btn-secondary btn-sm" style="color:var(--accent-red); padding: 2px 6px;" onclick="removeTempCard(${idx})">Remove</button>
         `;
         container.appendChild(row);
     });
 }
 
-window.removeTempCard = function(index) {
-    tempCards.splice(index, 1);
+window.removeTempCard = function(idx) {
+    tempCards.splice(idx, 1);
     renderTempCardsList();
+};
+
+// General Files Upload Dropzone (multi-photos / video)
+const genDropzone = document.getElementById('general-dropzone');
+const genFileInput = document.getElementById('general-file-input');
+const genPreview = document.getElementById('general-images-preview');
+
+genDropzone.addEventListener('click', () => genFileInput.click());
+genFileInput.addEventListener('change', (e) => {
+    Array.from(e.target.files).forEach(file => {
+        const reader = new FileReader();
+        reader.onload = (el) => {
+            const base64 = el.target.result;
+            const isVideo = file.type.startsWith('video/');
+            const id = Math.random().toString(36).substr(2, 9);
+            
+            uploadedGeneralFiles.push({ id, base64, isVideo });
+            renderGeneralPreviewList();
+        };
+        reader.readAsDataURL(file);
+    });
+});
+
+function renderGeneralPreviewList() {
+    genPreview.innerHTML = '';
+    uploadedGeneralFiles.forEach((file) => {
+        const wrapper = document.createElement('div');
+        wrapper.className = 'uploaded-preview-item';
+        if (file.isVideo) {
+            wrapper.innerHTML = `
+                <video src="${file.base64}" muted autoplay loop></video>
+                <button type="button" class="uploaded-preview-remove" onclick="removeGeneralUpload('${file.id}')">×</button>
+            `;
+        } else {
+            wrapper.innerHTML = `
+                <img src="${file.base64}">
+                <button type="button" class="uploaded-preview-remove" onclick="removeGeneralUpload('${file.id}')">×</button>
+            `;
+        }
+        genPreview.appendChild(wrapper);
+    });
+}
+
+window.removeGeneralUpload = function(id) {
+    uploadedGeneralFiles = uploadedGeneralFiles.filter(f => f.id !== id);
+    renderGeneralPreviewList();
 };
 
 function resetSubmissionFormState() {
     document.getElementById('submission-form').reset();
     tempCards = [];
-    removeUploadedImage();
+    uploadedGeneralFiles = [];
+    uploadedCardImageBase64 = null;
+    cardPreview.innerHTML = '';
+    genPreview.innerHTML = '';
     renderTempCardsList();
-    document.getElementById('step-2').classList.remove('active');
-    document.getElementById('step-1').classList.add('active');
+    document.getElementById('submission-success-box').style.display = 'none';
+    document.getElementById('submission-card-box').style.display = 'block';
 }
 
-// Submission Form Submit
+// Submission Form Submit Handler
 document.getElementById('submission-form').addEventListener('submit', (e) => {
     e.preventDefault();
     
     if (isFirebaseActive && !firebase.auth().currentUser) {
         openAuthModal('login');
-        showToast("Please sign in or create an account to submit your card collection.", "error");
+        showToast("Please register or sign in to submit your cards.", "error");
         return;
     }
-
-    const name = document.getElementById('collection-name').value.trim();
-    const desc = document.getElementById('collection-desc').value.trim();
-    const sport = document.getElementById('collection-sport').value;
-    const asking = parseFloat(document.getElementById('collection-asking').value);
     
-    if (tempCards.length === 0) {
-        showToast('You must add at least one card to your collection submission', 'error');
-        return;
-    }
+    const sellerName = document.getElementById('collection-seller-name').value.trim();
+    const sellerEmail = document.getElementById('collection-seller-email').value.trim();
+    const sellerPhone = document.getElementById('collection-seller-phone').value.trim();
+    const sellerPref = document.getElementById('collection-seller-pref').value;
+    const sellerLocation = document.getElementById('collection-seller-location').value.trim();
+    const sport = document.getElementById('collection-sport').value;
+    const qty = parseInt(document.getElementById('collection-qty').value);
+    const estVal = parseFloat(document.getElementById('collection-est-val').value) || 0;
+    const asking = parseFloat(document.getElementById('collection-asking').value) || 0;
+    const desc = document.getElementById('collection-desc').value.trim();
+    const deliveryPref = document.getElementById('collection-delivery-pref').value;
     
     const user = isFirebaseActive ? firebase.auth().currentUser : null;
     
-    const newCollection = {
+    const newCol = {
         id: 'col-' + Math.random().toString(36).substr(2, 9),
-        title: name,
+        title: `${sellerName}'s ${sport} Lot`,
         description: desc,
         sport,
-        sellerName: user ? (user.displayName || user.email.split('@')[0]) : 'Luke S.',
-        sellerEmail: user ? user.email : 'luke.s@gmail.com',
-        sellerUid: user ? user.uid : 'sandbox-luke-uid',
+        sellerName,
+        sellerEmail,
+        sellerPhone,
+        sellerPref,
+        sellerLocation,
+        sellerUid: user ? user.uid : 'sandbox-uid',
+        qty,
+        estVal,
         askingPrice: asking,
         offerPrice: 0,
-        status: 'Pending Review',
+        deliveryPref,
+        status: 'New',
         createdAt: new Date().toISOString(),
         cards: [...tempCards],
+        generalImages: [...uploadedGeneralFiles],
         messages: [
             {
                 sender: 'system',
@@ -877,27 +1026,29 @@ document.getElementById('submission-form').addEventListener('submit', (e) => {
     };
     
     if (isFirebaseActive) {
-        db.collection("collections").doc(newCollection.id).set(newCollection)
+        db.collection("collections").doc(newCol.id).set(newCol)
             .then(() => {
-                showToast('Collection submitted to cloud successfully!', 'success');
-                resetSubmissionFormState();
-                switchView('seller-dashboard');
+                document.getElementById('submission-card-box').style.display = 'none';
+                document.getElementById('submission-success-box').style.display = 'block';
+                showToast("Collection submitted successfully!", "success");
             })
             .catch(err => {
                 console.error("Firestore submission failed:", err);
-                showToast('Error uploading. Check Firebase configuration.', 'error');
+                showToast("Failed to upload to database.", "error");
             });
     } else {
-        collections.push(newCollection);
-        saveDatabase();
-        resetSubmissionFormState();
-        showToast('Collection saved to local sandbox!', 'success');
-        renderSellerDashboard();
-        switchView('seller-dashboard');
+        collections.push(newCol);
+        saveLocalCollections();
+        document.getElementById('submission-card-box').style.display = 'none';
+        document.getElementById('submission-success-box').style.display = 'block';
+        showToast("Collection saved in local sandbox!", "success");
+        triggerUIRefresh();
     }
 });
 
-// Render Seller Dashboard
+
+// ==================== SELLER DASHBOARD RENDERS ====================
+
 function renderSellerDashboard() {
     const listContainer = document.getElementById('seller-collections-list');
     listContainer.innerHTML = '';
@@ -906,7 +1057,7 @@ function renderSellerDashboard() {
         listContainer.innerHTML = `
             <div class="glass-card" style="grid-column: 1 / -1; text-align: center; padding: 4rem; color: var(--text-secondary);">
                 <p style="font-size: 1.2rem; margin-bottom: 1.5rem;">You haven't submitted any card collections yet.</p>
-                <button class="btn btn-primary" onclick="switchView('seller-submit')">Submit First Collection</button>
+                <button class="btn btn-primary" onclick="switchView('seller-submit')">Submit My First Collection</button>
             </div>
         `;
         return;
@@ -916,13 +1067,14 @@ function renderSellerDashboard() {
         const card = document.createElement('div');
         card.className = 'glass-card collection-card';
         card.addEventListener('click', () => {
-            renderSellerDetail(col.id);
+            selectedCollectionId = col.id;
+            switchView('seller-detail');
         });
         
         let badgeClass = 'badge-pending';
-        if (col.status === 'Negotiating') badgeClass = 'badge-negotiating';
+        if (col.status === 'Reviewing' || col.status === 'Negotiating') badgeClass = 'badge-negotiating';
         if (col.status === 'Offer Made') badgeClass = 'badge-offer';
-        if (col.status === 'Bought') badgeClass = 'badge-bought';
+        if (col.status === 'Bought' || col.status === 'Purchased' || col.status === 'Accepted') badgeClass = 'badge-bought';
         if (col.status === 'Declined') badgeClass = 'badge-declined';
         
         let previewHtml = '';
@@ -933,29 +1085,9 @@ function renderSellerDashboard() {
             previewHtml += `<div class="collection-preview-placeholder">+${col.cards.length - 4}</div>`;
         }
         
-        let pricingFooter = '';
-        if (col.status === 'Offer Made') {
-            pricingFooter = `
-                <div class="collection-price-box">
-                    <span class="price-label">Our Offer</span>
-                    <span class="price-val offer">$${col.offerPrice.toLocaleString()}</span>
-                </div>
-            `;
-        } else if (col.status === 'Bought') {
-            pricingFooter = `
-                <div class="collection-price-box">
-                    <span class="price-label">Purchased For</span>
-                    <span class="price-val bought">$${col.offerPrice.toLocaleString()}</span>
-                </div>
-            `;
-        } else {
-            pricingFooter = `
-                <div class="collection-price-box">
-                    <span class="price-label">Asking Price</span>
-                    <span class="price-val">$${col.askingPrice.toLocaleString()}</span>
-                </div>
-            `;
-        }
+        let priceText = `Asking: $${col.askingPrice.toLocaleString()}`;
+        if (col.status === 'Offer Made') priceText = `Offer: $${col.offerPrice.toLocaleString()}`;
+        if (col.status === 'Bought' || col.status === 'Purchased' || col.status === 'Accepted') priceText = `Bought: $${col.offerPrice.toLocaleString()}`;
         
         card.innerHTML = `
             <div>
@@ -965,56 +1097,38 @@ function renderSellerDashboard() {
                 </div>
                 <h3 class="collection-title">${col.title}</h3>
                 <div class="collection-meta">
-                    <span>🏀 ${col.sport}</span>
-                    <span>🃏 ${col.cards.length} Cards</span>
+                    <span>📦 ${col.qty} Items</span>
+                    <span>🃏 ${col.cards.length} Highlights</span>
                 </div>
-                <div class="collection-preview-row">
-                    ${previewHtml}
-                </div>
+                <div class="collection-preview-row" style="margin-top:1rem;">${previewHtml}</div>
             </div>
             <div class="collection-card-footer">
-                ${pricingFooter}
-                <span style="font-size: 0.85rem; color: var(--accent-cyan); font-weight: 600; display: inline-flex; align-items: center; gap: 4px;">
-                    View & Negotiate 
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-                </span>
+                <span class="price-val" style="font-size:1.1rem;">${priceText}</span>
+                <span style="font-size: 0.85rem; color: var(--accent-cyan); font-weight: 600;">Inspect Offer →</span>
             </div>
         `;
         listContainer.appendChild(card);
     });
 }
 
-// Render Seller Detail View
 function renderSellerDetail(id) {
-    selectedCollectionId = id;
     const col = collections.find(c => c.id === id);
     if (!col) return;
     
-    switchView('seller-detail');
-    
     document.getElementById('seller-detail-title').textContent = col.title;
     document.getElementById('seller-detail-desc').textContent = col.description;
-    document.getElementById('seller-detail-sport').textContent = col.sport;
-    document.getElementById('seller-detail-card-count').textContent = col.cards.length;
     
     const badge = document.getElementById('seller-detail-status');
     badge.textContent = col.status;
     badge.className = 'badge';
-    if (col.status === 'Pending Review') badge.classList.add('badge-pending');
-    if (col.status === 'Negotiating') badge.classList.add('badge-negotiating');
+    if (col.status === 'New') badge.classList.add('badge-pending');
+    if (col.status === 'Reviewing' || col.status === 'Negotiating') badge.classList.add('badge-negotiating');
     if (col.status === 'Offer Made') badge.classList.add('badge-offer');
-    if (col.status === 'Bought') badge.classList.add('badge-bought');
+    if (col.status === 'Bought' || col.status === 'Purchased' || col.status === 'Accepted') badge.classList.add('badge-bought');
     if (col.status === 'Declined') badge.classList.add('badge-declined');
     
     const headerPrice = document.getElementById('seller-chat-header-price');
-    if (col.status === 'Offer Made' || col.status === 'Bought') {
-        headerPrice.textContent = `$${col.offerPrice.toLocaleString()}`;
-        headerPrice.className = 'price-val offer';
-        if (col.status === 'Bought') headerPrice.className = 'price-val bought';
-    } else {
-        headerPrice.textContent = `$${col.askingPrice.toLocaleString()}`;
-        headerPrice.className = 'price-val';
-    }
+    headerPrice.textContent = `$${(col.offerPrice > 0 ? col.offerPrice : col.askingPrice).toLocaleString()}`;
     
     const statusBox = document.getElementById('seller-status-alert-box');
     const chatActionBox = document.getElementById('seller-chat-action-box');
@@ -1024,38 +1138,26 @@ function renderSellerDetail(id) {
     
     if (col.status === 'Offer Made') {
         statusBox.innerHTML = `
-            <div class="glass-card" style="padding: 0.75rem 1.25rem; border-color: var(--accent-orange); background: rgba(249, 115, 22, 0.05); display: flex; align-items: center; justify-content: space-between; gap: 1rem;">
-                <div style="font-size: 0.9rem;">
-                    🔥 <strong style="color: var(--accent-orange);">Offer Received:</strong> Vault 28 offered <strong>$${col.offerPrice.toLocaleString()}</strong> for this collection.
-                </div>
+            <div class="glass-card" style="padding: 1rem; border-color: var(--accent-cyan); background: rgba(223,183,80,0.05);">
+                🔥 <strong>Offer Received:</strong> Vault 28 offered <strong>$${col.offerPrice.toLocaleString()}</strong> for this collection.
             </div>
         `;
         
         chatActionBox.style.display = 'block';
         chatActionBox.innerHTML = `
-            <div class="chat-offer-card">
-                <div class="chat-offer-header">
-                    <span>Valuation Counter Offer</span>
-                    <span class="badge badge-offer">Active</span>
-                </div>
-                <div class="chat-offer-val">$${col.offerPrice.toLocaleString()}</div>
-                <p style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 0.25rem;">Accepting seals the deal. We will contact you immediately to coordinate shipping and payments.</p>
-                <div class="chat-offer-actions">
-                    <button class="btn btn-success btn-sm" style="flex: 1;" onclick="sellerAcceptOffer('${col.id}')">Accept Offer</button>
-                    <button class="btn btn-secondary btn-sm" style="flex: 1; color: var(--accent-red);" onclick="sellerDeclineOffer('${col.id}')">Decline / Counter</button>
+            <div class="chat-offer-card" style="background:rgba(223,183,80,0.05); border:1px solid var(--accent-cyan); border-radius:8px; padding:1rem; margin-bottom:1rem;">
+                <div style="font-weight:600; font-family:var(--font-title); margin-bottom:0.25rem;">VALUATION COUNTER OFFER</div>
+                <div style="font-size:1.75rem; font-weight:700; color:var(--accent-cyan); margin-bottom:0.5rem;">$${col.offerPrice.toLocaleString()}</div>
+                <div style="display:flex; gap:0.5rem;">
+                    <button class="btn btn-primary btn-sm" style="flex:1;" onclick="sellerAcceptOffer('${col.id}')">Accept Offer</button>
+                    <button class="btn btn-secondary btn-sm" style="flex:1; color:var(--accent-red);" onclick="sellerDeclineOffer('${col.id}')">Decline / Counter</button>
                 </div>
             </div>
         `;
-    } else if (col.status === 'Bought') {
+    } else if (col.status === 'Bought' || col.status === 'Purchased' || col.status === 'Accepted') {
         statusBox.innerHTML = `
-            <div class="glass-card" style="padding: 0.75rem 1.25rem; border-color: var(--accent-emerald); background: rgba(13, 243, 163, 0.05); font-size: 0.9rem;">
-                🎉 <strong>Deal Closed!</strong> Vault 28 bought this collection for <strong>$${col.offerPrice.toLocaleString()}</strong>. Check messages below for shipping address instructions.
-            </div>
-        `;
-    } else if (col.status === 'Declined') {
-        statusBox.innerHTML = `
-            <div class="glass-card" style="padding: 0.75rem 1.25rem; border-color: var(--accent-red); background: rgba(239, 68, 68, 0.05); font-size: 0.9rem; color: var(--text-secondary);">
-                🔒 This collection submission has been declined by the buying desk.
+            <div class="glass-card" style="padding: 1rem; border-color: var(--accent-emerald); background: rgba(13,243,163,0.05);">
+                🎉 <strong>Deal Closed!</strong> Purchased for <strong>$${col.offerPrice.toLocaleString()}</strong>.
             </div>
         `;
     }
@@ -1063,27 +1165,9 @@ function renderSellerDetail(id) {
     // Render Slabs
     const slabContainer = document.getElementById('seller-detail-slab-visuals');
     slabContainer.innerHTML = '';
-    
     col.cards.forEach(card => {
-        let gradeNum = '9';
-        let gradeText = 'MINT';
-        
-        if (card.grade.includes('10')) {
-            gradeNum = '10';
-            gradeText = 'GEM MT';
-        } else if (card.grade.includes('9.5')) {
-            gradeNum = '9.5';
-            gradeText = 'GEM MT';
-        } else if (card.grade.includes('8')) {
-            gradeNum = '8';
-            gradeText = 'NM-MT';
-        } else if (card.grade.toLowerCase().includes('excellent')) {
-            gradeNum = '6';
-            gradeText = 'EX';
-        } else if (card.grade.toLowerCase().includes('played') || card.grade.toLowerCase().includes('good')) {
-            gradeNum = '4';
-            gradeText = 'VG';
-        }
+        const gradeNum = card.grade.match(/\d+/) ? card.grade.match(/\d+/)[0] : '9';
+        const gradeText = card.grade.split(' ').slice(1).join(' ').toUpperCase() || 'MINT';
         
         const slab = document.createElement('div');
         slab.className = 'card-slab';
@@ -1092,50 +1176,61 @@ function renderSellerDetail(id) {
                 <div class="slab-label-brand">VAULT 28 GRADING</div>
                 <div class="slab-label-info">
                     <span class="card-player">${card.player}</span>
-                    <span>${card.year} ${card.brand.split('#')[0].trim()}</span>
+                    <span>${card.year} ${card.brand}</span>
                 </div>
                 <div class="slab-label-grade-box">
                     <div class="slab-label-grade-num">${gradeNum}</div>
                     <div class="slab-label-grade-text">${gradeText}</div>
                 </div>
             </div>
-            <div class="slab-image-container">
-                <img class="slab-image" src="${card.image}">
-            </div>
-            <div class="slab-footer">${card.player} - #${card.brand.split('#')[1] || 'Rookie'}</div>
+            <div class="slab-image-container"><img class="slab-image" src="${card.image}"></div>
+            <div class="slab-footer">${card.player}</div>
         `;
         slabContainer.appendChild(slab);
     });
     
-    // Inventory List
-    const invContainer = document.getElementById('seller-detail-cards-list');
-    invContainer.innerHTML = '';
-    col.cards.forEach(card => {
-        const item = document.createElement('div');
-        item.className = 'card-item-row';
-        item.innerHTML = `
-            <img class="card-item-img" src="${card.image}" alt="">
+    // Table Details
+    const listContainer = document.getElementById('seller-detail-cards-list');
+    listContainer.innerHTML = '';
+    col.cards.forEach(c => {
+        const row = document.createElement('div');
+        row.className = 'card-item-row';
+        row.innerHTML = `
+            <img class="card-item-img" src="${c.image}">
             <div class="card-item-details">
-                <div class="card-item-name">${card.player}</div>
-                <div class="card-item-meta">${card.year} ${card.brand}</div>
+                <div class="card-item-name">${c.player}</div>
+                <div class="card-item-meta">${c.year} ${c.brand}</div>
             </div>
-            <div class="card-item-price">${card.grade}</div>
+            <div class="price-val" style="font-size:0.9rem;">${c.grade}</div>
         `;
-        invContainer.appendChild(item);
+        listContainer.appendChild(row);
     });
-    
+
     renderChatMessages('seller-chat-messages', col.messages, 'seller');
 }
 
-// Chat Suggestions Chips
-document.getElementById('seller-chat-suggestions').addEventListener('click', (e) => {
-    if (e.target.classList.contains('chat-suggestion-chip')) {
-        document.getElementById('seller-chat-input').value = e.target.textContent;
-        document.getElementById('seller-chat-input').focus();
-    }
-});
+// Chat rendering helper
+function renderChatMessages(elementId, msgs, perspective) {
+    const box = document.getElementById(elementId);
+    box.innerHTML = '';
+    msgs.forEach(m => {
+        const div = document.createElement('div');
+        div.className = `chat-bubble-wrapper ${m.sender === perspective ? 'sent' : m.sender === 'system' ? 'system' : 'received'}`;
+        
+        if (m.sender === 'system') {
+            div.innerHTML = `<div class="chat-bubble-system">⚙️ ${m.text}</div>`;
+        } else {
+            div.innerHTML = `
+                <div class="chat-bubble-sender">${m.senderName}</div>
+                <div class="chat-bubble">${m.text}</div>
+            `;
+        }
+        box.appendChild(div);
+    });
+    box.scrollTop = box.scrollHeight;
+}
 
-// Seller Chat Submit
+// Seller chat submission
 document.getElementById('seller-chat-form').addEventListener('submit', (e) => {
     e.preventDefault();
     const input = document.getElementById('seller-chat-input');
@@ -1146,204 +1241,184 @@ document.getElementById('seller-chat-form').addEventListener('submit', (e) => {
     if (!col) return;
     
     const user = isFirebaseActive ? firebase.auth().currentUser : null;
-    const sellerName = user ? (user.displayName || user.email.split('@')[0]) : col.sellerName;
+    const name = user ? (user.displayName || user.email.split('@')[0]) : col.sellerName;
     
     const newMsg = {
         sender: 'seller',
-        senderName: sellerName,
-        text: text,
+        senderName: name,
+        text,
         timestamp: new Date().toISOString()
     };
     
-    const nextStatus = col.status === 'Pending Review' ? 'Negotiating' : col.status;
+    const nextStatus = col.status === 'Offer Made' ? 'Negotiating' : col.status;
     
     if (isFirebaseActive) {
         db.collection("collections").doc(selectedCollectionId).update({
             status: nextStatus,
             messages: firebase.firestore.FieldValue.arrayUnion(newMsg)
-        }).then(() => {
-            input.value = '';
-        }).catch(err => {
-            console.error("Cloud chat failed:", err);
-            showToast("Failed to sync message.", "error");
-        });
+        }).then(() => input.value = '');
     } else {
         col.messages.push(newMsg);
         col.status = nextStatus;
-        saveDatabase();
+        saveLocalCollections();
         input.value = '';
-        renderSellerDetail(col.id);
-        notifyBuyerOfMessage(col.title);
+        renderSellerDetail(selectedCollectionId);
+        showToast("Message sent to local sandbox!", "success");
     }
 });
 
-function notifyBuyerOfMessage(colTitle) {
-    if (currentActiveRole === 'seller') {
-        document.getElementById('buyer-update-dot').style.display = 'block';
-        showToast(`Buyer Desk: New message received on "${colTitle}"`);
+// ChatSuggestion Chips binding
+document.getElementById('seller-chat-suggestions').addEventListener('click', (e) => {
+    if (e.target.classList.contains('chat-suggestion-chip')) {
+        document.getElementById('seller-chat-input').value = e.target.textContent;
+        document.getElementById('seller-chat-input').focus();
     }
-}
+});
 
-// Seller Accept Offer
 window.sellerAcceptOffer = function(id) {
     const col = collections.find(c => c.id === id);
     if (!col) return;
     
-    const systemMsg = {
-        sender: 'system',
-        senderName: 'System',
-        text: 'Offer accepted! The transaction is locked. Vault 28 will process payment.',
-        timestamp: new Date().toISOString()
-    };
-    
-    const buyerMsg = {
-        sender: 'buyer',
-        senderName: 'V28 Buying Desk',
-        text: `Congratulations on the sale! We have registered this purchase of $${col.offerPrice.toLocaleString()}. Please pack the cards securely in bubble wrap and top loaders, and ship them to: Vault 28 Headquarters, 100 Collector Way, Suite A, New York, NY 10001. Please reply with the tracking number!`,
-        timestamp: new Date().toISOString()
-    };
+    const msg1 = { sender: 'system', senderName: 'System', text: 'Offer accepted! Deal is closed.', timestamp: new Date().toISOString() };
+    const msg2 = { sender: 'buyer', senderName: 'V28 Buying Desk', text: `We purchased this collection for $${col.offerPrice.toLocaleString()}. Please pack the items securely and ship them to: Vault 28 Headquarters, 100 Collector Way, Suite A, New York, NY 10001, or contact us to coordinate pickup.`, timestamp: new Date().toISOString() };
     
     if (isFirebaseActive) {
         db.collection("collections").doc(id).update({
-            status: 'Bought',
-            messages: firebase.firestore.FieldValue.arrayUnion(systemMsg, buyerMsg)
-        }).then(() => {
-            showToast('Offer accepted! Deal closed!', 'success');
-        }).catch(err => {
-            showToast('Accept failed.', 'error');
+            status: 'Accepted',
+            messages: firebase.firestore.FieldValue.arrayUnion(msg1, msg2)
         });
     } else {
-        col.status = 'Bought';
-        col.messages.push(systemMsg, buyerMsg);
-        saveDatabase();
-        showToast('Offer accepted! Deal closed!', 'success');
-        renderSellerDetail(col.id);
+        col.status = 'Accepted';
+        col.messages.push(msg1, msg2);
+        saveLocalCollections();
+        triggerUIRefresh();
+        showToast("Offer accepted!", "success");
     }
 };
 
-// Seller Decline Offer
 window.sellerDeclineOffer = function(id) {
     const col = collections.find(c => c.id === id);
     if (!col) return;
     
-    const systemMsg = {
-        sender: 'system',
-        senderName: 'System',
-        text: 'Seller declined the offer and opened negotiations.',
-        timestamp: new Date().toISOString()
-    };
+    const msg = { sender: 'system', senderName: 'System', text: 'Seller declined the offer and opened negotiations.', timestamp: new Date().toISOString() };
     
     if (isFirebaseActive) {
         db.collection("collections").doc(id).update({
             status: 'Negotiating',
-            messages: firebase.firestore.FieldValue.arrayUnion(systemMsg)
-        }).then(() => {
-            showToast('Offer declined. Chat is open.');
-        }).catch(err => {
-            showToast('Decline failed.', 'error');
+            messages: firebase.firestore.FieldValue.arrayUnion(msg)
         });
     } else {
         col.status = 'Negotiating';
-        col.messages.push(systemMsg);
-        saveDatabase();
-        showToast('Offer declined. You can message the buying desk directly to explain your counter price.');
-        renderSellerDetail(col.id);
+        col.messages.push(msg);
+        saveLocalCollections();
+        triggerUIRefresh();
+        showToast("Offer declined. Chat is open.");
     }
 };
 
 
-// ==================== BUYER (OWNER) DESK logic ====================
+// ==================== ADMIN console / dashboard ====================
 
-// Render Buyer Dashboard Overview
+// Admin tab switcher
+function setAdminTab(tabName) {
+    activeAdminTab = tabName;
+    const btnSub = document.getElementById('tab-btn-submissions');
+    const btnInv = document.getElementById('tab-btn-inventory');
+    const btnCon = document.getElementById('tab-btn-content');
+    
+    const panelSub = document.getElementById('panel-submissions');
+    const panelInv = document.getElementById('panel-inventory');
+    const panelCon = document.getElementById('panel-content');
+    
+    [btnSub, btnInv, btnCon].forEach(btn => btn.classList.remove('active'));
+    [panelSub, panelInv, panelCon].forEach(panel => panel.classList.remove('active'));
+    
+    if (tabName === 'submissions') {
+        btnSub.classList.add('active');
+        panelSub.classList.add('active');
+    } else if (tabName === 'inventory') {
+        btnInv.classList.add('active');
+        panelInv.classList.add('active');
+        renderAdminInventoryTable();
+    } else {
+        btnCon.classList.add('active');
+        panelCon.classList.add('active');
+        renderAdminReviewsList();
+    }
+}
+
+document.getElementById('tab-btn-submissions').addEventListener('click', () => setAdminTab('submissions'));
+document.getElementById('tab-btn-inventory').addEventListener('click', () => setAdminTab('inventory'));
+document.getElementById('tab-btn-content').addEventListener('click', () => setAdminTab('content'));
+
+// Render Admin submissions list
 function renderBuyerDashboard() {
     const tableBody = document.getElementById('buyer-submissions-list-rows');
     tableBody.innerHTML = '';
     
-    const totalSub = collections.length;
-    const pendingVal = collections.filter(c => c.status === 'Pending Review').length;
-    const activeNeg = collections.filter(c => c.status === 'Offer Made' || c.status === 'Negotiating').length;
-    const dealsClosed = collections.filter(c => c.status === 'Bought').length;
-    
-    document.getElementById('stat-total-submissions').textContent = totalSub;
-    document.getElementById('stat-pending-valuations').textContent = pendingVal;
-    document.getElementById('stat-active-negotiations').textContent = activeNeg;
-    document.getElementById('stat-deals-closed').textContent = dealsClosed;
+    // Stats calculations
+    document.getElementById('stat-total-submissions').textContent = collections.length;
+    document.getElementById('stat-pending-valuations').textContent = collections.filter(c => c.status === 'New' || c.status === 'Reviewing').length;
+    document.getElementById('stat-active-negotiations').textContent = collections.filter(c => c.status === 'Offer Made' || c.status === 'Negotiating').length;
+    document.getElementById('stat-deals-closed').textContent = collections.filter(c => c.status === 'Accepted' || c.status === 'Purchased' || c.status === 'Bought').length;
     
     if (collections.length === 0) {
-        tableBody.innerHTML = `
-            <tr>
-                <td colspan="8" style="text-align: center; padding: 3rem; color: var(--text-muted);">
-                    No submissions received yet.
-                </td>
-            </tr>
-        `;
+        tableBody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding:3rem; color:var(--text-muted);">No submissions received yet.</td></tr>`;
         return;
     }
     
-    const sorted = [...collections].sort((a,b) => {
-        if (a.status === 'Pending Review' && b.status !== 'Pending Review') return -1;
-        if (a.status !== 'Pending Review' && b.status === 'Pending Review') return 1;
-        return new Date(b.createdAt) - new Date(a.createdAt);
-    });
-    
-    sorted.forEach(col => {
+    collections.forEach(col => {
         const row = document.createElement('tr');
         row.style.borderBottom = '1px solid var(--border-color)';
-        row.style.fontSize = '0.92rem';
         row.className = 'table-row-hover';
         
         let badgeClass = 'badge-pending';
-        if (col.status === 'Negotiating') badgeClass = 'badge-negotiating';
+        if (col.status === 'Reviewing' || col.status === 'Negotiating') badgeClass = 'badge-negotiating';
         if (col.status === 'Offer Made') badgeClass = 'badge-offer';
-        if (col.status === 'Bought') badgeClass = 'badge-bought';
+        if (col.status === 'Bought' || col.status === 'Purchased' || col.status === 'Accepted') badgeClass = 'badge-bought';
         if (col.status === 'Declined') badgeClass = 'badge-declined';
         
-        const offerVal = col.offerPrice > 0 ? `$${col.offerPrice.toLocaleString()}` : '—';
-        
         row.innerHTML = `
-            <td style="padding: 1.2rem 0.5rem; font-weight: 600; color: var(--text-primary);">${col.title}</td>
-            <td style="padding: 1.2rem 0.5rem; color: var(--text-secondary);">${col.sellerName}</td>
-            <td style="padding: 1.2rem 0.5rem; color: var(--text-secondary);">🏀 ${col.sport}</td>
-            <td style="padding: 1.2rem 0.5rem; color: var(--text-secondary);">${col.cards.length}</td>
-            <td style="padding: 1.2rem 0.5rem; font-weight: 600; color: var(--text-secondary);">$${col.askingPrice.toLocaleString()}</td>
-            <td style="padding: 1.2rem 0.5rem; font-weight: 700; color: ${col.status === 'Bought' ? 'var(--accent-emerald)' : 'var(--accent-orange)'};">${offerVal}</td>
-            <td style="padding: 1.2rem 0.5rem;"><span class="badge ${badgeClass}">${col.status}</span></td>
-            <td style="padding: 1.2rem 0.5rem; text-align: right;">
-                <button class="btn btn-outline-cyan btn-sm" onclick="renderBuyerDetail('${col.id}')">
-                    Inspect & Value
-                </button>
+            <td style="padding: 1rem 0.5rem; font-weight:600;">${col.title}</td>
+            <td style="padding: 1rem 0.5rem;">${col.sellerName}</td>
+            <td style="padding: 1rem 0.5rem;">${col.sport}</td>
+            <td style="padding: 1rem 0.5rem;">${col.qty}</td>
+            <td style="padding: 1rem 0.5rem;">$${col.askingPrice.toLocaleString()}</td>
+            <td style="padding: 1rem 0.5rem; font-weight: 700; color:var(--accent-cyan);">$${(col.offerPrice || 0).toLocaleString()}</td>
+            <td style="padding: 1rem 0.5rem;"><span class="badge ${badgeClass}">${col.status}</span></td>
+            <td style="padding: 1rem 0.5rem; text-align:right;">
+                <button class="btn btn-outline-cyan btn-sm" onclick="openAdminReview('${col.id}')">Inspect & Value</button>
             </td>
         `;
         tableBody.appendChild(row);
     });
 }
 
-// Render Buyer/Review Detail Page
-function renderBuyerDetail(id) {
+window.openAdminReview = function(id) {
     selectedCollectionId = id;
+    switchView('buyer-detail');
+};
+
+function renderBuyerDetail(id) {
     const col = collections.find(c => c.id === id);
     if (!col) return;
     
-    switchView('buyer-detail');
-    
     document.getElementById('buyer-detail-title').textContent = col.title;
-    document.getElementById('buyer-detail-desc').textContent = col.description;
-    document.getElementById('buyer-detail-sport').textContent = col.sport;
-    document.getElementById('buyer-detail-seller-name').textContent = col.sellerName;
-    document.getElementById('buyer-detail-card-count').textContent = col.cards.length;
+    document.getElementById('buyer-detail-seller-name').textContent = `${col.sellerName} (${col.sellerEmail} | ${col.sellerPhone})`;
+    document.getElementById('buyer-detail-card-count').textContent = `${col.qty} items`;
     
     const badge = document.getElementById('buyer-detail-status');
     badge.textContent = col.status;
     badge.className = 'badge';
-    if (col.status === 'Pending Review') badge.classList.add('badge-pending');
-    if (col.status === 'Negotiating') badge.classList.add('badge-negotiating');
+    if (col.status === 'New') badge.classList.add('badge-pending');
+    if (col.status === 'Reviewing' || col.status === 'Negotiating') badge.classList.add('badge-negotiating');
     if (col.status === 'Offer Made') badge.classList.add('badge-offer');
-    if (col.status === 'Bought') badge.classList.add('badge-bought');
+    if (col.status === 'Bought' || col.status === 'Purchased' || col.status === 'Accepted') badge.classList.add('badge-bought');
     if (col.status === 'Declined') badge.classList.add('badge-declined');
     
-    document.getElementById('buyer-val-asking').value = col.askingPrice;
+    document.getElementById('buyer-val-asking').value = `$${col.askingPrice.toLocaleString()}`;
     document.getElementById('buyer-val-offer').value = col.offerPrice > 0 ? col.offerPrice : Math.floor(col.askingPrice * 0.85);
-    document.getElementById('buyer-offer-note').value = '';
+    document.getElementById('buyer-set-status-select').value = col.status;
     
     const headerPrice = document.getElementById('buyer-chat-header-price');
     headerPrice.textContent = `$${col.askingPrice.toLocaleString()}`;
@@ -1352,51 +1427,19 @@ function renderBuyerDetail(id) {
     chatAvatar.textContent = col.sellerName.charAt(0);
     document.getElementById('buyer-chat-seller-title').textContent = col.sellerName;
     
+    // Status specific alerts
     const statusBox = document.getElementById('buyer-status-alert-box');
     statusBox.innerHTML = '';
     if (col.status === 'Offer Made') {
-        statusBox.innerHTML = `
-            <div class="glass-card" style="padding: 0.75rem 1.25rem; border-color: var(--accent-orange); background: rgba(249, 115, 22, 0.05); font-size: 0.9rem;">
-                ⏳ <strong>Offer Sent:</strong> An active offer of <strong>$${col.offerPrice.toLocaleString()}</strong> has been delivered to the seller. Awaiting decision.
-            </div>
-        `;
-    } else if (col.status === 'Bought') {
-        statusBox.innerHTML = `
-            <div class="glass-card" style="padding: 0.75rem 1.25rem; border-color: var(--accent-emerald); background: rgba(13, 243, 163, 0.05); font-size: 0.9rem;">
-                🎉 <strong>Deal Closed!</strong> You purchased this collection for <strong>$${col.offerPrice.toLocaleString()}</strong>.
-            </div>
-        `;
-    } else if (col.status === 'Declined') {
-        statusBox.innerHTML = `
-            <div class="glass-card" style="padding: 0.75rem 1.25rem; border-color: var(--accent-red); background: rgba(239, 68, 68, 0.05); font-size: 0.9rem; color: var(--text-secondary);">
-                🚫 This submission has been declined.
-            </div>
-        `;
+        statusBox.innerHTML = `<div class="glass-card" style="padding:0.75rem 1rem; border-color:var(--accent-cyan); background:rgba(223,183,80,0.05);">⏳ Active offer of <strong>$${col.offerPrice.toLocaleString()}</strong> sent. Awaiting seller.</div>`;
     }
     
-    // Render Slabs
+    // Slabs
     const slabContainer = document.getElementById('buyer-detail-slab-visuals');
     slabContainer.innerHTML = '';
-    
     col.cards.forEach(card => {
-        let gradeNum = '9';
-        let gradeText = 'MINT';
-        if (card.grade.includes('10')) {
-            gradeNum = '10';
-            gradeText = 'GEM MT';
-        } else if (card.grade.includes('9.5')) {
-            gradeNum = '9.5';
-            gradeText = 'GEM MT';
-        } else if (card.grade.includes('8')) {
-            gradeNum = '8';
-            gradeText = 'NM-MT';
-        } else if (card.grade.toLowerCase().includes('excellent')) {
-            gradeNum = '6';
-            gradeText = 'EX';
-        } else if (card.grade.toLowerCase().includes('played') || card.grade.toLowerCase().includes('good')) {
-            gradeNum = '4';
-            gradeText = 'VG';
-        }
+        const gradeNum = card.grade.match(/\d+/) ? card.grade.match(/\d+/)[0] : '9';
+        const gradeText = card.grade.split(' ').slice(1).join(' ').toUpperCase() || 'MINT';
         
         const slab = document.createElement('div');
         slab.className = 'card-slab';
@@ -1405,42 +1448,68 @@ function renderBuyerDetail(id) {
                 <div class="slab-label-brand">VAULT 28 GRADING</div>
                 <div class="slab-label-info">
                     <span class="card-player">${card.player}</span>
-                    <span>${card.year} ${card.brand.split('#')[0].trim()}</span>
+                    <span>${card.year} ${card.brand}</span>
                 </div>
                 <div class="slab-label-grade-box">
                     <div class="slab-label-grade-num">${gradeNum}</div>
                     <div class="slab-label-grade-text">${gradeText}</div>
                 </div>
             </div>
-            <div class="slab-image-container">
-                <img class="slab-image" src="${card.image}">
-            </div>
-            <div class="slab-footer">${card.player} - #${card.brand.split('#')[1] || 'Rookie'}</div>
+            <div class="slab-image-container"><img class="slab-image" src="${card.image}"></div>
+            <div class="slab-footer">${card.player}</div>
         `;
         slabContainer.appendChild(slab);
     });
     
-    // Inventory List
-    const invContainer = document.getElementById('buyer-detail-cards-list');
-    invContainer.innerHTML = '';
-    col.cards.forEach(card => {
-        const item = document.createElement('div');
-        item.className = 'card-item-row';
-        item.innerHTML = `
-            <img class="card-item-img" src="${card.image}" alt="">
+    // Table Details
+    const listContainer = document.getElementById('buyer-detail-cards-list');
+    listContainer.innerHTML = '';
+    col.cards.forEach(c => {
+        const row = document.createElement('div');
+        row.className = 'card-item-row';
+        row.innerHTML = `
+            <img class="card-item-img" src="${c.image}">
             <div class="card-item-details">
-                <div class="card-item-name">${card.player}</div>
-                <div class="card-item-meta">${card.year} ${card.brand}</div>
+                <div class="card-item-name">${c.player}</div>
+                <div class="card-item-meta">${c.year} ${c.brand}</div>
             </div>
-            <div class="card-item-price">${card.grade}</div>
+            <div class="price-val" style="font-size:0.9rem;">${c.grade}</div>
         `;
-        invContainer.appendChild(item);
+        listContainer.appendChild(row);
     });
-    
+
     renderChatMessages('buyer-chat-messages', col.messages, 'buyer');
 }
 
-// Buyer Suggestions Chips
+// Buyer actions: send offers
+document.getElementById('btn-buyer-send-offer').addEventListener('click', () => {
+    const offerVal = parseFloat(document.getElementById('buyer-val-offer').value);
+    const note = document.getElementById('buyer-offer-note').value.trim();
+    if (!offerVal || !selectedCollectionId) return;
+    
+    const col = collections.find(c => c.id === selectedCollectionId);
+    if (!col) return;
+    
+    const msg1 = { sender: 'system', senderName: 'System', text: `Vault 28 Buying Desk made a counter offer of $${offerVal.toLocaleString()}.`, timestamp: new Date().toISOString() };
+    const msg2 = { sender: 'buyer', senderName: 'V28 Buying Desk', text: note ? `Offer notes: ${note}` : `Based on market research, we can make you a counter offer of $${offerVal.toLocaleString()}. Let us know if you accept!`, timestamp: new Date().toISOString() };
+    
+    if (isFirebaseActive) {
+        db.collection("collections").doc(selectedCollectionId).update({
+            status: 'Offer Made',
+            offerPrice: offerVal,
+            messages: firebase.firestore.FieldValue.arrayUnion(msg1, msg2)
+        });
+    } else {
+        col.status = 'Offer Made';
+        col.offerPrice = offerVal;
+        col.messages.push(msg1, msg2);
+        saveLocalCollections();
+        triggerUIRefresh();
+        showToast("Offer counter sent successfully!", "success");
+    }
+});
+
+// Admin chat suggestions
 document.getElementById('buyer-chat-suggestions').addEventListener('click', (e) => {
     if (e.target.classList.contains('chat-suggestion-chip')) {
         document.getElementById('buyer-chat-input').value = e.target.textContent;
@@ -1448,7 +1517,7 @@ document.getElementById('buyer-chat-suggestions').addEventListener('click', (e) 
     }
 });
 
-// Buyer Chat Submit
+// Buyer chat submission
 document.getElementById('buyer-chat-form').addEventListener('submit', (e) => {
     e.preventDefault();
     const input = document.getElementById('buyer-chat-input');
@@ -1461,244 +1530,700 @@ document.getElementById('buyer-chat-form').addEventListener('submit', (e) => {
     const newMsg = {
         sender: 'buyer',
         senderName: 'V28 Buying Desk',
-        text: text,
+        text,
         timestamp: new Date().toISOString()
     };
     
-    const nextStatus = col.status === 'Pending Review' ? 'Negotiating' : col.status;
+    const nextStatus = col.status === 'New' ? 'Reviewing' : col.status;
     
     if (isFirebaseActive) {
         db.collection("collections").doc(selectedCollectionId).update({
             status: nextStatus,
             messages: firebase.firestore.FieldValue.arrayUnion(newMsg)
-        }).then(() => {
-            input.value = '';
-        }).catch(err => {
-            console.error("Cloud chat failed:", err);
-            showToast("Failed to sync message.", "error");
-        });
+        }).then(() => input.value = '');
     } else {
         col.messages.push(newMsg);
         col.status = nextStatus;
-        saveDatabase();
+        saveLocalCollections();
         input.value = '';
-        renderBuyerDetail(col.id);
-        notifySellerOfMessage(col.title);
+        renderBuyerDetail(selectedCollectionId);
+        showToast("Message sent to local sandbox!", "success");
     }
 });
 
-function notifySellerOfMessage(colTitle) {
-    if (currentActiveRole === 'seller') {
-        showToast(`Buying Desk: New message received on "${colTitle}"`);
-        if (selectedCollectionId) {
-            renderSellerDetail(selectedCollectionId);
-        }
-    }
-}
-
-// Buyer Action: Send Counter Offer
-document.getElementById('btn-buyer-send-offer').addEventListener('click', () => {
-    const offerInput = document.getElementById('buyer-val-offer');
-    const offerVal = parseFloat(offerInput.value);
-    const note = document.getElementById('buyer-offer-note').value.trim();
-    
-    if (!offerVal || !selectedCollectionId) {
-        showToast('Please enter a valid counter offer price', 'error');
-        return;
-    }
-    
-    const col = collections.find(c => c.id === selectedCollectionId);
-    if (!col) return;
-    
-    const systemMsg = {
-        sender: 'system',
-        senderName: 'System',
-        text: `Vault 28 Buying Desk made a counter offer of $${offerVal.toLocaleString()}.`,
-        timestamp: new Date().toISOString()
-    };
-    
-    const customMsg = {
-        sender: 'buyer',
-        senderName: 'V28 Buying Desk',
-        text: note ? `Offer details: ${note}` : `We have reviewed your collection and can make a counter offer of $${offerVal.toLocaleString()}. Let us know if you accept!`,
-        timestamp: new Date().toISOString()
-    };
-    
-    if (isFirebaseActive) {
-        db.collection("collections").doc(selectedCollectionId).update({
-            status: 'Offer Made',
-            offerPrice: offerVal,
-            messages: firebase.firestore.FieldValue.arrayUnion(systemMsg, customMsg)
-        }).then(() => {
-            showToast('Counter offer sent!', 'success');
-        }).catch(err => {
-            showToast('Counter offer failed.', 'error');
-        });
-    } else {
-        col.status = 'Offer Made';
-        col.offerPrice = offerVal;
-        col.messages.push(systemMsg, customMsg);
-        saveDatabase();
-        showToast('Counter offer sent to seller!', 'success');
-        renderBuyerDetail(col.id);
-    }
-});
-
-// Buyer Action: Buy at Asking
+// Buyer buy at asking
 document.getElementById('btn-buyer-buy-asking').addEventListener('click', () => {
     if (!selectedCollectionId) return;
-    
     const col = collections.find(c => c.id === selectedCollectionId);
     if (!col) return;
     
-    const systemMsg = {
-        sender: 'system',
-        senderName: 'System',
-        text: `Vault 28 accepted the asking price and purchased the collection for $${col.askingPrice.toLocaleString()}!`,
-        timestamp: new Date().toISOString()
-    };
-    
-    const buyerMsg = {
-        sender: 'buyer',
-        senderName: 'V28 Buying Desk',
-        text: `We have accepted your asking price of $${col.askingPrice.toLocaleString()}! The deal is closed. Please ship the cards to our headquarters (Vault 28 Headquarters, 100 Collector Way, Suite A, New York, NY 10001) and let us know the tracking number here. Payment will be processed immediately upon receipt and inspection of the package.`,
-        timestamp: new Date().toISOString()
-    };
+    const msg1 = { sender: 'system', senderName: 'System', text: `Vault 28 accepted asking price of $${col.askingPrice.toLocaleString()}!`, timestamp: new Date().toISOString() };
+    const msg2 = { sender: 'buyer', senderName: 'V28 Buying Desk', text: `We accept your asking price of $${col.askingPrice.toLocaleString()}! Please pack the items securely and ship to our headquarters. Payout will be issued immediately upon arrival and checklist inspection.`, timestamp: new Date().toISOString() };
     
     if (isFirebaseActive) {
         db.collection("collections").doc(selectedCollectionId).update({
-            status: 'Bought',
+            status: 'Accepted',
             offerPrice: col.askingPrice,
-            messages: firebase.firestore.FieldValue.arrayUnion(systemMsg, buyerMsg)
-        }).then(() => {
-            showToast('Collection bought at asking!', 'success');
-        }).catch(err => {
-            showToast('Purchase failed.', 'error');
+            messages: firebase.firestore.FieldValue.arrayUnion(msg1, msg2)
         });
     } else {
-        col.status = 'Bought';
+        col.status = 'Accepted';
         col.offerPrice = col.askingPrice;
-        col.messages.push(systemMsg, buyerMsg);
-        saveDatabase();
-        showToast('Collection bought at asking price!', 'success');
-        renderBuyerDetail(col.id);
+        col.messages.push(msg1, msg2);
+        saveLocalCollections();
+        triggerUIRefresh();
+        showToast("Purchased collection at asking!", "success");
     }
 });
 
-// Buyer Action: Decline
+// Buyer decline
 document.getElementById('btn-buyer-decline').addEventListener('click', () => {
     if (!selectedCollectionId) return;
-    
     const col = collections.find(c => c.id === selectedCollectionId);
     if (!col) return;
     
-    const systemMsg = {
-        sender: 'system',
-        senderName: 'System',
-        text: 'This submission has been declined by Vault 28.',
-        timestamp: new Date().toISOString()
-    };
-    
-    const buyerMsg = {
-        sender: 'buyer',
-        senderName: 'V28 Buying Desk',
-        text: 'Thank you for submitting your collection. Unfortunately, we are not purchasing these specific cards at this time. Good luck with your sales!',
-        timestamp: new Date().toISOString()
-    };
+    const msg1 = { sender: 'system', senderName: 'System', text: 'Vault 28 has declined this submission.', timestamp: new Date().toISOString() };
+    const msg2 = { sender: 'buyer', senderName: 'V28 Buying Desk', text: 'Thank you for submitting your collectibles. Unfortunately, we are not purchasing these specific items at this time. Best of luck with your cards!', timestamp: new Date().toISOString() };
     
     if (isFirebaseActive) {
         db.collection("collections").doc(selectedCollectionId).update({
             status: 'Declined',
-            messages: firebase.firestore.FieldValue.arrayUnion(systemMsg, buyerMsg)
-        }).then(() => {
-            showToast('Submission declined.');
-        }).catch(err => {
-            showToast('Decline failed.', 'error');
+            messages: firebase.firestore.FieldValue.arrayUnion(msg1, msg2)
         });
     } else {
         col.status = 'Declined';
-        col.messages.push(systemMsg, buyerMsg);
-        saveDatabase();
-        showToast('Submission declined.');
-        renderBuyerDetail(col.id);
+        col.messages.push(msg1, msg2);
+        saveLocalCollections();
+        triggerUIRefresh();
+        showToast("Submission declined.");
+    }
+});
+
+// Manual status override selector
+document.getElementById('buyer-set-status-select').addEventListener('change', (e) => {
+    const nextStatus = e.target.value;
+    if (!selectedCollectionId) return;
+    
+    const col = collections.find(c => c.id === selectedCollectionId);
+    if (!col) return;
+    
+    const msg = { sender: 'system', senderName: 'System', text: `Admin overridden status label to: ${nextStatus}`, timestamp: new Date().toISOString() };
+    
+    if (isFirebaseActive) {
+        db.collection("collections").doc(selectedCollectionId).update({
+            status: nextStatus,
+            messages: firebase.firestore.FieldValue.arrayUnion(msg)
+        });
+    } else {
+        col.status = nextStatus;
+        col.messages.push(msg);
+        saveLocalCollections();
+        triggerUIRefresh();
+        showToast(`Status updated to: ${nextStatus}`);
+    }
+});
+
+
+// ==================== ADMIN SHOP INVENTORY MANAGEMENT ====================
+
+// Add product image uploader bindings
+const prodDropzone = document.getElementById('admin-prod-dropzone');
+const prodFileInput = document.getElementById('admin-prod-file-input');
+const prodPreview = document.getElementById('admin-prod-image-preview');
+let uploadedProductImageBase64 = null;
+
+prodDropzone.addEventListener('click', () => prodFileInput.click());
+prodFileInput.addEventListener('change', (e) => {
+    if (e.target.files.length > 0) {
+        const file = e.target.files[0];
+        const reader = new FileReader();
+        reader.onload = (el) => {
+            uploadedProductImageBase64 = el.target.result;
+            prodPreview.innerHTML = `
+                <div class="uploaded-preview-item" style="width: 120px; height: 120px;">
+                    <img src="${uploadedProductImageBase64}">
+                    <button type="button" class="uploaded-preview-remove" id="btn-remove-prod-img">×</button>
+                </div>
+            `;
+            document.getElementById('btn-remove-prod-img').addEventListener('click', () => {
+                uploadedProductImageBase64 = null;
+                prodPreview.innerHTML = '';
+            });
+        };
+        reader.readAsDataURL(file);
+    }
+});
+
+// Add / Edit Product Submit
+document.getElementById('admin-product-form').addEventListener('submit', (e) => {
+    e.preventDefault();
+    
+    const id = document.getElementById('admin-prod-id').value;
+    const title = document.getElementById('admin-prod-title').value.trim();
+    const price = parseFloat(document.getElementById('admin-prod-price').value);
+    const condition = document.getElementById('admin-prod-condition').value.trim();
+    const category = document.getElementById('admin-prod-category').value;
+    const availability = document.getElementById('admin-prod-availability').value;
+    const desc = document.getElementById('admin-prod-desc').value.trim();
+    const shipping = document.getElementById('admin-prod-shipping').value.trim();
+    
+    const fallbackImage = generateCardMockupImage(title, 2026, category, category);
+    const image = uploadedProductImageBase64 || fallbackImage;
+    
+    const prodId = id || 'prod-' + Math.random().toString(36).substr(2, 9);
+    const newProd = {
+        id: prodId,
+        title,
+        price,
+        condition,
+        category,
+        availability,
+        description: desc,
+        shipping,
+        image,
+        createdAt: new Date().toISOString()
+    };
+    
+    if (isFirebaseActive) {
+        db.collection("products").doc(prodId).set(newProd)
+            .then(() => {
+                showToast("Product listing saved successfully!", "success");
+                resetAdminProductForm();
+            });
+    } else {
+        const existingIdx = products.findIndex(p => p.id === prodId);
+        if (existingIdx > -1) {
+            // Keep original image if no new image was uploaded
+            if (!uploadedProductImageBase64) {
+                newProd.image = products[existingIdx].image;
+            }
+            products[existingIdx] = newProd;
+        } else {
+            products.push(newProd);
+        }
+        
+        saveLocalProducts();
+        showToast("Product saved locally!", "success");
+        resetAdminProductForm();
+        renderAdminInventoryTable();
+        renderShopCatalog();
+        renderFeaturedInventory();
+    }
+});
+
+function resetAdminProductForm() {
+    document.getElementById('admin-product-form').reset();
+    document.getElementById('admin-prod-id').value = '';
+    document.getElementById('admin-inventory-form-title').textContent = 'Add New Shop Product';
+    document.getElementById('btn-admin-prod-cancel').style.display = 'none';
+    document.getElementById('btn-admin-prod-submit').textContent = 'Save Product Listing';
+    uploadedProductImageBase64 = null;
+    prodPreview.innerHTML = '';
+    currentEditingProductId = null;
+}
+
+document.getElementById('btn-admin-prod-cancel').addEventListener('click', resetAdminProductForm);
+
+// Render Admin Product Listings Table
+function renderAdminInventoryTable() {
+    const tableBody = document.getElementById('admin-inventory-list-rows');
+    tableBody.innerHTML = '';
+    
+    if (products.length === 0) {
+        tableBody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:2rem; color:var(--text-muted);">No products listed yet.</td></tr>`;
+        return;
+    }
+    
+    products.forEach(p => {
+        const row = document.createElement('tr');
+        row.style.borderBottom = '1px solid var(--border-color)';
+        
+        row.innerHTML = `
+            <td style="padding:0.5rem;"><img src="${p.image}" style="width:40px; height:40px; object-fit:cover; border-radius:4px; border:1px solid var(--border-color);"></td>
+            <td style="padding:0.5rem; font-weight:600; font-size:0.88rem;">${p.title}</td>
+            <td style="padding:0.5rem; font-size:0.88rem;">$${p.price.toLocaleString()}</td>
+            <td style="padding:0.5rem; font-size:0.85rem; color:var(--text-secondary);">${p.category}</td>
+            <td style="padding:0.5rem;"><span class="badge ${p.availability === 'Available' ? 'badge-bought' : 'badge-declined'}" style="font-size:0.7rem; padding: 2px 6px;">${p.availability}</span></td>
+            <td style="padding:0.5rem; text-align:right;">
+                <button class="btn btn-secondary btn-sm" style="padding: 2px 6px; font-size: 0.75rem;" onclick="editAdminProduct('${p.id}')">Edit</button>
+                <button class="btn btn-secondary btn-sm" style="color:var(--accent-red); padding: 2px 6px; font-size: 0.75rem;" onclick="deleteAdminProduct('${p.id}')">Delete</button>
+            </td>
+        `;
+        tableBody.appendChild(row);
+    });
+}
+
+window.editAdminProduct = function(id) {
+    const p = products.find(prod => prod.id === id);
+    if (!p) return;
+    
+    currentEditingProductId = id;
+    document.getElementById('admin-prod-id').value = p.id;
+    document.getElementById('admin-prod-title').value = p.title;
+    document.getElementById('admin-prod-price').value = p.price;
+    document.getElementById('admin-prod-condition').value = p.condition;
+    document.getElementById('admin-prod-category').value = p.category;
+    document.getElementById('admin-prod-availability').value = p.availability;
+    document.getElementById('admin-prod-desc').value = p.description;
+    document.getElementById('admin-prod-shipping').value = p.shipping;
+    
+    uploadedProductImageBase64 = p.image;
+    prodPreview.innerHTML = `
+        <div class="uploaded-preview-item" style="width: 120px; height: 120px;">
+            <img src="${p.image}">
+            <button type="button" class="uploaded-preview-remove" id="btn-remove-prod-img">×</button>
+        </div>
+    `;
+    document.getElementById('btn-remove-prod-img').addEventListener('click', () => {
+        uploadedProductImageBase64 = null;
+        prodPreview.innerHTML = '';
+    });
+    
+    document.getElementById('admin-inventory-form-title').textContent = 'Edit Shop Product';
+    document.getElementById('btn-admin-prod-cancel').style.display = 'inline-block';
+    document.getElementById('btn-admin-prod-submit').textContent = 'Update Product Listing';
+    
+    window.scrollTo({ top: document.getElementById('admin-product-form').offsetTop - 100, behavior: 'smooth' });
+};
+
+window.deleteAdminProduct = function(id) {
+    if (!confirm("Are you sure you want to delete this product listing?")) return;
+    
+    if (isFirebaseActive) {
+        db.collection("products").doc(id).delete()
+            .then(() => showToast("Product deleted.", "success"));
+    } else {
+        products = products.filter(p => p.id !== id);
+        saveLocalProducts();
+        showToast("Product deleted locally.", "success");
+        renderAdminInventoryTable();
+        renderShopCatalog();
+        renderFeaturedInventory();
+    }
+};
+
+
+// ==================== ADMIN CONTENT MANAGEMENT ====================
+
+// Add Review Submit
+document.getElementById('admin-review-form').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const name = document.getElementById('admin-rev-name').value.trim();
+    const location = document.getElementById('admin-rev-location').value.trim();
+    const stars = parseInt(document.getElementById('admin-rev-stars').value);
+    const text = document.getElementById('admin-rev-text').value.trim();
+    
+    const revId = 'rev-' + Math.random().toString(36).substr(2, 9);
+    const newRev = { id: revId, name, location, stars, text };
+    
+    if (isFirebaseActive) {
+        db.collection("reviews").doc(revId).set(newRev)
+            .then(() => {
+                showToast("Testimonial added to homepage!", "success");
+                document.getElementById('admin-review-form').reset();
+            });
+    } else {
+        reviews.push(newRev);
+        saveLocalReviews();
+        showToast("Testimonial added locally!", "success");
+        document.getElementById('admin-review-form').reset();
+        renderPublicReviews();
+        renderAdminReviewsList();
+    }
+});
+
+function renderAdminReviewsList() {
+    const list = document.getElementById('admin-reviews-list');
+    list.innerHTML = '';
+    
+    if (reviews.length === 0) {
+        list.innerHTML = `<div style="color:var(--text-muted); font-size:0.88rem;">No customer testimonials listed.</div>`;
+        return;
+    }
+    
+    reviews.forEach(r => {
+        const item = document.createElement('div');
+        item.style.padding = '0.75rem';
+        item.style.border = '1px solid var(--border-color)';
+        item.style.borderRadius = '8px';
+        item.style.background = 'rgba(0,0,0,0.1)';
+        item.style.display = 'flex';
+        item.style.justifyContent = 'space-between';
+        item.style.alignItems = 'center';
+        
+        let starsStr = '⭐'.repeat(r.stars);
+        
+        item.innerHTML = `
+            <div style="font-size:0.85rem;">
+                <strong>${r.name} (${r.location})</strong> - ${starsStr}
+                <p style="color:var(--text-secondary); margin:4px 0 0 0; font-size:0.8rem; font-style:italic;">"${r.text.substring(0, 70)}..."</p>
+            </div>
+            <button class="btn btn-secondary btn-sm" style="color:var(--accent-red); padding:2px 6px; font-size:0.75rem;" onclick="deleteAdminReview('${r.id}')">Delete</button>
+        `;
+        list.appendChild(item);
+    });
+}
+
+window.deleteAdminReview = function(id) {
+    if (!confirm("Remove this review from your website?")) return;
+    
+    if (isFirebaseActive) {
+        db.collection("reviews").doc(id).delete()
+            .then(() => showToast("Review removed.", "success"));
+    } else {
+        reviews = reviews.filter(r => r.id !== id);
+        saveLocalReviews();
+        showToast("Review removed locally.", "success");
+        renderPublicReviews();
+        renderAdminReviewsList();
+    }
+};
+
+// Website Settings Manager form submit
+document.getElementById('admin-settings-form').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const email = document.getElementById('admin-set-email').value.trim();
+    const area = document.getElementById('admin-set-area').value.trim();
+    
+    const newSettings = { email, area };
+    
+    if (isFirebaseActive) {
+        db.collection("settings").doc("config").set(newSettings)
+            .then(() => showToast("Website contact settings updated!", "success"));
+    } else {
+        settings = newSettings;
+        saveLocalSettings();
+        showToast("Contact details saved locally!", "success");
+        renderSettingsDetails();
+    }
+});
+
+function renderSettingsDetails() {
+    // Update contact settings forms
+    document.getElementById('admin-set-email').value = settings.email;
+    document.getElementById('admin-set-area').value = settings.area;
+    
+    // Update contact elements
+    document.getElementById('contact-info-email').textContent = settings.email;
+    document.getElementById('contact-info-email').href = `mailto:${settings.email}`;
+    document.getElementById('contact-info-area').textContent = settings.area;
+}
+
+// Reset Database button trigger
+document.getElementById('btn-admin-reset-db').addEventListener('click', () => {
+    if (!confirm("Are you sure you want to delete all customizations and reseed the platform with defaults? This will erase all custom cards and collections.")) return;
+    
+    if (isFirebaseActive) {
+        showToast("Reset cloud database in Firebase console. Local reset starting...");
+        // Fallback local reset
+    }
+    
+    localStorage.clear();
+    collections = [];
+    products = [];
+    reviews = [];
+    settings = {
+        email: "info@vault28cards.com",
+        area: "Summerville, Charleston, and surrounding SC areas (Or secure nationwide shipping)"
+    };
+    
+    showToast("Local Database Reset. Reseeding...", "success");
+    initDatabase();
+});
+
+
+// ==================== PUBLIC SECTION RENDERS ====================
+
+// Render Shop Catalog Grid
+function renderShopCatalog() {
+    const grid = document.getElementById('shop-catalog-grid');
+    if (!grid) return;
+    
+    grid.innerHTML = '';
+    
+    const searchVal = document.getElementById('shop-search').value.toLowerCase().trim();
+    const selectedCategories = Array.from(document.querySelectorAll('.shop-category-filter:checked')).map(c => c.value);
+    const maxPrice = parseFloat(document.getElementById('shop-price-slider').value);
+    const sortVal = document.getElementById('shop-sort').value;
+    
+    let filtered = products.filter(p => {
+        const matchesSearch = p.title.toLowerCase().includes(searchVal) || p.description.toLowerCase().includes(searchVal);
+        const matchesCategory = selectedCategories.length === 0 || selectedCategories.includes(p.category);
+        const matchesPrice = p.price <= maxPrice;
+        return matchesSearch && matchesCategory && matchesPrice;
+    });
+    
+    // Sorting
+    if (sortVal === 'price-low') filtered.sort((a,b) => a.price - b.price);
+    else if (sortVal === 'price-high') filtered.sort((a,b) => b.price - a.price);
+    else if (sortVal === 'title-asc') filtered.sort((a,b) => a.title.localeCompare(b.title));
+    else filtered.sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt));
+    
+    if (filtered.length === 0) {
+        grid.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:4rem; color:var(--text-muted);">No products match your search filters.</div>`;
+        return;
+    }
+    
+    filtered.forEach(p => {
+        const card = document.createElement('div');
+        card.className = 'glass-card product-card';
+        card.addEventListener('click', () => openProductModal(p.id));
+        
+        let badgeClass = p.availability === 'Available' ? 'badge-bought' : 'badge-declined';
+        
+        card.innerHTML = `
+            <div class="product-card-img-wrapper">
+                <img class="product-card-img" src="${p.image}">
+                <span class="product-badge ${badgeClass}">${p.availability}</span>
+            </div>
+            <div style="padding:1rem; display:flex; flex-direction:column; gap:0.5rem; flex-grow:1;">
+                <span style="font-size:0.75rem; color:var(--text-muted); font-weight:600; text-transform:uppercase;">${p.category}</span>
+                <h3 style="font-size:1rem; margin:0; line-height:1.4; flex-grow:1; font-family:var(--font-title); font-weight:600;">${p.title}</h3>
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-top:0.5rem; border-top:1px solid var(--border-color); padding-top:0.5rem;">
+                    <span class="price-val" style="font-size:1.1rem; color:var(--accent-cyan); font-weight:700;">$${p.price.toLocaleString()}</span>
+                    <span style="font-size:0.8rem; color:var(--text-secondary);">${p.condition}</span>
+                </div>
+            </div>
+        `;
+        grid.appendChild(card);
+    });
+}
+
+// Shop search and filters event listeners
+document.getElementById('shop-search').addEventListener('input', renderShopCatalog);
+document.querySelectorAll('.shop-category-filter').forEach(chk => chk.addEventListener('change', renderShopCatalog));
+document.getElementById('shop-price-slider').addEventListener('input', (e) => {
+    document.getElementById('shop-price-display').textContent = `$${parseFloat(e.target.value).toLocaleString()}`;
+    renderShopCatalog();
+});
+document.getElementById('shop-sort').addEventListener('change', renderShopCatalog);
+document.getElementById('btn-reset-shop-filters').addEventListener('click', () => {
+    document.getElementById('shop-search').value = '';
+    document.querySelectorAll('.shop-category-filter').forEach(chk => chk.checked = false);
+    document.getElementById('shop-price-slider').value = 5000;
+    document.getElementById('shop-price-display').textContent = '$5,000';
+    document.getElementById('shop-sort').value = 'recent';
+    renderShopCatalog();
+});
+
+// Product Modal Viewer
+function openProductModal(id) {
+    selectedProductId = id;
+    const p = products.find(prod => prod.id === id);
+    if (!p) return;
+    
+    document.getElementById('shop-modal-img').src = p.image;
+    document.getElementById('shop-modal-title').textContent = p.title;
+    document.getElementById('shop-modal-price').textContent = `$${p.price.toLocaleString()}`;
+    document.getElementById('shop-modal-category').textContent = p.category;
+    document.getElementById('shop-modal-condition').textContent = p.condition;
+    document.getElementById('shop-modal-status').textContent = p.availability;
+    
+    const statusLabel = document.getElementById('shop-modal-status');
+    statusLabel.className = p.availability === 'Available' ? 'badge-bought' : 'badge-declined';
+    
+    document.getElementById('shop-modal-shipping').textContent = p.shipping;
+    document.getElementById('shop-modal-desc').textContent = p.description;
+    
+    const inquireBtn = document.getElementById('btn-shop-modal-inquire');
+    if (p.availability === 'Sold') {
+        inquireBtn.disabled = true;
+        inquireBtn.textContent = 'Listing Sold';
+        inquireBtn.className = 'btn btn-secondary';
+    } else {
+        inquireBtn.disabled = false;
+        inquireBtn.textContent = 'Inquire / Buy Card';
+        inquireBtn.className = 'btn btn-primary';
+    }
+    
+    document.getElementById('shop-product-modal').style.display = 'flex';
+}
+
+document.getElementById('btn-close-shop-modal').addEventListener('click', () => {
+    document.getElementById('shop-product-modal').style.display = 'none';
+});
+
+// Product inquiry CTA click handler
+document.getElementById('btn-shop-modal-inquire').addEventListener('click', () => {
+    if (!selectedProductId) return;
+    const p = products.find(prod => prod.id === selectedProductId);
+    if (!p) return;
+    
+    document.getElementById('shop-product-modal').style.display = 'none';
+    switchView('contact');
+    
+    // Autofill contact inquiry subject
+    document.getElementById('contact-inquiry-subject').value = `Inquiry on Shop Item: ${p.title}`;
+    document.getElementById('contact-inquiry-message').value = `Hi Vault 28, I saw the "${p.title}" listed in your shop for $${p.price.toLocaleString()} and would like to coordinate purchase/shipping options. Thanks!`;
+    
+    window.scrollTo({ top: document.getElementById('contact-form-inquiry').offsetTop - 100, behavior: 'smooth' });
+    showToast("Opening inquiry email. Please enter your contact info.");
+});
+
+// Render Featured Shop Inventory on homepage
+function renderFeaturedInventory() {
+    const container = document.getElementById('landing-featured-inventory');
+    if (!container) return;
+    
+    container.innerHTML = '';
+    const active = products.filter(p => p.availability === 'Available').slice(0, 3);
+    
+    if (active.length === 0) {
+        container.innerHTML = `<div style="grid-column:1/-1; text-align:center; color:var(--text-muted);">No products currently featured.</div>`;
+        return;
+    }
+    
+    active.forEach(p => {
+        const card = document.createElement('div');
+        card.className = 'glass-card product-card';
+        card.addEventListener('click', () => openProductModal(p.id));
+        
+        card.innerHTML = `
+            <div class="product-card-img-wrapper">
+                <img class="product-card-img" src="${p.image}">
+            </div>
+            <div style="padding:1rem; display:flex; flex-direction:column; gap:0.5rem; flex-grow:1;">
+                <span style="font-size:0.75rem; color:var(--text-muted); font-weight:600; text-transform:uppercase;">${p.category}</span>
+                <h3 style="font-size:1rem; margin:0; line-height:1.4; flex-grow:1; font-family:var(--font-title); font-weight:600;">${p.title}</h3>
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-top:0.5rem; border-top:1px solid var(--border-color); padding-top:0.5rem;">
+                    <span class="price-val" style="font-size:1.1rem; color:var(--accent-cyan); font-weight:700;">$${p.price.toLocaleString()}</span>
+                    <span style="font-size:0.8rem; color:var(--text-secondary);">${p.condition}</span>
+                </div>
+            </div>
+        `;
+        container.appendChild(card);
+    });
+}
+
+// Render Public Reviews Testimonials
+function renderPublicReviews() {
+    const container = document.getElementById('landing-reviews-container');
+    if (!container) return;
+    
+    container.innerHTML = '';
+    reviews.forEach(r => {
+        const card = document.createElement('div');
+        card.className = 'glass-card review-card';
+        
+        let starsStr = '★'.repeat(r.stars) + '☆'.repeat(5 - r.stars);
+        
+        card.innerHTML = `
+            <div class="review-stars">${starsStr}</div>
+            <p class="review-comment">"${r.text}"</p>
+            <div style="margin-top:0.5rem;">
+                <div class="review-author">${r.name}</div>
+                <div class="review-location">${r.location}</div>
+            </div>
+        `;
+        container.appendChild(card);
+    });
+}
+
+// Render Recently Purchased Gallery on Landing page (displays our real JPGs)
+function renderRecentlyPurchasedGallery() {
+    const container = document.getElementById('landing-recent-gallery');
+    if (!container) return;
+    
+    container.innerHTML = `
+        <div class="glass-card" style="display: flex; flex-direction: column; gap: 0.75rem; padding: 1rem;">
+            <img src="assets/inventory3.jpg" alt="1989 Bowman" style="width: 100%; height: 180px; object-fit: cover; border-radius: 8px; border: 1px solid var(--border-color);">
+            <h3 style="font-size: 1.05rem; margin-top: 0.5rem; font-family: var(--font-title); font-weight: 600;">1989 Bowman & Vintage Baseball Lot</h3>
+            <p style="color: var(--text-secondary); font-size: 0.82rem; line-height: 1.5; flex-grow: 1;">Unopened 1989 Bowman Baseball boxes and multiple sorted storage cases of 70s-90s vintage baseball cards.</p>
+            <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border-color); padding-top: 0.5rem; font-size: 0.78rem; color: var(--text-muted);">
+                <span>📍 Summerville, SC</span>
+                <span class="badge badge-bought">Purchased</span>
+            </div>
+        </div>
+        
+        <div class="glass-card" style="display: flex; flex-direction: column; gap: 0.75rem; padding: 1rem;">
+            <img src="assets/inventory2.jpg" alt="Vintage Binders" style="width: 100%; height: 180px; object-fit: cover; border-radius: 8px; border: 1px solid var(--border-color);">
+            <h3 style="font-size: 1.05rem; margin-top: 0.5rem; font-family: var(--font-title); font-weight: 600;">Classic Baseball Binders Lot</h3>
+            <p style="color: var(--text-secondary); font-size: 0.82rem; line-height: 1.5; flex-grow: 1;">Acquired two massive card albums filled with 1970s and 1980s Topps, featuring rookie team sets and Hall of Famers.</p>
+            <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border-color); padding-top: 0.5rem; font-size: 0.78rem; color: var(--text-muted);">
+                <span>📍 Charleston, SC</span>
+                <span class="badge badge-bought">Purchased</span>
+            </div>
+        </div>
+
+        <div class="glass-card" style="display: flex; flex-direction: column; gap: 0.75rem; padding: 1rem;">
+            <img src="assets/inventory4.jpg" alt="90s Sports Banners" style="width: 100%; height: 180px; object-fit: cover; border-radius: 8px; border: 1px solid var(--border-color);">
+            <h3 style="font-size: 1.05rem; margin-top: 0.5rem; font-family: var(--font-title); font-weight: 600;">90s Basketball & Memorabilia Lot</h3>
+            <p style="color: var(--text-secondary); font-size: 0.82rem; line-height: 1.5; flex-grow: 1;">A local buy of 90s basketball sets, hobby boxes, vintage Future Stars magazines, and classic team banners.</p>
+            <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border-color); padding-top: 0.5rem; font-size: 0.78rem; color: var(--text-muted);">
+                <span>📍 Mt. Pleasant, SC</span>
+                <span class="badge badge-bought">Purchased</span>
+            </div>
+        </div>
+    `;
+}
+
+// Contact Inquiry Submission Handler
+document.getElementById('contact-form-inquiry').addEventListener('submit', (e) => {
+    e.preventDefault();
+    
+    const name = document.getElementById('contact-inquiry-name').value.trim();
+    const email = document.getElementById('contact-inquiry-email').value.trim();
+    const subject = document.getElementById('contact-inquiry-subject').value.trim();
+    const msg = document.getElementById('contact-inquiry-message').value.trim();
+    
+    const newInquiry = {
+        id: 'inq-' + Math.random().toString(36).substr(2, 9),
+        name,
+        email,
+        subject,
+        message: msg,
+        createdAt: new Date().toISOString()
+    };
+    
+    if (isFirebaseActive) {
+        db.collection("inquiries").doc(newInquiry.id).set(newInquiry)
+            .then(() => {
+                showToast(`Thank you, ${name}! Your inquiry has been sent.`, "success");
+                document.getElementById('contact-form-inquiry').reset();
+            });
+    } else {
+        inquiries.push(newInquiry);
+        localStorage.setItem('v28_inquiries', JSON.stringify(inquiries));
+        showToast(`Inquiry saved to local sandbox!`, "success");
+        document.getElementById('contact-form-inquiry').reset();
     }
 });
 
 
 // ==================== GLOBAL CONTROLS & BINDINGS ====================
 
-// Brand Logo Home Redirect
 document.getElementById('brand-logo').addEventListener('click', (e) => {
     e.preventDefault();
-    resetSubmissionFormState();
-    if (currentActiveRole === 'seller') {
-        switchView('seller-landing');
-    } else {
-        switchView('buyer-dashboard');
-    }
-});
-
-document.getElementById('btn-hero-sell').addEventListener('click', () => {
-    switchView('seller-submit');
-});
-
-document.getElementById('btn-hero-browse').addEventListener('click', () => {
-    switchView('seller-dashboard');
-});
-
-document.getElementById('btn-cancel-submit').addEventListener('click', () => {
-    resetSubmissionFormState();
     switchView('seller-landing');
 });
+document.getElementById('btn-nav-free-offer').addEventListener('click', () => switchView('seller-submit'));
+document.getElementById('btn-hero-sell').addEventListener('click', () => switchView('seller-submit'));
+document.getElementById('btn-hero-browse').addEventListener('click', () => switchView('shop'));
 
-document.getElementById('btn-seller-back-dashboard').addEventListener('click', () => {
-    switchView('seller-dashboard');
-});
-
+document.getElementById('btn-dashboard-new').addEventListener('click', () => switchView('seller-submit'));
+document.getElementById('btn-seller-back-dashboard').addEventListener('click', () => switchView('seller-dashboard'));
 document.getElementById('btn-buyer-back-dashboard').addEventListener('click', () => {
     renderBuyerDashboard();
     switchView('buyer-dashboard');
 });
 
-document.getElementById('btn-dashboard-new').addEventListener('click', () => {
-    switchView('seller-submit');
-});
-
-// Role switcher bindings
 document.getElementById('btn-role-seller').addEventListener('click', () => setRole('seller'));
 document.getElementById('btn-role-buyer').addEventListener('click', () => setRole('buyer'));
 
-// Contact Form Submission Handling
-function initContactForm() {
-    const contactForm = document.getElementById('contact-form');
-    if (contactForm) {
-        contactForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            const name = document.getElementById('contact-name').value.trim();
-            showToast(`Thank you, ${name}! Your message has been sent.`, "success");
-            contactForm.reset();
-        });
-    }
-}
-
-// Scroll Reveal Observer
+// Scroll Reveal observer
 function initScrollReveal() {
     const reveals = document.querySelectorAll('.reveal');
     const observer = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
             if (entry.isIntersecting) {
                 entry.target.classList.add('active');
-                observer.unobserve(entry.target); // Animation runs once
+                observer.unobserve(entry.target);
             }
         });
-    }, {
-        threshold: 0.08,
-        rootMargin: '0px 0px -40px 0px'
-    });
+    }, { threshold: 0.05, rootMargin: '0px 0px -40px 0px' });
     
     reveals.forEach(el => observer.observe(el));
     
-    // Immediately reveal hero elements if viewport loads on them
     setTimeout(() => {
         reveals.forEach(el => {
             const rect = el.getBoundingClientRect();
@@ -1709,7 +2234,7 @@ function initScrollReveal() {
     }, 200);
 }
 
-// Page Init
+// DOM Init
 document.addEventListener('DOMContentLoaded', () => {
     const banner = document.getElementById('sandbox-banner');
     if (isFirebaseActive) {
@@ -1731,5 +2256,4 @@ document.addEventListener('DOMContentLoaded', () => {
     initDatabase();
     setRole('seller');
     initScrollReveal();
-    initContactForm();
 });

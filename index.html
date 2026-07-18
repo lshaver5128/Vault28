@@ -4,23 +4,22 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Vault 28 Trading Co. | Sell Sports Card Collections</title>
-    <meta name="description" content="Sell your sports card collections instantly. Get premium valuations, negotiate directly with our buyers, and turn your cards into cash.">
+    <meta name="description" content="Sell your sports card, Pokémon, TCG, sealed product, and collectible collections. Based near Summerville, SC. Get premium valuations and fast cash offers.">
     <meta name="google-site-verification" content="QYIy_EZy3nVUwvhrjrVTm0CM_KEltQ9HQjpMEuQ2eIw" />
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <!-- Database Sandbox Alert Banner -->
-    <div id="sandbox-banner" class="sandbox-banner" style="background: linear-gradient(90deg, #1e293b, #0f172a); border-bottom: 1px solid rgba(6, 182, 212, 0.3); padding: 8px 16px; font-size: 0.82rem; text-align: center; display: flex; align-items: center; justify-content: center; gap: 8px; color: var(--text-secondary);">
-        <span>🔒 Running in <strong>Local Sandbox Mode</strong> (All data stays in this browser).</span>
-        <button class="btn btn-primary btn-sm" id="btn-setup-db" style="padding: 2px 8px; font-size: 0.75rem; border-radius: 4px; background: rgba(6, 182, 212, 0.15); border: 1px solid var(--accent-cyan); color: var(--accent-cyan); cursor: pointer; box-shadow: none;">
-            Setup Real-time Cloud Sync
-        </button>
+
+    <!-- Local DB Setup Sandbox Banner (only visible if Firebase config isn't pasted) -->
+    <div class="sandbox-banner" id="sandbox-banner">
+        <span>⚡ Running in <strong>Local Sandbox Mode</strong> (Data is saved locally in your browser).</span>
+        <button class="btn btn-sm" id="btn-setup-db" style="background: #fbbf24; color: #000; font-weight:600;">Connect Firebase</button>
     </div>
 
     <!-- Header & Navigation -->
     <header>
         <div class="container navbar">
-            <a href="#" class="logo" id="brand-logo" style="display: flex; align-items: center; gap: 0.85rem;">
+            <a href="/" class="logo" id="brand-logo" style="display: flex; align-items: center; gap: 0.85rem;">
                 <img src="assets/logo.png" alt="Vault 28 Logo" style="height: 58px; width: auto; border-radius: 10px;" id="logo-img" onload="document.getElementById('logo-text').style.display='none';" onerror="this.style.display='none';">
                 <span id="logo-text">VAULT <span>28</span> <span style="font-size: 0.95rem; font-weight: 500; letter-spacing: 0.05em; color: var(--text-secondary); margin-left: 0.25rem;">TRADING CO.</span></span>
             </a>
@@ -30,37 +29,38 @@
                 <!-- Links will be dynamically adjusted by active role -->
             </nav>
 
-            <!-- Role Switcher -->
-            <div class="role-switcher-container" id="role-switcher-wrapper" style="display: none;" title="Switch between Seller and Vault 28 Buyer view to test the application">
-                <button class="role-btn active" data-role="seller" id="btn-role-seller">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20.38 3.46L16 7.84M2 22l4.84-4.84M15 2.5a2.5 2.5 0 1 1 5 5L7 20l-5 2 2-5z"/></svg>
-                    Seller View
-                </button>
-                <button class="role-btn" data-role="buyer" id="btn-role-buyer">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-                    Buyer (Owner) View
-                    <span class="badge-dot" id="buyer-update-dot"></span>
-                </button>
-            </div>
+            <div style="display: flex; align-items: center; gap: 1rem;">
+                <!-- Header CTA Button -->
+                <button class="btn btn-primary btn-sm" id="btn-nav-free-offer" style="box-shadow: 0 0 15px rgba(223, 183, 80, 0.25);">Get a Free Offer</button>
 
-            <!-- Authentication Widget -->
-            <div id="auth-widget" style="display: flex; align-items: center; gap: 0.75rem;">
-                <button class="btn btn-secondary btn-sm" id="btn-header-signin">Sign In</button>
-                <button class="btn btn-primary btn-sm" id="btn-header-signup">Register</button>
-            </div>
-            
-            <div id="user-profile-widget" style="display: none; align-items: center; gap: 0.75rem;">
-                <div style="text-align: right; line-height: 1.2;">
-                    <div id="user-display-name" style="font-size: 0.85rem; font-weight: 600; color: var(--text-primary);">User Name</div>
-                    <div id="user-display-role" style="font-size: 0.72rem; color: var(--accent-cyan); font-weight: 500;">Seller Account</div>
+                <!-- Admin switcher widget (visible only if logged in as owner) -->
+                <div class="role-switcher-container" id="role-switcher-wrapper" style="display: none;" title="Switch between Seller and Vault 28 Buyer view to test the application">
+                    <button class="role-btn active" id="btn-role-seller">Seller View</button>
+                    <button class="role-btn" id="btn-role-buyer">
+                        Buyer (Owner) View
+                        <span class="update-dot" id="buyer-update-dot"></span>
+                    </button>
                 </div>
-                <button class="btn btn-secondary btn-sm" id="btn-header-signout" style="padding: 4px 8px; font-size: 0.75rem;">Sign Out</button>
+                
+                <!-- Auth Widget (Sign In / Register) -->
+                <div id="auth-widget" style="display: flex; gap: 0.5rem;">
+                    <button class="btn btn-secondary btn-sm" id="btn-header-signin">Sign In</button>
+                    <button class="btn btn-outline-cyan btn-sm" id="btn-header-signup">Register</button>
+                </div>
+                
+                <div id="user-profile-widget" style="display: none; align-items: center; gap: 0.75rem;">
+                    <div style="text-align: right; line-height: 1.2;">
+                        <div id="user-display-name" style="font-size: 0.85rem; font-weight: 600; color: var(--text-primary);">User Name</div>
+                        <div id="user-display-role" style="font-size: 0.72rem; color: var(--accent-cyan); font-weight: 500;">Seller Account</div>
+                    </div>
+                    <button class="btn btn-secondary btn-sm" id="btn-header-signout" style="padding: 4px 8px; font-size: 0.75rem;">Sign Out</button>
+                </div>
             </div>
         </div>
     </header>
 
     <!-- Main Content Area -->
-    <main class="container" style="padding-top: 1rem; padding-bottom: 4rem;">
+    <main class="container" style="padding-top: 1rem; padding-bottom: 2rem;">
         
         <!-- ==================== SELLER VIEWS ==================== -->
         
@@ -69,160 +69,577 @@
             <div class="hero-section">
                 <div class="hero-glow"></div>
                 <span class="hero-tag">Your Shelf to Our Vault</span>
-                <h1 class="hero-title">Turn Your Sports Card<br>Collections Into <span>Cash</span></h1>
-                <p class="hero-subtitle">Submit your trading card collections to Vault 28. Get instant professional valuations, live-chat with our buying team, and secure the best offers in minutes.</p>
+                <h1 class="hero-title">Turn Your Collection<br>Into <span>Cash</span></h1>
+                <p class="hero-subtitle">Vault 28 Trading Co. buys sports cards, Pokémon cards, TCG collections, sealed products, complete sets, and entire collectibles lots. Professional valuations, direct negotiations, and quick secure payouts.</p>
                 <div class="hero-actions">
                     <button class="btn btn-primary" id="btn-hero-sell">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
-                        Sell Your Collection
+                        Get a Free Offer
                     </button>
-                    <button class="btn btn-secondary" id="btn-hero-browse">View Active Offers</button>
+                    <button class="btn btn-secondary" id="btn-hero-browse">Browse Inventory</button>
                 </div>
             </div>
 
-            <!-- Features Grid -->
-            <div class="features-section reveal">
-                <h2 class="section-title">Why Sell To <span>Vault 28 Trading Co.</span>?</h2>
+            <!-- Trust Bar Section -->
+            <div class="trust-bar-row">
+                <div class="trust-item"><span>🚀</span> Fast Responses</div>
+                <div class="trust-item"><span>⚖️</span> No-Pressure Offers</div>
+                <div class="trust-item"><span>📍</span> Local Pickup Available</div>
+                <div class="trust-item"><span>📦</span> Shipping Accepted</div>
+                <div class="trust-item"><span>🔒</span> Safe & Simple Process</div>
+            </div>
+
+            <!-- How It Works Section -->
+            <div class="features-section reveal" style="margin-top: 5rem;">
+                <h2 class="section-title">How <span>It Works</span></h2>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 2rem; margin-top: 2rem;">
+                    <div class="glass-card feature-card" style="text-align: center;">
+                        <div class="feature-icon-wrapper" style="margin: 0 auto 1rem auto;">1</div>
+                        <h3>Submit Details</h3>
+                        <p>Tell us what you have. Upload photos or videos of your trading cards, TCG collections, or sealed product.</p>
+                    </div>
+                    <div class="glass-card feature-card" style="text-align: center;">
+                        <div class="feature-icon-wrapper" style="margin: 0 auto 1rem auto;">2</div>
+                        <h3>Receive an Offer</h3>
+                        <p>Our specialists review your items and send a fair, no-obligation valuation counter-offer directly to your dashboard.</p>
+                    </div>
+                    <div class="glass-card feature-card" style="text-align: center;">
+                        <div class="feature-icon-wrapper" style="margin: 0 auto 1rem auto;">3</div>
+                        <h3>Get Paid</h3>
+                        <p>Once you accept, ship your cards or arrange a local pickup to receive your payout instantly via your preferred method.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- What We Buy Section -->
+            <div class="reveal" style="padding: 4rem 0; border-top: 1px solid var(--border-color); margin-top: 5rem;">
+                <h2 class="section-title">What <span>We Buy</span></h2>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; margin-top: 2rem; text-align: left;">
+                    <div class="glass-card feature-card">
+                        <h3 style="color: var(--accent-cyan);">⚾ Sports Cards</h3>
+                        <p>Baseball, basketball, football, and multi-sport collections. High-end singles, graded slabs (PSA/BGS/SGC), and raw vintage cards.</p>
+                    </div>
+                    <div class="glass-card feature-card">
+                        <h3 style="color: var(--accent-cyan);">⚡ Pokémon & TCG</h3>
+                        <p>Pokémon, Magic: The Gathering, Yu-Gi-Oh!, and Disney Lorcana collections. Holographic highlights, vintage binders, and master sets.</p>
+                    </div>
+                    <div class="glass-card feature-card">
+                        <h3 style="color: var(--accent-cyan);">📜 Vintage Collections</h3>
+                        <p>Older collections spanning the 1950s to early 1980s. Well-preserved baseball cards, rookie card lots, and historical collectibles.</p>
+                    </div>
+                    <div class="glass-card feature-card">
+                        <h3 style="color: var(--accent-cyan);">📚 Complete Sets</h3>
+                        <p>Complete vintage and modern factory card sets, custom binders, and fully assembled card sets from Topps, Fleer, Upper Deck, and more.</p>
+                    </div>
+                    <div class="glass-card feature-card">
+                        <h3 style="color: var(--accent-cyan);">📦 Sealed Products</h3>
+                        <p>Unopened booster boxes, elite trainer boxes (ETBs), booster packs, retail blasters, and factory-sealed sports hobby boxes.</p>
+                    </div>
+                    <div class="glass-card feature-card">
+                        <h3 style="color: var(--accent-cyan);">🗳️ Bulk Lots & Entire Collections</h3>
+                        <p>Massive multi-box storage lots, complete binders, or accumulated hobby boxes. No collection is too large for us to review.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Why Sell to Vault 28 Section -->
+            <div class="features-section reveal" style="border-top: 1px solid var(--border-color); padding-top: 5rem; margin-top: 5rem;">
+                <h2 class="section-title">Why Sell To <span>Vault 28</span>?</h2>
                 <div class="features-grid">
                     <div class="glass-card feature-card">
-                        <div class="feature-icon-wrapper">
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
-                        </div>
-                        <h3>1. Digital Grading Slab Mockups</h3>
-                        <p>Our cataloging system automatically visualizes your sports cards inside professionally graded slabs (PSA/BGS style) for beautiful organization.</p>
+                        <div class="feature-icon-wrapper">✔️</div>
+                        <h3>Simple Process</h3>
+                        <p>Skip the hassle of listing individual cards, packing hundreds of items, and dealing with buyer questions. We buy everything at once.</p>
                     </div>
                     <div class="glass-card feature-card">
-                        <div class="feature-icon-wrapper">
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-                        </div>
-                        <h3>2. Live Direct Negotiation</h3>
-                        <p>No waiting for emails or automated lowballs. Chat in real-time directly with our buying desk to negotiate prices and settle on a fair cash deal.</p>
+                        <div class="feature-icon-wrapper">💬</div>
+                        <h3>Honest Communication</h3>
+                        <p>We pride ourselves on transparent offers based on actual current market values. Real collectors reviewing your items, not bots.</p>
                     </div>
                     <div class="glass-card feature-card">
-                        <div class="feature-icon-wrapper">
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
-                        </div>
-                        <h3>3. Quick Payouts</h3>
-                        <p>Once you accept our custom purchase offer, we handle the logistics and transfer your funds instantly via PayPal, Wire, or Venmo.</p>
+                        <div class="feature-icon-wrapper">📍</div>
+                        <h3>Pickup or Shipping</h3>
+                        <p>Sellers near Summerville, SC can opt for safe local pickup. Otherwise, we accept secure, insured mail-ins from anywhere in the country.</p>
                     </div>
                 </div>
             </div>
 
             <!-- Recently Purchased Gallery Section -->
-            <div class="reveal" style="padding: 4rem 0; border-top: 1px solid var(--border-color); margin-top: 4rem;">
+            <div class="reveal" style="padding: 4rem 0; border-top: 1px solid var(--border-color); margin-top: 5rem;">
                 <h2 class="section-title">Recently Purchased <span>Collections</span></h2>
                 <p style="text-align: center; color: var(--text-secondary); max-width: 600px; margin: -2rem auto 3rem auto; font-size: 1.05rem;">
-                    We buy collections of all sizes, from single high-end graded cards to massive multi-box warehouse lots. Here are some real collections we've recently purchased from collectors like you:
+                    We buy collections of all sizes. Here are some real collections we've recently purchased:
                 </p>
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; text-align: left;">
-                    <!-- Card 1 -->
-                    <div class="glass-card" style="display: flex; flex-direction: column; gap: 0.75rem; padding: 1rem;">
-                        <img src="assets/inventory3.jpg" alt="1989 Bowman Baseball Cards Collection" style="width: 100%; height: 200px; object-fit: cover; border-radius: 8px; border: 1px solid var(--border-color);">
-                        <h3 style="font-size: 1.1rem; margin-top: 0.5rem; font-family: var(--font-title); font-weight: 600;">1989 Bowman & Vintage Baseball Lot</h3>
-                        <p style="color: var(--text-secondary); font-size: 0.85rem; line-height: 1.5; flex-grow: 1;">
-                            Purchased a set of unopened 1989 Bowman Baseball picture card boxes along with multiple sorted boxes of 70s-90s vintage baseball cards.
-                        </p>
-                        <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border-color); padding-top: 0.75rem; font-size: 0.8rem; color: var(--text-muted);">
-                            <span>📍 Summerville, SC</span>
-                            <span class="badge badge-bought">Purchased</span>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; text-align: left;" id="landing-recent-gallery">
+                    <!-- Loaded dynamically via app.js -->
+                </div>
+            </div>
+
+            <!-- Testimonials Reviews Section -->
+            <div class="reveal" style="padding: 4rem 0; border-top: 1px solid var(--border-color); margin-top: 5rem;">
+                <h2 class="section-title">What Collectors <span>Say</span></h2>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; margin-top: 2rem;" id="landing-reviews-container">
+                    <!-- Reviews loaded dynamically via app.js -->
+                </div>
+            </div>
+
+            <!-- Featured Inventory Section -->
+            <div class="reveal" style="padding: 4rem 0; border-top: 1px solid var(--border-color); margin-top: 5rem;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
+                    <h2 class="section-title" style="margin: 0; text-align: left;">Featured <span>Inventory</span></h2>
+                    <button class="btn btn-outline-cyan" onclick="switchView('shop')">Browse Full Shop →</button>
+                </div>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; text-align: left;" id="landing-featured-inventory">
+                    <!-- Featured items loaded dynamically via app.js -->
+                </div>
+            </div>
+
+            <!-- Large Bottom CTA Section -->
+            <div class="reveal" style="background: linear-gradient(135deg, rgba(223, 183, 80, 0.03), rgba(24, 26, 31, 0.7)); border: 1px solid var(--border-color); border-radius: 16px; padding: 4rem 2rem; margin-top: 6rem; text-align: center;">
+                <h2 style="font-size: 2.25rem; margin-bottom: 1rem; font-family: var(--font-title);">Ready to Sell Your Collection?</h2>
+                <p style="color: var(--text-secondary); max-width: 600px; margin: 0 auto 2rem auto; font-size: 1.1rem; line-height: 1.6;">
+                    Catalog your items and submit photos. We'll inspect your collection and reach out with an offer. Simple, secure, and no obligations.
+                </p>
+                <button class="btn btn-primary" onclick="switchView('seller-submit')" style="box-shadow: 0 0 25px rgba(223, 183, 80, 0.35); padding: 1rem 2rem; font-size: 1.05rem;">
+                    Get a Free Offer
+                </button>
+            </div>
+        </section>
+
+        <!-- Seller View 2: Submit Collection Wizard -->
+        <section id="seller-submit" class="page-view">
+            <div style="max-width: 850px; margin: 0 auto;">
+                <div class="content-header" style="margin-bottom: 2rem; display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <h2 style="font-size: 2rem;">Sell Your Collection</h2>
+                        <p style="color: var(--text-secondary);">Fill in the details below to submit your cards or collectibles lot for a free cash offer.</p>
+                    </div>
+                </div>
+
+                <div class="glass-card" id="submission-card-box">
+                    <form id="submission-form" style="display: flex; flex-direction: column; gap: 1.5rem; text-align: left;">
+                        
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.25rem;">
+                            <div class="form-group">
+                                <label for="collection-seller-name">Full Name <span style="color: var(--accent-red);">*</span></label>
+                                <input type="text" id="collection-seller-name" placeholder="e.g. Luke Shaver" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="collection-seller-email">Email Address <span style="color: var(--accent-red);">*</span></label>
+                                <input type="email" id="collection-seller-email" placeholder="e.g. luke@gmail.com" required>
+                            </div>
+                        </div>
+
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.25rem;">
+                            <div class="form-group">
+                                <label for="collection-seller-phone">Phone Number <span style="color: var(--accent-red);">*</span></label>
+                                <input type="text" id="collection-seller-phone" placeholder="e.g. (843) 555-1234" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="collection-seller-pref">Preferred Contact Method</label>
+                                <select id="collection-seller-pref">
+                                    <option value="Email">Email</option>
+                                    <option value="Phone Call">Phone Call</option>
+                                    <option value="Text Message">Text Message</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.25rem;">
+                            <div class="form-group">
+                                <label for="collection-seller-location">City & State <span style="color: var(--accent-red);">*</span></label>
+                                <input type="text" id="collection-seller-location" placeholder="e.g. Summerville, SC" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="collection-sport">Type of Collection</label>
+                                <select id="collection-sport">
+                                    <option value="Sports Cards">Sports Cards (Baseball/Basketball/Football)</option>
+                                    <option value="Pokémon & TCG">Pokémon & TCG Collections</option>
+                                    <option value="Sealed Product">Sealed Boxes / Packs</option>
+                                    <option value="Complete Sets">Complete Sets</option>
+                                    <option value="Mixed Collectibles">Mixed Collectibles / Binders</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1.25rem;">
+                            <div class="form-group">
+                                <label for="collection-qty">Approx. Item Count <span style="color: var(--accent-red);">*</span></label>
+                                <input type="number" id="collection-qty" placeholder="e.g. 500 cards" required min="1">
+                            </div>
+                            <div class="form-group">
+                                <label for="collection-est-val">Estimated Value ($), if known</label>
+                                <input type="number" id="collection-est-val" placeholder="e.g. 1200" min="0">
+                            </div>
+                            <div class="form-group">
+                                <label for="collection-asking">Asking Price ($), if applicable</label>
+                                <input type="number" id="collection-asking" placeholder="e.g. 1000" min="0">
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="collection-desc">Description of Collection <span style="color: var(--accent-red);">*</span></label>
+                            <textarea id="collection-desc" rows="4" placeholder="Detail condition, key highlight cards, sets, years, and if items are graded or raw..." required></textarea>
+                        </div>
+
+                        <!-- Local/Shipping preference -->
+                        <div class="form-group">
+                            <label for="collection-delivery-pref">Pickup or Shipping Preference</label>
+                            <select id="collection-delivery-pref">
+                                <option value="Shipping Accepted">I will ship the collection (Secure Mail-in)</option>
+                                <option value="Local Pickup">Local Meetup / Pickup (Near Summerville, SC)</option>
+                            </select>
+                        </div>
+
+                        <!-- Custom inventory slab builder -->
+                        <div style="border: 1px solid var(--border-color); border-radius: 8px; padding: 1.5rem; background: rgba(0,0,0,0.15); margin-top: 1rem;">
+                            <h3 style="font-size: 1.1rem; margin-bottom: 0.25rem; font-family: var(--font-title);">Highlight Catalog (Optional)</h3>
+                            <p style="color: var(--text-secondary); font-size: 0.82rem; margin-bottom: 1.5rem;">Add key cards in your collection to build graded slab previews.</p>
+                            
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 1.25rem;">
+                                <div class="form-group">
+                                    <label for="card-player" style="font-size: 0.8rem;">Player / Character Name</label>
+                                    <input type="text" id="card-player" placeholder="e.g. Michael Jordan / Charizard">
+                                </div>
+                                <div class="form-group" style="font-size: 0.8rem;">
+                                    <label for="card-brand">Brand / Set</label>
+                                    <input type="text" id="card-brand" placeholder="e.g. Fleer #57 / Base Set">
+                                </div>
+                                <div class="form-group" style="font-size: 0.8rem;">
+                                    <label for="card-year">Year</label>
+                                    <input type="number" id="card-year" placeholder="e.g. 1986 / 1999" min="1900" max="2030">
+                                </div>
+                                <div class="form-group" style="font-size: 0.8rem;">
+                                    <label for="card-grade">Condition / Grade</label>
+                                    <select id="card-grade">
+                                        <option value="Raw (Near Mint or Better)">Raw (Near Mint+)</option>
+                                        <option value="Raw (Excellent/Light Play)">Raw (Excellent/Light Play)</option>
+                                        <option value="Raw (Moderate Play/Played)">Raw (Played)</option>
+                                        <option value="PSA 10 Gem Mint">PSA 10 Gem Mint</option>
+                                        <option value="PSA 9 Mint">PSA 9 Mint</option>
+                                        <option value="PSA 8 Near-Mint/Mint">PSA 8 Near-Mint/Mint</option>
+                                        <option value="BGS 9.5 Gem Mint">BGS 9.5 Gem Mint</option>
+                                        <option value="BGS 9 Mint">BGS 9 Mint</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <!-- Image Drag & Drop Uploader -->
+                            <div class="form-group">
+                                <label style="font-size: 0.8rem;">Card Photo (For graded slab background)</label>
+                                <div class="upload-dropzone" id="card-dropzone">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-bottom: 0.5rem; color: var(--text-muted);"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
+                                    <span>Drag & Drop card photo here, or <strong style="color: var(--accent-cyan);">Browse</strong></span>
+                                    <input type="file" id="card-file-input" accept="image/*" style="display: none;">
+                                </div>
+                                <div id="card-images-preview" style="margin-top: 0.75rem; display: flex; gap: 0.5rem; flex-wrap: wrap;"></div>
+                            </div>
+
+                            <button type="button" class="btn btn-secondary btn-sm" id="btn-add-card-to-list" style="margin-top: 0.5rem;">
+                                ➕ Catalog Card Highlight
+                            </button>
+
+                            <div style="margin-top: 1.5rem;">
+                                <h4 style="font-size: 0.9rem; margin-bottom: 0.75rem;">Cataloged Highlights List (<span id="cards-count-badge">0</span>)</h4>
+                                <div class="temp-cards-list" id="temp-cards-list">
+                                    <div style="text-align: center; padding: 1.5rem; color: var(--text-muted); border: 1px dashed var(--border-color); border-radius: 8px; font-size: 0.9rem;">
+                                        No specific highlights cataloged yet.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- General Submission File Upload (multiple photos / video) -->
+                        <div class="form-group" style="margin-top: 1rem;">
+                            <label>Upload Collection Photos / Videos <span style="color: var(--accent-red);">*</span></label>
+                            <div class="upload-dropzone" id="general-dropzone">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-bottom: 0.5rem; color: var(--text-muted);"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
+                                <span>Drag & Drop photos/videos here, or <strong style="color: var(--accent-cyan);">Browse Files</strong></span>
+                                <input type="file" id="general-file-input" accept="image/*,video/*" multiple style="display: none;">
+                            </div>
+                            <div id="general-images-preview" style="margin-top: 0.75rem; display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 0.5rem;"></div>
+                        </div>
+
+                        <!-- Ownership check -->
+                        <div style="display: flex; align-items: flex-start; gap: 0.75rem; margin-top: 1rem;">
+                            <input type="checkbox" id="collection-ownership-check" required style="width: auto; margin-top: 0.25rem; cursor: pointer;">
+                            <label for="collection-ownership-check" style="font-size: 0.9rem; color: var(--text-secondary); cursor: pointer; user-select: none;">
+                                I confirm that I legally own the items in this collection and have the full authority to sell them.
+                            </label>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary" style="margin-top: 1rem; width: 100%; padding: 0.9rem; font-size: 1.05rem;">
+                            Submit Collection for Valuation
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Form confirmation screen (hidden by default) -->
+                <div class="glass-card" id="submission-success-box" style="display: none; padding: 4rem 2rem; text-align: center;">
+                    <div style="font-size: 3rem; margin-bottom: 1.5rem;">📬</div>
+                    <h2 style="font-family: var(--font-title); font-size: 1.75rem; margin-bottom: 1rem;">Collection Submitted!</h2>
+                    <p style="color: var(--text-secondary); max-width: 500px; margin: 0 auto 2rem auto; line-height: 1.6;">
+                        Thank you for submitting your collection. We have cataloged your items securely in our database. Our valuation desk will review your details, inspect your photos, and reach out to you via your preferred contact method within 24 hours.
+                    </p>
+                    <button class="btn btn-primary" onclick="resetSubmissionFormState(); switchView('seller-landing');">Back to Homepage</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Seller View 3: My Collections Dashboard -->
+        <section id="seller-dashboard" class="page-view">
+            <div style="max-width: 1000px; margin: 0 auto;">
+                <div class="content-header" style="margin-bottom: 2rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+                    <div>
+                        <h2 style="font-size: 2rem;">My Collections</h2>
+                        <p style="color: var(--text-secondary);">Track valuations, view counter-offers, and communicate with the Vault 28 Buying Desk.</p>
+                    </div>
+                    <button class="btn btn-primary btn-sm" id="btn-dashboard-new">Submit New Collection</button>
+                </div>
+                
+                <div class="dashboard-grid" id="seller-collections-list">
+                    <!-- Managed dynamically by app.js -->
+                </div>
+            </div>
+        </section>
+
+        <!-- Seller View 4: Collection Detail View -->
+        <section id="seller-detail" class="page-view">
+            <div style="max-width: 1200px; margin: 0 auto;">
+                <div class="content-header" style="margin-bottom: 2rem; text-align: left;">
+                    <button class="btn btn-secondary btn-sm" id="btn-seller-back-dashboard" style="margin-bottom: 1rem;">← Back to Dashboard</button>
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1rem;">
+                        <div>
+                            <h2 style="font-size: 2.25rem; font-family: var(--font-title);" id="seller-detail-title">Collection Title</h2>
+                            <p style="color: var(--text-secondary);" id="seller-detail-desc">Description text</p>
+                        </div>
+                        <div style="text-align: right;">
+                            <span class="badge" id="seller-detail-status">Status</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Status specific alerts -->
+                <div id="seller-status-alert-box" style="margin-bottom: 2rem; text-align: left;"></div>
+
+                <div class="detail-layout">
+                    <!-- Left: Slab mockup gallery -->
+                    <div>
+                        <h3 style="font-size: 1.25rem; margin-bottom: 1rem; text-align: left;">Cataloged Highlight Slabs</h3>
+                        <div class="slab-visuals-grid" id="seller-detail-slab-visuals">
+                            <!-- Graded slabs rendered here dynamically -->
+                        </div>
+                        
+                        <h3 style="font-size: 1.25rem; margin-top: 2rem; margin-bottom: 1rem; text-align: left;">Collection Item Details</h3>
+                        <div class="cards-list-container" id="seller-detail-cards-list">
+                            <!-- Table of items list -->
                         </div>
                     </div>
                     
-                    <!-- Card 2 -->
-                    <div class="glass-card" style="display: flex; flex-direction: column; gap: 0.75rem; padding: 1rem;">
-                        <img src="assets/inventory2.jpg" alt="Vintage Binders Collection" style="width: 100%; height: 200px; object-fit: cover; border-radius: 8px; border: 1px solid var(--border-color);">
-                        <h3 style="font-size: 1.1rem; margin-top: 0.5rem; font-family: var(--font-title); font-weight: 600;">Classic Baseball Binders Lot</h3>
-                        <p style="color: var(--text-secondary); font-size: 0.85rem; line-height: 1.5; flex-grow: 1;">
-                            Acquired two comprehensive collectors' binders filled with 1970s and 1980s Topps, featuring team sets, rookies, and Hall of Famers.
-                        </p>
-                        <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border-color); padding-top: 0.75rem; font-size: 0.8rem; color: var(--text-muted);">
-                            <span>📍 Charleston, SC</span>
-                            <span class="badge badge-bought">Purchased</span>
+                    <!-- Right: Live negotiator panel -->
+                    <div class="chat-section">
+                        <div class="chat-header">
+                            <div style="display: flex; align-items: center; gap: 0.75rem;">
+                                <div class="chat-avatar" style="background: var(--accent-cyan); color: var(--bg-primary);">V</div>
+                                <div style="text-align: left;">
+                                    <div style="font-size: 0.9rem; font-weight: 600;">Vault 28 Buying Desk</div>
+                                    <div style="font-size: 0.72rem; color: var(--accent-emerald);">Live Reviewer Active</div>
+                                </div>
+                            </div>
+                            <div style="text-align: right;">
+                                <div style="font-size: 0.75rem; color: var(--text-muted); font-weight: 500;">COUNTER VALUE</div>
+                                <div id="seller-chat-header-price">$0</div>
+                            </div>
                         </div>
-                    </div>
+                        
+                        <!-- Offer details container inside chat -->
+                        <div id="seller-chat-action-box" style="display: none;"></div>
 
-                    <!-- Card 3 -->
-                    <div class="glass-card" style="display: flex; flex-direction: column; gap: 0.75rem; padding: 1rem;">
-                        <img src="assets/inventory4.jpg" alt="90s Sports Treasures & Banners" style="width: 100%; height: 200px; object-fit: cover; border-radius: 8px; border: 1px solid var(--border-color);">
-                        <h3 style="font-size: 1.1rem; margin-top: 0.5rem; font-family: var(--font-title); font-weight: 600;">90s Basketball & Memorabilia Lot</h3>
-                        <p style="color: var(--text-secondary); font-size: 0.85rem; line-height: 1.5; flex-grow: 1;">
-                            Bought a tub of 90s basketball sets, hobby boxes, vintage Future Stars magazines, and classic team banners (Magic, Blue Jays).
-                        </p>
-                        <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border-color); padding-top: 0.75rem; font-size: 0.8rem; color: var(--text-muted);">
-                            <span>📍 Mt. Pleasant, SC</span>
-                            <span class="badge badge-bought">Purchased</span>
+                        <div class="chat-messages" id="seller-chat-messages">
+                            <!-- Messages -->
                         </div>
-                    </div>
-
-                    <!-- Card 4 -->
-                    <div class="glass-card" style="display: flex; flex-direction: column; gap: 0.75rem; padding: 1rem;">
-                        <img src="assets/inventory5.jpg" alt="Sorted Cardboard Long-Boxes" style="width: 100%; height: 200px; object-fit: cover; border-radius: 8px; border: 1px solid var(--border-color);">
-                        <h3 style="font-size: 1.1rem; margin-top: 0.5rem; font-family: var(--font-title); font-weight: 600;">Bulk Sorted Cardboard Storage</h3>
-                        <p style="color: var(--text-secondary); font-size: 0.85rem; line-height: 1.5; flex-grow: 1;">
-                            Purchased multiple organized cardboard row boxes containing thousands of sorted vintage cards, cataloged and ready for valuation.
-                        </p>
-                        <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border-color); padding-top: 0.75rem; font-size: 0.8rem; color: var(--text-muted);">
-                            <span>📍 Columbia, SC</span>
-                            <span class="badge badge-bought">Purchased</span>
-                        </div>
-                    </div>
-
-                    <!-- Card 5 -->
-                    <div class="glass-card" style="display: flex; flex-direction: column; gap: 0.75rem; padding: 1rem;">
-                        <img src="assets/inventory1.jpg" alt="Miscellaneous Binder Lot" style="width: 100%; height: 200px; object-fit: cover; border-radius: 8px; border: 1px solid var(--border-color);">
-                        <h3 style="font-size: 1.1rem; margin-top: 0.5rem; font-family: var(--font-title); font-weight: 600;">Multi-Sport Tub & Binder Set</h3>
-                        <p style="color: var(--text-secondary); font-size: 0.85rem; line-height: 1.5; flex-grow: 1;">
-                            Acquired a storage tub of loose pages and binders containing comic cards (Marvel), basketball inserts, and vintage baseball sets.
-                        </p>
-                        <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border-color); padding-top: 0.75rem; font-size: 0.8rem; color: var(--text-muted);">
-                            <span>📍 Greenville, SC</span>
-                            <span class="badge badge-bought">Purchased</span>
+                        
+                        <div class="chat-input-area">
+                            <div class="chat-suggestions" id="seller-chat-suggestions">
+                                <span class="chat-suggestion-chip">I'm happy with this offer, let's close the deal!</span>
+                                <span class="chat-suggestion-chip">Can we do a bit higher?</span>
+                                <span class="chat-suggestion-chip">Are you available for local meetup today?</span>
+                            </div>
+                            <form class="chat-input-row" id="seller-chat-form">
+                                <input type="text" class="chat-input" id="seller-chat-input" placeholder="Type a message to the buyer...">
+                                <button type="submit" class="chat-send-btn">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                                </button>
+                            </form>
                         </div>
                     </div>
                 </div>
             </div>
+        </section>
 
-            <!-- About Us Section -->
-            <div id="about-section" class="reveal" style="padding: 5rem 0; border-top: 1px solid var(--border-color); margin-top: 4rem;">
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4rem; align-items: center; text-align: left;">
+        <!-- Seller View 5: Shop Page -->
+        <section id="shop" class="page-view">
+            <div style="max-width: 1300px; margin: 0 auto; text-align: left;">
+                <div class="content-header" style="margin-bottom: 2rem;">
+                    <h2 style="font-size: 2rem;">Browse Inventory</h2>
+                    <p style="color: var(--text-secondary);">Browse high-grade sports cards, Pokémon singles, complete factory sets, and TCG booster packs available in our vault.</p>
+                </div>
+                
+                <div class="shop-layout">
+                    <!-- Shop Sidebar Filters -->
+                    <div class="shop-sidebar-filters">
+                        <div class="filter-group">
+                            <label class="filter-label">Search Inventory</label>
+                            <input type="text" id="shop-search" placeholder="Search by player, brand...">
+                        </div>
+                        
+                        <div class="filter-group">
+                            <label class="filter-label">Filter by Category</label>
+                            <div class="filter-checkbox-list">
+                                <label><input type="checkbox" class="shop-category-filter" value="Sports Cards"> Sports Cards</label>
+                                <label><input type="checkbox" class="shop-category-filter" value="Pokémon & TCG"> Pokémon & TCG</label>
+                                <label><input type="checkbox" class="shop-category-filter" value="Sealed Product"> Sealed Products</label>
+                                <label><input type="checkbox" class="shop-category-filter" value="Complete Sets"> Complete Sets</label>
+                                <label><input type="checkbox" class="shop-category-filter" value="Card Lots"> Card Lots</label>
+                                <label><input type="checkbox" class="shop-category-filter" value="Other Collectibles"> Other Collectibles</label>
+                            </div>
+                        </div>
+
+                        <div class="filter-group">
+                            <label class="filter-label">Maximum Price ($)</label>
+                            <div style="display: flex; align-items: center; gap: 0.75rem;">
+                                <input type="range" id="shop-price-slider" min="0" max="5000" step="50" value="5000" style="flex-grow: 1;">
+                                <span id="shop-price-display" style="font-family: var(--font-title); font-weight:600; width: 60px; text-align: right;">$5,000</span>
+                            </div>
+                        </div>
+
+                        <div class="filter-group">
+                            <label class="filter-label">Sort By</label>
+                            <select id="shop-sort">
+                                <option value="recent">Newest Arrivals</option>
+                                <option value="price-low">Price: Low to High</option>
+                                <option value="price-high">Price: High to Low</option>
+                                <option value="title-asc">A - Z</option>
+                            </select>
+                        </div>
+                        
+                        <button class="btn btn-secondary btn-sm" id="btn-reset-shop-filters" style="width: 100%; margin-top: 1rem;">Reset Filters</button>
+                    </div>
+                    
+                    <!-- Shop Catalog Grid -->
                     <div>
-                        <h2 class="section-title" style="text-align: left; margin-bottom: 1.5rem;">About <span>Vault 28 Trading Co.</span></h2>
-                        <p style="color: var(--text-primary); font-size: 1.15rem; line-height: 1.7; margin-bottom: 1.5rem; font-weight: 500;">
-                            Your shelf to our vault. We are sports card enthusiasts dedicated to giving collectors a trusted, direct outlet to cash out their collections.
+                        <div class="catalog-grid" id="shop-catalog-grid">
+                            <!-- Shop products loaded dynamically via app.js -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Seller View 6: How It Works Page -->
+        <section id="how-it-works" class="page-view">
+            <div style="max-width: 800px; margin: 0 auto; text-align: left;">
+                <div class="content-header" style="margin-bottom: 3rem; text-align: center;">
+                    <h2 style="font-size: 2.25rem;">The Selling Process</h2>
+                    <p style="color: var(--text-secondary); max-width: 500px; margin: 0.5rem auto 0 auto;">Getting an offer on your card collections is simple, transparent, and completely free.</p>
+                </div>
+                
+                <div style="display: flex; flex-direction: column; gap: 2rem;">
+                    <div class="glass-card" style="display: flex; gap: 1.5rem; align-items: flex-start; padding: 2rem;">
+                        <div class="feature-icon-wrapper" style="flex-shrink:0;">1</div>
+                        <div>
+                            <h3 style="font-size: 1.25rem; margin-bottom: 0.5rem;">Submit Your Collection</h3>
+                            <p style="color: var(--text-secondary); line-height: 1.6;">Use our Sell Your Collection form to catalog your items. Upload high-quality photos or a quick video showing the condition. The more details you provide (estimates of card counts, years, brands), the quicker we can value your items.</p>
+                        </div>
+                    </div>
+
+                    <div class="glass-card" style="display: flex; gap: 1.5rem; align-items: flex-start; padding: 2rem;">
+                        <div class="feature-icon-wrapper" style="flex-shrink:0;">2</div>
+                        <div>
+                            <h3 style="font-size: 1.25rem; margin-bottom: 0.5rem;">We Review and Value</h3>
+                            <p style="color: var(--text-secondary); line-height: 1.6;">A sports card and TCG specialist inspects your details. We build digital graded slab mockups of your highlights to organize the offer sheet. We don't use lowball algorithms; we calculate values based on actual recent sales data.</p>
+                        </div>
+                    </div>
+
+                    <div class="glass-card" style="display: flex; gap: 1.5rem; align-items: flex-start; padding: 2rem;">
+                        <div class="feature-icon-wrapper" style="flex-shrink:0;">3</div>
+                        <div>
+                            <h3 style="font-size: 1.25rem; margin-bottom: 0.5rem;">Receive and Negotiate Your Offer</h3>
+                            <p style="color: var(--text-secondary); line-height: 1.6;">We send a direct counter-offer to your dashboard. You'll receive a toast notification and can open our real-time chat window to negotiate, ask questions, or align on price directly with our buying desk.</p>
+                        </div>
+                    </div>
+
+                    <div class="glass-card" style="display: flex; gap: 1.5rem; align-items: flex-start; padding: 2rem;">
+                        <div class="feature-icon-wrapper" style="flex-shrink:0;">4</div>
+                        <div>
+                            <h3 style="font-size: 1.25rem; margin-bottom: 0.5rem;">Choose Whether to Accept</h3>
+                            <p style="color: var(--text-secondary); line-height: 1.6;">Submitting a collection is 100% free and does not obligate you to sell. Take your time to review our numbers. If you decide to decline, there are absolutely no fees or penalties.</p>
+                        </div>
+                    </div>
+
+                    <div class="glass-card" style="display: flex; gap: 1.5rem; align-items: flex-start; padding: 2rem;">
+                        <div class="feature-icon-wrapper" style="flex-shrink:0;">5</div>
+                        <div>
+                            <h3 style="font-size: 1.25rem; margin-bottom: 0.5rem;">Safe Payment and Handoff</h3>
+                            <p style="color: var(--text-secondary); line-height: 1.6;">If you accept, you can ship your cards to our headquarters securely using insured trackable shipping, or meet us in person if you live near Summerville, SC. Once the items are received and inspected, we send your payout instantly via PayPal, Venmo, or Wire.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Seller View 7: About Page -->
+        <section id="about" class="page-view">
+            <div style="max-width: 900px; margin: 0 auto; text-align: left;">
+                <div class="content-header" style="margin-bottom: 3rem; text-align: center;">
+                    <h2 style="font-size: 2.25rem;">About Vault 28 Trading Co.</h2>
+                    <p style="color: var(--text-secondary); max-width: 500px; margin: 0.5rem auto 0 auto;">Your shelf to our vault. The personal and trustworthy way to cash out card collections.</p>
+                </div>
+                
+                <div style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 3.5rem; align-items: center; margin-bottom: 3rem;">
+                    <div>
+                        <p style="font-size: 1.15rem; color: var(--text-primary); line-height: 1.7; font-weight: 500; margin-bottom: 1.5rem;">
+                            “Vault 28 Trading Co. was created to make selling trading cards and collectibles easier. We buy sports cards, Pokémon, TCG collections, sealed products, complete sets, and larger collections. Our goal is to provide a simple, honest, and convenient way for collectors and families to turn unwanted collections into cash.”
                         </p>
-                        <p style="color: var(--text-secondary); font-size: 0.95rem; line-height: 1.7; margin-bottom: 1.5rem;">
-                            Based out of Summerville, South Carolina, Vault 28 Trading Co. started with a simple mission: remove the stress, fees, and waiting times from selling sports card collections. We specialize in basketball, baseball, and football cards—buying everything from single high-end graded cards to massive, multi-box unsorted collections.
+                        <p style="color: var(--text-secondary); line-height: 1.7; margin-bottom: 1.25rem;">
+                            Vault 28 Trading Co. is based near **Summerville, South Carolina**, serving Charleston and surrounding local counties. However, we also work daily with collectors nationwide who ship their card folders and boxes to us for valuation.
                         </p>
-                        <p style="color: var(--text-secondary); font-size: 0.95rem; line-height: 1.7;">
-                            We don't rely on lowball automation. Every collection submitted to our digital platform is inspected by a real specialist. We work directly with you in real-time chat to negotiate transparent, fair cash deals and coordinate safe, insured shipping.
+                        <p style="color: var(--text-secondary); line-height: 1.7;">
+                            We are a small, dedicated team of card enthusiasts. We know card grading, market values, and rarity. We treat every collection with respect—whether it is a child's binder of vintage Pokémon cards, a massive inherited box of 80s baseball cards, or a modern sealed product lot.
                         </p>
                     </div>
                     <div style="position: relative;">
-                        <div style="border-radius: 12px; overflow: hidden; border: 2px solid var(--accent-cyan); box-shadow: var(--shadow-neon-cyan); transform: rotate(1.5deg); transition: var(--transition-normal);">
-                            <img src="assets/inventory2.jpg" alt="Vault 28 Collection binders" style="width: 100%; height: 360px; object-fit: cover;">
+                        <div style="border-radius: 12px; overflow: hidden; border: 2px solid var(--accent-cyan); box-shadow: var(--shadow-neon-cyan); transform: rotate(-1.5deg);">
+                            <img src="assets/inventory3.jpg" alt="Vault 28 Inventory boxes" style="width: 100%; height: 350px; object-fit: cover;">
                         </div>
-                        <div style="position: absolute; z-index: -1; top: 15px; left: -15px; width: 100%; height: 100%; border-radius: 12px; background: rgba(223, 183, 80, 0.05); border: 1px dashed rgba(223, 183, 80, 0.2); transform: rotate(-1.5deg);"></div>
                     </div>
                 </div>
             </div>
+        </section>
 
-            <!-- Contact Us Section -->
-            <div id="contact-section" class="reveal" style="padding: 5rem 0; border-top: 1px solid var(--border-color); margin-top: 4rem;">
-                <div style="display: grid; grid-template-columns: 1fr 1.2fr; gap: 4rem; text-align: left;">
+        <!-- Seller View 8: Contact Page -->
+        <section id="contact" class="page-view">
+            <div style="max-width: 1000px; margin: 0 auto; text-align: left;">
+                <div class="content-header" style="margin-bottom: 3rem; text-align: center;">
+                    <h2 style="font-size: 2.25rem;">Contact Us</h2>
+                    <p style="color: var(--text-secondary); max-width: 500px; margin: 0.5rem auto 0 auto;">Have questions? Reach out directly and we will respond as soon as possible.</p>
+                </div>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1.3fr; gap: 3.5rem;">
                     <div>
-                        <h2 class="section-title" style="text-align: left; margin-bottom: 1.5rem;">Get In <span>Touch</span></h2>
-                        <p style="color: var(--text-secondary); font-size: 0.95rem; line-height: 1.7; margin-bottom: 2rem;">
-                            Have questions about a collection you want to sell, bulk submissions, or how our shipping and payout processes work? Drop us a line and our buying team will get back to you within 24 hours.
+                        <h3 style="font-size: 1.3rem; margin-bottom: 1rem;">Vault 28 Contact Info</h3>
+                        <p style="color: var(--text-secondary); margin-bottom: 2rem; font-size: 0.95rem; line-height: 1.6;">
+                            Our typical response time is **under 24 hours**. If you want a quick cash offer on your collection, please use our dedicated submission page for faster service.
                         </p>
                         
-                        <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+                        <div style="display: flex; flex-direction: column; gap: 1.25rem;">
                             <div style="display: flex; align-items: center; gap: 1rem;">
                                 <div style="width: 44px; height: 44px; border-radius: 8px; background: rgba(223, 183, 80, 0.1); border: 1px solid rgba(223, 183, 80, 0.2); color: var(--accent-cyan); display: flex; align-items: center; justify-content: center;">
                                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
                                 </div>
                                 <div>
-                                    <h4 style="font-size: 0.85rem; color: var(--text-muted); text-transform: uppercase; margin: 0;">Email Us</h4>
-                                    <a href="mailto:info@vault28cards.com" style="color: var(--text-primary); font-weight: 500; transition: var(--transition-fast);" onmouseover="this.style.color='var(--accent-cyan)'" onmouseout="this.style.color='var(--text-primary)'">info@vault28cards.com</a>
+                                    <h4 style="font-size: 0.85rem; color: var(--text-muted); text-transform: uppercase; margin: 0;">Email Address</h4>
+                                    <a href="mailto:info@vault28cards.com" style="color: var(--text-primary); font-weight: 500;" id="contact-info-email">info@vault28cards.com</a>
                                 </div>
                             </div>
                             
@@ -231,483 +648,377 @@
                                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
                                 </div>
                                 <div>
-                                    <h4 style="font-size: 0.85rem; color: var(--text-muted); text-transform: uppercase; margin: 0;">Location</h4>
-                                    <p style="color: var(--text-primary); font-weight: 500; margin: 0;">Summerville, South Carolina</p>
+                                    <h4 style="font-size: 0.85rem; color: var(--text-muted); text-transform: uppercase; margin: 0;">Service Area</h4>
+                                    <p style="color: var(--text-primary); font-weight: 500; margin: 0;" id="contact-info-area">Summerville, Charleston, and surrounding SC areas (Or secure nationwide shipping)</p>
                                 </div>
                             </div>
-                            
-                            <div style="display: flex; gap: 1rem; margin-top: 1rem;">
-                                <a href="https://www.facebook.com/profile.php?id=61565494639433" target="_blank" style="width: 44px; height: 44px; border-radius: 50%; border: 1px solid var(--border-color); display: flex; align-items: center; justify-content: center; color: var(--text-secondary); transition: var(--transition-fast);" onmouseover="this.style.borderColor='var(--accent-cyan)'; this.style.color='var(--accent-cyan)'" onmouseout="this.style.borderColor='var(--border-color)'; this.style.color='var(--text-secondary)'">
-                                    <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M22 12c0-5.52-4.48-10-10-10S2 6.48 2 12c0 4.84 3.44 8.87 8 9.8V15H8v-3h2V9.5C10 7.57 11.57 6 13.5 6H16v3h-2c-.55 0-1 .45-1 1v2h3v3h-3v6.95c4.56-.93 8-4.96 8-9.75z"/></svg>
-                                </a>
-                                <a href="https://www.instagram.com/vault28cards" target="_blank" style="width: 44px; height: 44px; border-radius: 50%; border: 1px solid var(--border-color); display: flex; align-items: center; justify-content: center; color: var(--text-secondary); transition: var(--transition-fast);" onmouseover="this.style.borderColor='var(--accent-cyan)'; this.style.color='var(--accent-cyan)'" onmouseout="this.style.borderColor='var(--border-color)'; this.style.color='var(--text-secondary)'">
-                                    <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.051.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 1 0 0 12.324 6.162 6.162 0 0 0 0-12.324zM12 16a4 4 0 1 1 0-8 4 4 0 0 1 0 8zm6.406-11.845a1.44 1.44 0 1 0 0 2.881 1.44 1.44 0 0 0 0-2.881z"/></svg>
-                                </a>
-                            </div>
+                        </div>
+
+                        <div style="margin-top: 2rem; border-top: 1px solid var(--border-color); padding-top: 1.5rem;">
+                            <h4 style="font-size: 0.9rem; margin-bottom: 0.75rem;">Want to sell a collection?</h4>
+                            <button class="btn btn-primary btn-sm" onclick="switchView('seller-submit')">Go to Sell Page →</button>
                         </div>
                     </div>
                     
                     <div class="glass-card" style="padding: 2rem;">
-                        <form id="contact-form" style="display: flex; flex-direction: column; gap: 1.25rem;">
-                            <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
-                                <div class="form-group" style="text-align: left;">
+                        <form id="contact-form-inquiry" style="display: flex; flex-direction: column; gap: 1.25rem;">
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                                <div class="form-group">
                                     <label class="form-label" style="font-size: 0.8rem;">Your Name</label>
-                                    <input type="text" id="contact-name" placeholder="John Doe" required>
+                                    <input type="text" id="contact-inquiry-name" placeholder="John Doe" required>
                                 </div>
-                                <div class="form-group" style="text-align: left;">
+                                <div class="form-group">
                                     <label class="form-label" style="font-size: 0.8rem;">Email Address</label>
-                                    <input type="email" id="contact-email" placeholder="john@example.com" required>
+                                    <input type="email" id="contact-inquiry-email" placeholder="john@domain.com" required>
                                 </div>
                             </div>
-                            <div class="form-group" style="text-align: left;">
+                            <div class="form-group">
                                 <label class="form-label" style="font-size: 0.8rem;">Subject</label>
-                                <input type="text" id="contact-subject" placeholder="Question about selling cards" required>
+                                <input type="text" id="contact-inquiry-subject" placeholder="General question..." required>
                             </div>
-                            <div class="form-group" style="text-align: left;">
+                            <div class="form-group">
                                 <label class="form-label" style="font-size: 0.8rem;">Message</label>
-                                <textarea id="contact-message" rows="5" placeholder="Tell us about your collection..." required></textarea>
+                                <textarea id="contact-inquiry-message" rows="5" placeholder="Write your message here..." required></textarea>
                             </div>
-                            <button type="submit" class="btn btn-primary" style="width: 100%;">Send Message</button>
+                            <button type="submit" class="btn btn-primary">Send Message</button>
                         </form>
                     </div>
                 </div>
             </div>
-
-            <!-- Footer -->
-            <footer style="background: var(--bg-secondary); border-top: 1px solid var(--border-color); padding: 3rem 0; margin-top: 5rem; text-align: center;">
-                <div class="container" style="display: flex; flex-direction: column; align-items: center; gap: 1.5rem;">
-                    <a href="#" class="logo" style="display: flex; align-items: center; gap: 0.5rem; justify-content: center;">
-                        <img src="assets/logo.png" alt="Vault 28 Logo" style="height: 48px; width: auto; border-radius: 8px;" onerror="this.style.display='none';">
-                        <span style="font-family: var(--font-title); font-weight: 800; font-size: 1.3rem; background: linear-gradient(135deg, var(--text-primary) 30%, var(--accent-cyan) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">VAULT <span>28</span></span>
-                    </a>
-                    <p style="color: var(--text-secondary); font-size: 0.85rem; max-width: 500px; line-height: 1.6; margin: 0;">
-                        Vault 28 Trading Co. is the premier platform to sell basketball, baseball, and football card collections. Serving collectors nationwide from Summerville, SC.
-                    </p>
-                    <div style="display: flex; gap: 1.5rem; justify-content: center; font-size: 0.9rem;">
-                        <a href="#seller-landing" style="color: var(--text-secondary); transition: var(--transition-fast);" onmouseover="this.style.color='var(--accent-cyan)'" onmouseout="this.style.color='var(--text-secondary)'">Home</a>
-                        <a href="#" onclick="switchView('seller-submit')" style="color: var(--text-secondary); transition: var(--transition-fast);" onmouseover="this.style.color='var(--accent-cyan)'" onmouseout="this.style.color='var(--text-secondary)'">Submit Cards</a>
-                        <a href="#" onclick="switchView('seller-dashboard')" style="color: var(--text-secondary); transition: var(--transition-fast);" onmouseover="this.style.color='var(--accent-cyan)'" onmouseout="this.style.color='var(--text-secondary)'">My Dashboard</a>
-                    </div>
-                    <div style="display: flex; gap: 1rem; justify-content: center; margin-top: 0.5rem;">
-                        <a href="https://www.facebook.com/profile.php?id=61565494639433" target="_blank" style="color: var(--text-secondary); transition: var(--transition-fast);" onmouseover="this.style.color='var(--accent-cyan)'" onmouseout="this.style.color='var(--text-secondary)'">
-                            <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M22 12c0-5.52-4.48-10-10-10S2 6.48 2 12c0 4.84 3.44 8.87 8 9.8V15H8v-3h2V9.5C10 7.57 11.57 6 13.5 6H16v3h-2c-.55 0-1 .45-1 1v2h3v3h-3v6.95c4.56-.93 8-4.96 8-9.75z"/></svg>
-                        </a>
-                        <a href="https://www.instagram.com/vault28cards" target="_blank" style="color: var(--text-secondary); transition: var(--transition-fast);" onmouseover="this.style.color='var(--accent-cyan)'" onmouseout="this.style.color='var(--text-secondary)'">
-                            <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.051.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 1 0 0 12.324 6.162 6.162 0 0 0 0-12.324zM12 16a4 4 0 1 1 0-8 4 4 0 0 1 0 8zm6.406-11.845a1.44 1.44 0 1 0 0 2.881 1.44 1.44 0 0 0 0-2.881z"/></svg>
-                        </a>
-                    </div>
-                    <div style="border-top: 1px solid rgba(255,255,255,0.03); width: 100%; padding-top: 1.5rem; color: var(--text-muted); font-size: 0.8rem; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 1rem;">
-                        <span>© 2026 Vault 28 Trading Co. All rights reserved.</span>
-                        <span>Your shelf to our vault.</span>
-                    </div>
-                </div>
-            </footer>
         </section>
 
-        <!-- Seller View 2: Submit Collection Wizard -->
-        <section id="seller-submit" class="page-view">
-            <div style="max-width: 800px; margin: 0 auto;">
-                <div class="content-header" style="margin-bottom: 2rem;">
+
+        <!-- ==================== ADMIN (BUYER) VIEWS ==================== -->
+        
+        <!-- Admin View 1: Main Admin Console / Dashboard -->
+        <section id="buyer-dashboard" class="page-view">
+            <div style="max-width: 1300px; margin: 0 auto; text-align: left;">
+                <div class="content-header" style="margin-bottom: 2rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
                     <div>
-                        <h2 style="font-size: 2rem;">Submit a New Collection</h2>
-                        <p style="color: var(--text-secondary);">Fill in the details below to catalog your cards for valuation review.</p>
+                        <h2 style="font-size: 2rem;">Admin Console</h2>
+                        <p style="color: var(--text-secondary);">Manage collections submissions, store inventory, and public website content.</p>
                     </div>
-                    <button class="btn btn-secondary btn-sm" id="btn-cancel-submit">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
-                        Back
-                    </button>
+                </div>
+                
+                <!-- Admin tab buttons -->
+                <div class="admin-tabs-nav">
+                    <button class="admin-tab-btn active" id="tab-btn-submissions">Submissions (<span id="admin-badge-submissions">0</span>)</button>
+                    <button class="admin-tab-btn" id="tab-btn-inventory">Shop Inventory (<span id="admin-badge-inventory">0</span>)</button>
+                    <button class="admin-tab-btn" id="tab-btn-content">Page Content</button>
                 </div>
 
-                <div class="glass-card">
-                    <form id="submission-form">
-                        <!-- Step 1: Collection Overview -->
-                        <div id="step-1" class="wizard-step active">
-                            <h3 style="margin-bottom: 1.5rem; color: var(--accent-cyan);">Step 1: Collection Overview</h3>
-                            <div class="form-group">
-                                <label for="collection-name">Collection Name / Title</label>
-                                <input type="text" id="collection-name" placeholder="e.g., Rare Jordan Rookies & 90's Bulls Gems" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="collection-desc">Description & History</label>
-                                <textarea id="collection-desc" rows="4" placeholder="Tell us about the cards. Where did you get them? Are there any specific details or grades we should know about?" required></textarea>
-                            </div>
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label for="collection-sport">Primary Sport</label>
-                                    <select id="collection-sport">
-                                        <option value="Basketball">Basketball</option>
-                                        <option value="Baseball">Baseball</option>
-                                        <option value="Football">Football</option>
-                                        <option value="Soccer">Soccer</option>
-                                        <option value="Pokemon/TCG">Pokemon/TCG</option>
-                                        <option value="Multi-Sport">Multi-Sport</option>
-                                    </select>
-                                </div>
-                                <div class="form-group">
-                                    <label for="collection-asking">Your Asking Price ($)</label>
-                                    <input type="number" id="collection-asking" placeholder="1500" min="1" required>
-                                </div>
-                            </div>
-                            <div style="display: flex; justify-content: flex-end; margin-top: 2rem;">
-                                <button type="button" class="btn btn-primary" id="btn-step1-next">
-                                    Next: Add Cards
-                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-                                </button>
-                            </div>
+                <!-- Admin Tab 1: Submissions Manager -->
+                <div class="admin-tab-panel active" id="panel-submissions">
+                    <!-- Valuation summary statistics -->
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 2rem;">
+                        <div class="glass-card" style="padding: 1rem; text-align: center;">
+                            <div style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase;">Total Submissions</div>
+                            <div style="font-size: 1.75rem; font-weight: 700; margin-top: 0.25rem;" id="stat-total-submissions">0</div>
                         </div>
+                        <div class="glass-card" style="padding: 1rem; text-align: center;">
+                            <div style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase;">Pending Review</div>
+                            <div style="font-size: 1.75rem; font-weight: 700; color: var(--accent-orange); margin-top: 0.25rem;" id="stat-pending-valuations">0</div>
+                        </div>
+                        <div class="glass-card" style="padding: 1rem; text-align: center;">
+                            <div style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase;">Active Negotiations</div>
+                            <div style="font-size: 1.75rem; font-weight: 700; color: var(--accent-cyan); margin-top: 0.25rem;" id="stat-active-negotiations">0</div>
+                        </div>
+                        <div class="glass-card" style="padding: 1rem; text-align: center;">
+                            <div style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase;">Deals Purchased</div>
+                            <div style="font-size: 1.75rem; font-weight: 700; color: var(--accent-emerald); margin-top: 0.25rem;" id="stat-deals-closed">0</div>
+                        </div>
+                    </div>
 
-                        <!-- Step 2: Add Cards -->
-                        <div id="step-2" class="wizard-step">
-                            <h3 style="margin-bottom: 1.5rem; color: var(--accent-cyan);">Step 2: Add Cards & Photos</h3>
+                    <div class="glass-card" style="padding: 1.5rem; overflow-x: auto;">
+                        <table style="width: 100%; border-collapse: collapse; text-align: left;">
+                            <thead>
+                                <tr style="border-bottom: 2px solid var(--border-color); color: var(--text-primary); font-size: 0.85rem; text-transform: uppercase; font-family: var(--font-title);">
+                                    <th style="padding: 0.75rem 0.5rem;">Collection Name</th>
+                                    <th style="padding: 0.75rem 0.5rem;">Seller</th>
+                                    <th style="padding: 0.75rem 0.5rem;">Category</th>
+                                    <th style="padding: 0.75rem 0.5rem;">Count</th>
+                                    <th style="padding: 0.75rem 0.5rem;">Asking Price</th>
+                                    <th style="padding: 0.75rem 0.5rem;">Offer Value</th>
+                                    <th style="padding: 0.75rem 0.5rem;">Status</th>
+                                    <th style="padding: 0.75rem 0.5rem; text-align: right;">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="buyer-submissions-list-rows">
+                                <!-- Loaded dynamically via app.js -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Admin Tab 2: Inventory Manager (Manage Shop Listings) -->
+                <div class="admin-tab-panel" id="panel-inventory">
+                    <div style="display: grid; grid-template-columns: 1fr 1.5fr; gap: 2rem; align-items: start;">
+                        <!-- Add Product Form -->
+                        <div class="glass-card" style="padding: 1.5rem;">
+                            <h3 style="font-size: 1.2rem; margin-bottom: 1.25rem;" id="admin-inventory-form-title">Add New Shop Product</h3>
                             
-                            <div class="glass-card" style="background: rgba(0,0,0,0.15); margin-bottom: 1.5rem; border-color: rgba(255,255,255,0.05);">
-                                <h4 style="margin-bottom: 1rem; font-size: 1rem;">Add Card Details</h4>
-                                <div class="form-row">
+                            <form id="admin-product-form" style="display: flex; flex-direction: column; gap: 1rem;">
+                                <input type="hidden" id="admin-prod-id">
+                                
+                                <div class="form-group">
+                                    <label for="admin-prod-title">Product Title</label>
+                                    <input type="text" id="admin-prod-title" placeholder="e.g. 1999 Pokémon Base Set Charizard Holo" required>
+                                </div>
+
+                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
                                     <div class="form-group">
-                                        <label for="card-player">Player Name</label>
-                                        <input type="text" id="card-player" placeholder="e.g., Michael Jordan">
+                                        <label for="admin-prod-price">Price ($)</label>
+                                        <input type="number" id="admin-prod-price" placeholder="e.g. 350" required min="1">
                                     </div>
                                     <div class="form-group">
-                                        <label for="card-brand">Brand / Set Name</label>
-                                        <input type="text" id="card-brand" placeholder="e.g., Fleer Rookie">
+                                        <label for="admin-prod-condition">Condition / Grade</label>
+                                        <input type="text" id="admin-prod-condition" placeholder="e.g. PSA 8 / Near Mint" required>
                                     </div>
                                 </div>
-                                <div class="form-row">
+
+                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
                                     <div class="form-group">
-                                        <label for="card-year">Year</label>
-                                        <input type="number" id="card-year" placeholder="e.g., 1986">
+                                        <label for="admin-prod-category">Category</label>
+                                        <select id="admin-prod-category">
+                                            <option value="Sports Cards">Sports Cards</option>
+                                            <option value="Pokémon & TCG">Pokémon & TCG</option>
+                                            <option value="Sealed Product">Sealed Product</option>
+                                            <option value="Complete Sets">Complete Sets</option>
+                                            <option value="Card Lots">Card Lots</option>
+                                            <option value="Other Collectibles">Other Collectibles</option>
+                                        </select>
                                     </div>
                                     <div class="form-group">
-                                        <label for="card-grade">Condition / Graded Slab Score</label>
-                                        <select id="card-grade">
-                                            <option value="PSA 10 Gem Mint">PSA 10 Gem Mint</option>
-                                            <option value="PSA 9 Mint">PSA 9 Mint</option>
-                                            <option value="BGS 9.5 Gem Mint">BGS 9.5 Gem Mint</option>
-                                            <option value="PSA 8 Near-Mint/Mint">PSA 8 NM-Mint</option>
-                                            <option value="Ungraded (Excellent)">Ungraded (Excellent)</option>
-                                            <option value="Ungraded (Very Good)">Ungraded (Very Good)</option>
-                                            <option value="Ungraded (Played)">Ungraded (Played)</option>
+                                        <label for="admin-prod-availability">Availability</label>
+                                        <select id="admin-prod-availability">
+                                            <option value="Available">Available (Active)</option>
+                                            <option value="Sold">Sold</option>
                                         </select>
                                     </div>
                                 </div>
+
                                 <div class="form-group">
-                                    <label>Card Photo (Optional mockup)</label>
-                                    <div class="upload-dropzone" id="card-dropzone">
-                                        <div class="upload-icon">📷</div>
-                                        <div class="upload-text">Click to choose or drag photo here</div>
-                                        <div class="upload-hint">Supports JPEG, PNG (Mock images will load if empty)</div>
-                                        <input type="file" id="card-file-input" accept="image/*" style="display: none;">
-                                    </div>
-                                    <div class="uploaded-images-preview" id="card-images-preview">
-                                        <!-- Temporary image preview -->
-                                    </div>
+                                    <label for="admin-prod-desc">Description</label>
+                                    <textarea id="admin-prod-desc" rows="3" placeholder="Card highlights, features, or shipping notes..." required></textarea>
                                 </div>
-                                <button type="button" class="btn btn-secondary btn-sm" id="btn-add-card-to-list" style="width: 100%;">
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
-                                    Add Card to Collection List
-                                </button>
-                            </div>
 
-                            <!-- List of Added Cards -->
-                            <div style="margin-bottom: 2rem;">
-                                <h4 style="margin-bottom: 0.75rem; font-size: 1rem;">Collection Card List (<span id="cards-count-badge">0</span> added)</h4>
-                                <div id="temp-cards-list" class="cards-list-container">
-                                    <!-- Rows added here dynamically -->
-                                    <div style="text-align: center; padding: 2rem; color: var(--text-muted); border: 1px dashed var(--border-color); border-radius: 8px;">
-                                        No cards added yet. Add at least one card detail above.
-                                    </div>
+                                <div class="form-group">
+                                    <label for="admin-prod-shipping">Shipping / Local Pickup Info</label>
+                                    <input type="text" id="admin-prod-shipping" placeholder="e.g. $5.00 Insured Shipping / Free Summerville SC Pickup" required>
                                 </div>
-                            </div>
 
-                            <div style="display: flex; justify-content: space-between;">
-                                <button type="button" class="btn btn-secondary" id="btn-step2-prev">Back</button>
-                                <button type="submit" class="btn btn-success" id="btn-submit-collection">
-                                    Submit to Vault 28
-                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>
-                                </button>
-                            </div>
+                                <!-- Product Image Upload -->
+                                <div class="form-group">
+                                    <label>Product Image</label>
+                                    <div class="upload-dropzone" id="admin-prod-dropzone">
+                                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-bottom: 0.5rem; color: var(--text-muted);"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
+                                        <span>Drag & Drop image, or <strong style="color: var(--accent-cyan);">Browse</strong></span>
+                                        <input type="file" id="admin-prod-file-input" accept="image/*" style="display: none;">
+                                    </div>
+                                    <div id="admin-prod-image-preview" style="margin-top: 0.75rem;"></div>
+                                </div>
+
+                                <button type="submit" class="btn btn-primary" style="margin-top: 0.5rem;" id="btn-admin-prod-submit">Save Product Listing</button>
+                                <button type="button" class="btn btn-secondary btn-sm" id="btn-admin-prod-cancel" style="display: none;">Cancel Edit</button>
+                            </form>
                         </div>
-                    </form>
-                </div>
-            </div>
-        </section>
-
-        <!-- Seller View 3: Dashboard (Collection List) -->
-        <section id="seller-dashboard" class="page-view">
-            <div class="content-header" style="margin-bottom: 2rem;">
-                <div>
-                    <h2 style="font-size: 2rem;">My Submitted Collections</h2>
-                    <p style="color: var(--text-secondary);">Track values, offers, and negotiations for your sports card collections.</p>
-                </div>
-                <button class="btn btn-primary" id="btn-dashboard-new">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
-                    New Submission
-                </button>
-            </div>
-
-            <!-- List of collections grid -->
-            <div id="seller-collections-list" class="collections-grid">
-                <!-- Rendered dynamically -->
-            </div>
-        </section>
-
-        <!-- Seller View 4: Collection Detail Page & Chat -->
-        <section id="seller-detail" class="page-view">
-            <div class="content-header" style="margin-bottom: 2rem;">
-                <div style="display: flex; align-items: center; gap: 1rem;">
-                    <button class="btn btn-secondary btn-sm" id="btn-seller-back-dashboard">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
-                    </button>
-                    <div>
-                        <h2 id="seller-detail-title" style="font-size: 1.8rem;">Collection Details</h2>
-                        <div style="display: flex; gap: 0.5rem; align-items: center; margin-top: 0.25rem;">
-                            <span class="badge badge-pending" id="seller-detail-status">Pending Review</span>
-                            <span style="color: var(--text-muted); font-size: 0.85rem;" id="seller-detail-sport">Basketball</span>
-                        </div>
-                    </div>
-                </div>
-                <div id="seller-status-alert-box"></div>
-            </div>
-
-            <div class="detail-layout">
-                <!-- Left Pane: Card List & Details -->
-                <div class="detail-info-pane">
-                    <div class="glass-card">
-                        <h3 style="margin-bottom: 1rem; font-size: 1.2rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">Collection Description</h3>
-                        <p id="seller-detail-desc" style="color: var(--text-secondary); font-size: 0.95rem; line-height: 1.6;">Description goes here.</p>
-                    </div>
-
-                    <div class="glass-card">
-                        <h3 style="margin-bottom: 1rem; font-size: 1.2rem;">Slab Mockups & Details (<span id="seller-detail-card-count">0</span> Cards)</h3>
                         
-                        <!-- Graded card layout horizontal -->
-                        <div id="seller-detail-slab-visuals" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 2rem;">
-                            <!-- Render graded cards PSA-style labels dynamically -->
-                        </div>
-
-                        <h4 style="margin-bottom: 0.75rem; font-size: 1rem; border-top: 1px solid var(--border-color); padding-top: 1rem;">Complete Inventory Sheet</h4>
-                        <div id="seller-detail-cards-list" class="cards-list-container">
-                            <!-- Raw detail rows -->
+                        <!-- Product Listings Table -->
+                        <div class="glass-card" style="padding: 1.5rem; overflow-x: auto;">
+                            <h3 style="font-size: 1.2rem; margin-bottom: 1.25rem;">Active Inventory Listings</h3>
+                            <table style="width: 100%; border-collapse: collapse; text-align: left;">
+                                <thead>
+                                    <tr style="border-bottom: 1px solid var(--border-color); color: var(--text-primary); font-size: 0.8rem; text-transform: uppercase;">
+                                        <th style="padding: 0.5rem;">Preview</th>
+                                        <th style="padding: 0.5rem;">Title</th>
+                                        <th style="padding: 0.5rem;">Price</th>
+                                        <th style="padding: 0.5rem;">Category</th>
+                                        <th style="padding: 0.5rem;">Status</th>
+                                        <th style="padding: 0.5rem; text-align: right;">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="admin-inventory-list-rows">
+                                    <!-- Loaded dynamically via app.js -->
+                                </tbody>
+                            </table>
                         </div>
                     </div>
                 </div>
 
-                <!-- Right Pane: Negotiation Chat -->
-                <div class="chat-container">
-                    <div class="chat-header">
-                        <div class="chat-user-info">
-                            <div class="chat-avatar buyer">V28</div>
+                <!-- Admin Tab 3: Website Content Editor -->
+                <div class="admin-tab-panel" id="panel-content">
+                    <div style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 2rem; align-items: start;">
+                        <!-- Manage Customer Testimonials -->
+                        <div class="glass-card" style="padding: 1.5rem;">
+                            <h3 style="font-size: 1.2rem; margin-bottom: 1.25rem;">Add Customer Testimonial</h3>
+                            <form id="admin-review-form" style="display: flex; flex-direction: column; gap: 1rem;">
+                                <div class="form-group">
+                                    <label for="admin-rev-name">Customer Name</label>
+                                    <input type="text" id="admin-rev-name" placeholder="e.g. Mike T." required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="admin-rev-location">Customer Location</label>
+                                    <input type="text" id="admin-rev-location" placeholder="e.g. Summerville, SC" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="admin-rev-stars">Rating (1 - 5 Stars)</label>
+                                    <select id="admin-rev-stars">
+                                        <option value="5">⭐⭐⭐⭐⭐ (5 Stars)</option>
+                                        <option value="4">⭐⭐⭐⭐ (4 Stars)</option>
+                                        <option value="3">⭐⭐⭐ (3 Stars)</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="admin-rev-text">Review Comments</label>
+                                    <textarea id="admin-rev-text" rows="3" placeholder="Excellent experience selling my collection..." required></textarea>
+                                </div>
+                                <button type="submit" class="btn btn-primary btn-sm">Add Testimonial to Homepage</button>
+                            </form>
+                            
+                            <h4 style="font-size: 1rem; margin-top: 2rem; margin-bottom: 0.75rem; border-top: 1px solid var(--border-color); padding-top: 1.5rem;">Active Homepage Reviews</h4>
+                            <div id="admin-reviews-list" style="display: flex; flex-direction: column; gap: 0.75rem; text-align: left;">
+                                <!-- Managed dynamically -->
+                            </div>
+                        </div>
+
+                        <!-- Manage Contact Settings -->
+                        <div class="glass-card" style="padding: 1.5rem; display: flex; flex-direction: column; gap: 1.5rem;">
                             <div>
-                                <h4 style="font-size: 0.95rem;">Vault 28 Buying Desk</h4>
-                                <span style="font-size: 0.75rem; color: #10b981; display: flex; align-items: center; gap: 4px;">
-                                    <span style="width: 6px; height: 6px; background-color: #10b981; border-radius: 50%;"></span>
-                                    Online • Pro Evaluator
-                                </span>
+                                <h3 style="font-size: 1.2rem; margin-bottom: 1.25rem;">Manage Contact details & Settings</h3>
+                                <form id="admin-settings-form" style="display: flex; flex-direction: column; gap: 1rem;">
+                                    <div class="form-group">
+                                        <label for="admin-set-email">Public Business Email</label>
+                                        <input type="email" id="admin-set-email" placeholder="info@vault28cards.com" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="admin-set-area">Service Area Location Text</label>
+                                        <input type="text" id="admin-set-area" placeholder="Summerville, SC and surrounding areas" required>
+                                    </div>
+                                    <button type="submit" class="btn btn-primary btn-sm">Save Website Settings</button>
+                                </form>
+                            </div>
+
+                            <div style="border-top: 1px solid var(--border-color); padding-top: 1.5rem;">
+                                <h3 style="font-size: 1.2rem; margin-bottom: 1rem;">Reset Website Data</h3>
+                                <p style="color: var(--text-secondary); font-size: 0.82rem; line-height: 1.5; margin-bottom: 1rem;">
+                                    Clicking the button below will clear all locally modified database entries and reseed the platform with default collections, reviews, and catalog products.
+                                </p>
+                                <button class="btn btn-secondary btn-sm" id="btn-admin-reset-db" style="color: var(--accent-red); border-color: rgba(239,68,68,0.2); width:100%;">
+                                    ⚠️ Reset Database to Defaults
+                                </button>
                             </div>
                         </div>
-                        <div class="price-label" style="text-align: right;">
-                            <span style="font-size: 0.75rem; color: var(--text-muted);">Counter Offer</span>
-                            <div class="price-val offer" id="seller-chat-header-price">$0</div>
-                        </div>
-                    </div>
-
-                    <div class="chat-messages" id="seller-chat-messages">
-                        <!-- Chat bubbles rendered here dynamically -->
-                    </div>
-
-                    <!-- Negotiation Actions for Seller (e.g. Accept Offer) -->
-                    <div id="seller-chat-action-box" style="padding: 0 1rem; display: none;">
-                        <!-- Decided in JS -->
-                    </div>
-
-                    <div class="chat-footer">
-                        <div class="chat-suggestions" id="seller-chat-suggestions">
-                            <div class="chat-suggestion-chip">I'm ready to ship tomorrow.</div>
-                            <div class="chat-suggestion-chip">Can you go a bit higher on the Jordan?</div>
-                            <div class="chat-suggestion-chip">I have more cards I can add.</div>
-                        </div>
-                        <form id="seller-chat-form" class="chat-input-row">
-                            <input type="text" class="chat-input" id="seller-chat-input" placeholder="Type a message to the buyer...">
-                            <button type="submit" class="chat-send-btn">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-                            </button>
-                        </form>
                     </div>
                 </div>
+
             </div>
         </section>
 
-
-        <!-- ==================== BUYER (OWNER) VIEWS ==================== -->
-        
-        <!-- Buyer View 1: Dashboard Overview -->
-        <section id="buyer-dashboard" class="page-view">
-            <div class="content-header" style="margin-bottom: 2rem;">
-                <div>
-                    <h2 style="font-size: 2rem;">Vault 28 Valuation Desk</h2>
-                    <p style="color: var(--text-secondary);">Manage card submissions, analyze conditions, and negotiate purchase deals.</p>
-                </div>
-            </div>
-
-            <!-- Stats Banner -->
-            <div class="stats-row" style="margin-bottom: 2rem;">
-                <div class="glass-card stat-card">
-                    <div class="stat-val" id="stat-total-submissions">0</div>
-                    <div class="stat-label">Total Submissions</div>
-                </div>
-                <div class="glass-card stat-card cyan">
-                    <div class="stat-val" id="stat-pending-valuations">0</div>
-                    <div class="stat-label">Pending Review</div>
-                </div>
-                <div class="glass-card stat-card orange">
-                    <div class="stat-val" id="stat-active-negotiations">0</div>
-                    <div class="stat-label">Active Offers</div>
-                </div>
-                <div class="glass-card stat-card emerald">
-                    <div class="stat-val" id="stat-deals-closed">0</div>
-                    <div class="stat-label">Deals Closed</div>
-                </div>
-            </div>
-
-            <!-- Submission Review List -->
-            <div class="glass-card">
-                <h3 style="margin-bottom: 1.25rem; font-size: 1.25rem;">Incoming Submissions Inventory</h3>
-                <div style="overflow-x: auto;">
-                    <table style="width: 100%; border-collapse: collapse; text-align: left;" id="buyer-submissions-table">
-                        <thead>
-                            <tr style="border-bottom: 1px solid var(--border-color); color: var(--text-secondary); font-size: 0.85rem; font-family: var(--font-title); text-transform: uppercase;">
-                                <th style="padding: 1rem 0.5rem;">Collection Name</th>
-                                <th style="padding: 1rem 0.5rem;">Seller</th>
-                                <th style="padding: 1rem 0.5rem;">Primary Sport</th>
-                                <th style="padding: 1rem 0.5rem;">Card Qty</th>
-                                <th style="padding: 1rem 0.5rem;">Asking Price</th>
-                                <th style="padding: 1rem 0.5rem;">Vault Offer</th>
-                                <th style="padding: 1rem 0.5rem;">Status</th>
-                                <th style="padding: 1rem 0.5rem; text-align: right;">Action</th>
-                            </tr>
-                        </thead>
-                        <tbody id="buyer-submissions-list-rows">
-                            <!-- Dynamic rows -->
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </section>
-
-        <!-- Buyer View 2: Submission Valuation Worksheet & Chat -->
+        <!-- Admin View 2: Collection Review / Valuation Panel -->
         <section id="buyer-detail" class="page-view">
-            <div class="content-header" style="margin-bottom: 2rem;">
-                <div style="display: flex; align-items: center; gap: 1rem;">
-                    <button class="btn btn-secondary btn-sm" id="btn-buyer-back-dashboard">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
-                    </button>
-                    <div>
-                        <h2 id="buyer-detail-title" style="font-size: 1.8rem;">Review Submission</h2>
-                        <div style="display: flex; gap: 0.5rem; align-items: center; margin-top: 0.25rem;">
-                            <span class="badge badge-pending" id="buyer-detail-status">Pending Review</span>
-                            <span style="color: var(--text-muted); font-size: 0.85rem;" id="buyer-detail-sport">Baseball</span>
-                            <span style="color: var(--text-muted); font-size: 0.85rem;">• Submitted by <span id="buyer-detail-seller-name" style="font-weight: 600; color: var(--text-primary);">Luke S.</span></span>
+            <div style="max-width: 1200px; margin: 0 auto; text-align: left;">
+                <div class="content-header" style="margin-bottom: 2rem;">
+                    <button class="btn btn-secondary btn-sm" id="btn-buyer-back-dashboard" style="margin-bottom: 1rem;">← Back to Admin Console</button>
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1rem;">
+                        <div>
+                            <h2 style="font-size: 2.25rem; font-family: var(--font-title);" id="buyer-detail-title">Collection Title</h2>
+                            <p style="color: var(--text-secondary);">Submitted by: <strong id="buyer-detail-seller-name" style="color: var(--text-primary);">Seller Name</strong></p>
+                        </div>
+                        <div style="text-align: right;">
+                            <span class="badge" id="buyer-detail-status">Status</span>
                         </div>
                     </div>
                 </div>
-                <div id="buyer-status-alert-box"></div>
-            </div>
+                
+                <!-- Valuation alert status -->
+                <div id="buyer-status-alert-box" style="margin-bottom: 2rem;"></div>
 
-            <div class="detail-layout">
-                <!-- Left Pane: Card Details, Image Inspection, and Counter Offer Tool -->
-                <div class="detail-info-pane">
-                    
-                    <!-- Description -->
-                    <div class="glass-card">
-                        <h3 style="margin-bottom: 0.5rem; font-size: 1.1rem;">Seller Notes & Description</h3>
-                        <p id="buyer-detail-desc" style="color: var(--text-secondary); font-size: 0.95rem; line-height: 1.6;">Notes...</p>
-                    </div>
-
-                    <!-- Valuation Panel -->
-                    <div class="glass-card" style="border-color: rgba(6, 182, 212, 0.3);">
-                        <h3 style="margin-bottom: 1rem; font-size: 1.2rem; color: var(--accent-cyan);">Valuation Tool & Financial Offer</h3>
-                        
-                        <div class="owner-action-panel">
-                            <div class="form-row">
+                <div class="detail-layout">
+                    <!-- Left: Card highlights and detail tables -->
+                    <div>
+                        <!-- Valuation Form Controls -->
+                        <div class="glass-card" style="padding: 1.5rem; margin-bottom: 2rem; border-color: var(--accent-orange);">
+                            <h3 style="font-size: 1.15rem; margin-bottom: 1.25rem; font-family: var(--font-title); color: var(--accent-cyan);">Valuation Controls</h3>
+                            
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; margin-bottom: 1rem;">
                                 <div class="form-group">
-                                    <label>Seller's Asking Price</label>
-                                    <div class="owner-price-input-group" style="opacity: 0.7; background: rgba(255,255,255,0.03);">
-                                        <span class="owner-price-prefix">$</span>
-                                        <input type="text" id="buyer-val-asking" readonly style="color: var(--text-secondary);">
-                                    </div>
+                                    <label>User's Asking Price</label>
+                                    <input type="text" id="buyer-val-asking" readonly style="background: rgba(0,0,0,0.3); border-color: rgba(255,255,255,0.03);">
                                 </div>
                                 <div class="form-group">
-                                    <label>Vault 28 Counter Offer ($)</label>
-                                    <div class="owner-price-input-group">
-                                        <span class="owner-price-prefix">$</span>
-                                        <input type="number" id="buyer-val-offer" placeholder="Enter offer amount...">
-                                    </div>
+                                    <label>Vault 28 Valuation Offer ($)</label>
+                                    <input type="number" id="buyer-val-offer" placeholder="Enter offer value...">
                                 </div>
                             </div>
                             
-                            <div class="form-group">
-                                <label for="buyer-offer-note">Offer Rationale / Notes (Sent to Seller)</label>
-                                <textarea id="buyer-offer-note" rows="2" placeholder="e.g. Valuation is based on the centering error on the card and recent eBay sales..."></textarea>
+                            <div class="form-group" style="margin-bottom: 1.25rem;">
+                                <label for="buyer-offer-note">Offer Description Notes (Will show in customer's chat)</label>
+                                <textarea id="buyer-offer-note" rows="2" placeholder="e.g. Based on PSA 8 sales, we can offer $4,800 package value..."></textarea>
                             </div>
-
-                            <div style="display: flex; gap: 0.5rem;">
-                                <button class="btn btn-outline-cyan btn-sm" style="flex: 1;" id="btn-buyer-send-offer">
-                                    Send Counter Offer
-                                </button>
-                                <button class="btn btn-success btn-sm" style="flex: 1;" id="btn-buyer-buy-asking">
-                                    Buy at Asking Price
-                                </button>
-                                <button class="btn btn-secondary btn-sm" style="color: var(--accent-red); border-color: rgba(239, 68, 68, 0.3);" id="btn-buyer-decline">
-                                    Decline Submission
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Slabs Visuals -->
-                    <div class="glass-card">
-                        <h3 style="margin-bottom: 1rem; font-size: 1.2rem;">Inventory Inspection (<span id="buyer-detail-card-count">0</span> Cards)</h3>
-                        <div id="buyer-detail-slab-visuals" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(185px, 1fr)); gap: 1rem; margin-bottom: 2rem;">
-                            <!-- Slab details -->
-                        </div>
-                        <div id="buyer-detail-cards-list" class="cards-list-container">
-                            <!-- Table breakdown rows -->
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Right Pane: Negotiation Chat -->
-                <div class="chat-container">
-                    <div class="chat-header">
-                        <div class="chat-user-info">
-                            <div class="chat-avatar" id="buyer-chat-avatar">S</div>
-                            <div>
-                                <h4 style="font-size: 0.95rem;" id="buyer-chat-seller-title">Seller Name</h4>
-                                <span style="font-size: 0.75rem; color: var(--text-secondary);">Direct Negotiation Line</span>
+                            
+                            <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+                                <button class="btn btn-primary btn-sm" id="btn-buyer-send-offer">Send Counter Offer</button>
+                                <button class="btn btn-success btn-sm" id="btn-buyer-buy-asking">Buy at Asking Price</button>
+                                <button class="btn btn-secondary btn-sm" style="color: var(--accent-red);" id="btn-buyer-decline">Decline Submission</button>
+                                
+                                <div style="margin-left: auto;">
+                                    <label for="buyer-set-status-select" style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-bottom: 2px;">STATUS LABEL</label>
+                                    <select id="buyer-set-status-select" style="padding: 0.4rem; font-size: 0.8rem; border-radius: 6px; width: 140px;">
+                                        <option value="New">New</option>
+                                        <option value="Reviewing">Reviewing</option>
+                                        <option value="Offer Sent">Offer Sent</option>
+                                        <option value="Accepted">Accepted</option>
+                                        <option value="Declined">Declined</option>
+                                        <option value="Purchased">Purchased</option>
+                                    </select>
+                                </div>
                             </div>
                         </div>
-                        <div class="price-label" style="text-align: right;">
-                            <span style="font-size: 0.75rem; color: var(--text-muted);">Asking Price</span>
-                            <div class="price-val" id="buyer-chat-header-price">$0</div>
+
+                        <h3 style="font-size: 1.25rem; margin-bottom: 1rem;">Submitted Highlight Slabs</h3>
+                        <div class="slab-visuals-grid" id="buyer-detail-slab-visuals">
+                            <!-- Graded slabs rendered here -->
+                        </div>
+                        
+                        <h3 style="font-size: 1.25rem; margin-top: 2rem; margin-bottom: 1rem;">Collection Catalog details</h3>
+                        <div class="cards-list-container" id="buyer-detail-cards-list">
+                            <!-- Table of items list -->
                         </div>
                     </div>
-
-                    <div class="chat-messages" id="buyer-chat-messages">
-                        <!-- Chat messages rendered dynamically -->
-                    </div>
-
-                    <div class="chat-footer">
-                        <div class="chat-suggestions" id="buyer-chat-suggestions">
-                            <div class="chat-suggestion-chip">Could you upload a photo of the corners?</div>
-                            <div class="chat-suggestion-chip">Based on recent sales, we can offer...</div>
-                            <div class="chat-suggestion-chip">Are you looking for cash or trade?</div>
+                    
+                    <!-- Right: Live Chat box with seller -->
+                    <div class="chat-section">
+                        <div class="chat-header">
+                            <div style="display: flex; align-items: center; gap: 0.75rem;">
+                                <div class="chat-avatar" id="buyer-chat-avatar">S</div>
+                                <div style="text-align: left;">
+                                    <div style="font-size: 0.9rem; font-weight: 600;" id="buyer-chat-seller-title">Seller Name</div>
+                                    <div style="font-size: 0.72rem; color: var(--text-muted);" id="buyer-detail-card-count">0 items</div>
+                                </div>
+                            </div>
+                            <div style="text-align: right;">
+                                <div style="font-size: 0.75rem; color: var(--text-muted); font-weight: 500;">ASKING PRICE</div>
+                                <div id="buyer-chat-header-price">$0</div>
+                            </div>
                         </div>
-                        <form id="buyer-chat-form" class="chat-input-row">
-                            <input type="text" class="chat-input" id="buyer-chat-input" placeholder="Message the seller...">
-                            <button type="submit" class="chat-send-btn">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-                            </button>
-                        </form>
+                        
+                        <div class="chat-messages" id="buyer-chat-messages">
+                            <!-- Messages -->
+                        </div>
+                        
+                        <div class="chat-input-area">
+                            <div class="chat-suggestions" id="buyer-chat-suggestions">
+                                <span class="chat-suggestion-chip">Centering looks solid. Package offer sent!</span>
+                                <span class="chat-suggestion-chip">Please send close-ups of the corners.</span>
+                                <span class="chat-suggestion-chip">Payment has been wire transferred. tracking info?</span>
+                            </div>
+                            <form class="chat-input-row" id="buyer-chat-form">
+                                <input type="text" class="chat-input" id="buyer-chat-input" placeholder="Message the seller...">
+                                <button type="submit" class="chat-send-btn">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                                </button>
+                            </form>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -715,38 +1026,93 @@
 
     </main>
 
-    <!-- Toast Notifications Container -->
-    <div class="toast-container" id="toast-container"></div>
-
-    <!-- Database Setup Modal -->
-    <div id="db-setup-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.85); z-index: 1000; align-items: center; justify-content: center; backdrop-filter: blur(4px);">
-        <div class="glass-card" style="max-width: 600px; width: 90%; max-height: 85vh; overflow-y: auto; position: relative; border-color: var(--accent-cyan); box-shadow: var(--shadow-neon-cyan);">
-            <button id="btn-close-db-modal" style="position: absolute; top: 16px; right: 16px; background: none; border: none; color: var(--text-secondary); font-size: 1.5rem; cursor: pointer; line-height: 1;">×</button>
-            
-            <h2 style="font-size: 1.5rem; margin-bottom: 1rem; color: var(--accent-cyan); font-family: var(--font-title);">Connect Real-time Cloud Database</h2>
-            
-            <p style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 1rem; line-height: 1.5;">
-                By default, Vault 28 runs in a local sandbox mode. Follow these steps to connect a free Google Firebase Database so users on other computers can submit cards and chat with you in real-time.
+    <!-- Global Footer -->
+    <footer style="background: var(--bg-secondary); border-top: 1px solid var(--border-color); padding: 4rem 0; text-align: center; margin-top: 5rem;">
+        <div class="container" style="display: flex; flex-direction: column; align-items: center; gap: 1.5rem;">
+            <a href="/" class="logo" style="display: flex; align-items: center; gap: 0.5rem; justify-content: center;">
+                <img src="assets/logo.png" alt="Vault 28 Logo" style="height: 48px; width: auto; border-radius: 8px;" onerror="this.style.display='none';">
+                <span style="font-family: var(--font-title); font-weight: 800; font-size: 1.3rem; background: linear-gradient(135deg, var(--text-primary) 30%, var(--accent-cyan) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">VAULT <span>28</span></span>
+            </a>
+            <p style="color: var(--text-secondary); font-size: 0.85rem; max-width: 500px; line-height: 1.6; margin: 0;">
+                Vault 28 Trading Co. is the premier platform to sell sports card, Pokémon, TCG, sealed product, and collectible collections. Serving collectors nationwide.
             </p>
+            <div style="display: flex; gap: 1.5rem; justify-content: center; font-size: 0.9rem; flex-wrap: wrap;">
+                <a href="/" class="footer-link">Home</a>
+                <a href="/sell" class="footer-link">Sell Your Collection</a>
+                <a href="/shop" class="footer-link">Shop Catalog</a>
+                <a href="/how-it-works" class="footer-link">How It Works</a>
+                <a href="/about" class="footer-link">About Us</a>
+                <a href="/contact" class="footer-link">Contact</a>
+            </div>
+            <div style="display: flex; gap: 1rem; justify-content: center; margin-top: 0.5rem;">
+                <a href="https://www.facebook.com/profile.php?id=61565494639433" target="_blank" class="footer-social-icon">
+                    <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M22 12c0-5.52-4.48-10-10-10S2 6.48 2 12c0 4.84 3.44 8.87 8 9.8V15H8v-3h2V9.5C10 7.57 11.57 6 13.5 6H16v3h-2c-.55 0-1 .45-1 1v2h3v3h-3v6.95c4.56-.93 8-4.96 8-9.75z"/></svg>
+                </a>
+                <a href="https://www.instagram.com/vault28cards" target="_blank" class="footer-social-icon">
+                    <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.051.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 1 0 0 12.324 6.162 6.162 0 0 0 0-12.324zM12 16a4 4 0 1 1 0-8 4 4 0 0 1 0 8zm6.406-11.845a1.44 1.44 0 1 0 0 2.881 1.44 1.44 0 0 0 0-2.881z"/></svg>
+                </a>
+            </div>
+            <div style="border-top: 1px solid rgba(255,255,255,0.03); width: 100%; padding-top: 1.5rem; color: var(--text-muted); font-size: 0.8rem; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 1rem;">
+                <span>© 2026 Vault 28 Trading Co. All rights reserved. • <a href="#" style="color: var(--text-muted);" onclick="alert('Privacy Policy placeholder: Submissions are protected and encrypted.');">Privacy Policy</a> • <a href="#" style="color: var(--text-muted);" onclick="alert('Terms and Conditions: Valuation offers are active for 14 days.');">Terms & Conditions</a></span>
+                <span>Located near Summerville, South Carolina</span>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Product Details Preview Overlay Modal (for Shop Items) -->
+    <div id="shop-product-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.85); z-index: 1001; align-items: center; justify-content: center; backdrop-filter: blur(4px);">
+        <div class="glass-card" style="max-width: 700px; width: 90%; position: relative; border-color: var(--accent-cyan); box-shadow: var(--shadow-neon-cyan); display: flex; flex-direction: column; gap: 1.5rem; padding: 2rem; max-height: 90vh; overflow-y: auto; text-align: left;">
+            <button id="btn-close-shop-modal" style="position: absolute; top: 16px; right: 16px; background: none; border: none; color: var(--text-secondary); font-size: 1.5rem; cursor: pointer; line-height: 1; z-index: 10;">×</button>
             
-            <div style="font-size: 0.85rem; display: flex; flex-direction: column; gap: 1rem; line-height: 1.6; text-align: left;">
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 2rem; margin-top: 1rem;">
                 <div>
-                    <strong style="color: var(--text-primary); display: block;">Step 1: Create a Firebase Project</strong>
-                    <span style="color: var(--text-secondary);">Go to <a href="https://console.firebase.google.com" target="_blank" style="color: var(--accent-cyan); text-decoration: underline;">firebase.google.com</a>, sign in, and click <strong>Create a Project</strong>. Name it "Vault28".</span>
+                    <img id="shop-modal-img" src="" alt="Product Image" style="width: 100%; border-radius: 8px; border: 1px solid var(--border-color); object-fit: contain; max-height: 320px;">
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                    <span class="badge badge-pending" id="shop-modal-category">Category</span>
+                    <h2 id="shop-modal-title" style="font-family: var(--font-title); font-size: 1.5rem;">Product Title</h2>
+                    <div id="shop-modal-price" style="font-size: 1.75rem; font-weight: 700; color: var(--accent-cyan);">$0.00</div>
+                    
+                    <div style="border-top: 1px solid var(--border-color); border-bottom: 1px solid var(--border-color); padding: 0.75rem 0; font-size: 0.88rem; display: flex; flex-direction: column; gap: 0.5rem;">
+                        <div>Condition: <strong id="shop-modal-condition" style="color: var(--text-primary);">Grade</strong></div>
+                        <div>Availability: <strong id="shop-modal-status" style="color: var(--accent-emerald);">In Stock</strong></div>
+                        <div id="shop-modal-shipping" style="color: var(--text-secondary);">Shipping Details</div>
+                    </div>
+                    
+                    <p id="shop-modal-desc" style="color: var(--text-secondary); font-size: 0.9rem; line-height: 1.6; flex-grow: 1;">Product Description</p>
+                    
+                    <button class="btn btn-primary" id="btn-shop-modal-inquire">Inquire / Buy Card</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- DB Setup Modal Helper -->
+    <div id="db-setup-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1010; align-items: center; justify-content: center;">
+        <div class="glass-card" style="max-width: 500px; width: 90%; max-height: 85vh; overflow-y: auto; text-align: left; position: relative;">
+            <button id="btn-close-db-modal" style="position: absolute; top: 16px; right: 16px; background: none; border: none; color: var(--text-secondary); font-size: 1.5rem; cursor: pointer; line-height: 1;">×</button>
+            <h3 style="font-size: 1.4rem; margin-bottom: 1rem; font-family: var(--font-title); display: flex; align-items: center; gap: 0.5rem;">
+                <span>🛠️</span> Connect Google Firebase
+            </h3>
+            
+            <div style="display: flex; flex-direction: column; gap: 1rem; font-size: 0.88rem; line-height: 1.6;">
+                <div>
+                    <strong style="color: var(--text-primary); display: block;">Step 1: Go to Firebase Console</strong>
+                    <span style="color: var(--text-secondary);">Open <a href="https://console.firebase.google.com/" target="_blank" style="color: var(--accent-cyan); text-decoration: underline;">console.firebase.google.com</a> and sign in with your Google account.</span>
                 </div>
                 
                 <div>
-                    <strong style="color: var(--text-primary); display: block;">Step 2: Create Firestore Database</strong>
-                    <span style="color: var(--text-secondary);">In the Firebase Console sidebar, click <strong>Firestore Database</strong>, then click <strong>Create Database</strong>. Choose <strong>Start in Test Mode</strong> (so read/write rules are open for testing) and select your database location.</span>
+                    <strong style="color: var(--text-primary); display: block;">Step 2: Create a Project</strong>
+                    <span style="color: var(--text-secondary);">Click <strong>Add Project</strong>, name it (e.g. <code>Vault28</code>), disable Google Analytics (recommended for fast setup), and click Create.</span>
                 </div>
-                
+
                 <div>
                     <strong style="color: var(--text-primary); display: block;">Step 3: Register a Web App</strong>
-                    <span style="color: var(--text-secondary);">On your project overview page, click the web icon (<code>&lt;/&gt;</code>) to register a web app. Name it "Vault28 Web".</span>
+                    <span style="color: var(--text-secondary);">In your project overview, click the <strong>Web icon (&lt;/&gt;)</strong> to register an app. Name it <code>Vault28Web</code> and click register.</span>
                 </div>
-                
+
                 <div>
-                    <strong style="color: var(--text-primary); display: block;">Step 4: Copy API Config keys</strong>
+                    <strong style="color: var(--text-primary); display: block;">Step 4: Copy Config Keys</strong>
                     <span style="color: var(--text-secondary);">Firebase will show you a configuration script. Copy <strong>only</strong> the <code>firebaseConfig</code> object. It looks like this:</span>
                     <pre style="background: rgba(0,0,0,0.4); padding: 8px; border-radius: 6px; font-size: 0.75rem; color: #fda4af; overflow-x: auto; margin-top: 4px; border: 1px solid var(--border-color); font-family: monospace;">
 const firebaseConfig = {
@@ -775,12 +1141,12 @@ const firebaseConfig = {
             <button id="btn-close-auth-modal" style="position: absolute; top: 16px; right: 16px; background: none; border: none; color: var(--text-secondary); font-size: 1.5rem; cursor: pointer; line-height: 1;">×</button>
             
             <!-- Auth Tabs -->
-            <div style="display: flex; gap: 1rem; margin-bottom: 1.5rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">
+            <div style="display: flex; gap: 1rem; margin-bottom: 1.5rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem; text-align: left;">
                 <h3 id="tab-login" style="font-size: 1.25rem; color: var(--text-primary); cursor: pointer; position: relative; padding-bottom: 4px; font-family: var(--font-title); border-bottom: 2px solid var(--accent-cyan);">Log In</h3>
                 <h3 id="tab-signup" style="font-size: 1.25rem; color: var(--text-secondary); cursor: pointer; position: relative; padding-bottom: 4px; font-family: var(--font-title);">Create Account</h3>
             </div>
             
-            <form id="auth-form">
+            <form id="auth-form" style="text-align: left;">
                 <!-- Name field (Signup only) -->
                 <div class="form-group" id="auth-name-group" style="display: none;">
                     <label for="auth-name">Full Name</label>
