@@ -1,0 +1,5 @@
+.vscode/
+bin/
+*.class
+node_modules/
+.DS_Store
