@@ -617,13 +617,20 @@ function initDatabase() {
                         renderAdminInquiriesList();
                     });
 
-                    // Automatically default owner accounts to Buyer/Owner View
-                    const tabTarget = initialAdminTab || 'submissions';
-                    initialAdminTab = null;
-                    setTimeout(() => {
-                        setRole('buyer');
-                        setAdminTab(tabTarget);
-                    }, 200);
+                    // Only automatically redirect if they clicked a direct deep-link (like from an email)
+                    if (initialAdminTab) {
+                        const tabTarget = initialAdminTab;
+                        initialAdminTab = null;
+                        setTimeout(() => {
+                            setRole('buyer');
+                            setAdminTab(tabTarget);
+                        }, 200);
+                    } else {
+                        // Otherwise, load in seller view so they can browse the public site
+                        setTimeout(() => {
+                            setRole('seller');
+                        }, 200);
+                    }
                 } else {
                     roleLabel.textContent = "Seller Account";
                     roleLabel.style.color = "var(--text-secondary)";
