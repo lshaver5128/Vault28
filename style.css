@@ -129,6 +129,8 @@ body.has-admin-bar header {
     justify-content: space-between;
     align-items: center;
     width: 100%;
+    max-width: 100% !important;
+    padding: 0 2rem !important;
 }
 
 .admin-status {
@@ -161,6 +163,8 @@ body.has-admin-bar header {
     justify-content: space-between;
     align-items: center;
     height: 80px;
+    max-width: 100% !important;
+    padding: 0 2rem !important;
 }
 
 /* Content Container offsets for Fixed Header */
