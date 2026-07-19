@@ -25,6 +25,7 @@ const ROUTE_MAP = {
     'how-it-works': '/how-it-works',
     'about': '/about',
     'contact': '/contact',
+    'customer-thread': '/contact-thread',
     'buyer-dashboard': '/admin',
     'buyer-detail': '/admin/review'
 };
@@ -38,6 +39,7 @@ const PATH_MAP = {
     '/how-it-works': 'how-it-works',
     '/about': 'about',
     '/contact': 'contact',
+    '/contact-thread': 'customer-thread',
     '/admin': 'buyer-dashboard',
     '/admin/review': 'buyer-detail'
 };
@@ -65,6 +67,7 @@ let inquiries = [];
 
 let tempCards = []; // Highlights list during Sell wizard
 let selectedCollectionId = null;
+let selectedInquiryId = null;
 let uploadedCardImageBase64 = null;
 let uploadedGeneralFiles = []; // Base64 strings of uploaded files
 let currentActiveRole = 'seller'; // 'seller' or 'buyer' (admin)
@@ -458,8 +461,10 @@ function switchView(viewId, pushState = true) {
             url += `?id=${selectedCollectionId}`;
         } else if (viewId === 'buyer-detail' && selectedCollectionId) {
             url += `?id=${selectedCollectionId}`;
+        } else if (viewId === 'customer-thread' && selectedInquiryId) {
+            url += `?id=${selectedInquiryId}`;
         }
-        window.history.pushState({ viewId, collectionId: selectedCollectionId }, "", url);
+        window.history.pushState({ viewId, collectionId: selectedCollectionId, inquiryId: selectedInquiryId }, "", url);
     }
     
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -474,7 +479,12 @@ function handleInitialRouting() {
     let targetView = PATH_MAP[path] || 'seller-landing';
     
     if (id) {
-        selectedCollectionId = id;
+        if (targetView === 'customer-thread') {
+            selectedInquiryId = id;
+            loadCustomerThreadDetail(id);
+        } else {
+            selectedCollectionId = id;
+        }
     }
     
     if (initialAdminTab) {
@@ -497,6 +507,10 @@ window.addEventListener('popstate', (e) => {
     if (e.state && e.state.viewId) {
         if (e.state.collectionId) {
             selectedCollectionId = e.state.collectionId;
+        }
+        if (e.state.inquiryId) {
+            selectedInquiryId = e.state.inquiryId;
+            loadCustomerThreadDetail(selectedInquiryId);
         }
         switchView(e.state.viewId, false);
     } else {
@@ -2576,6 +2590,9 @@ document.getElementById('contact-form-inquiry').addEventListener('submit', (e) =
         subject,
         message: msg,
         status: 'Pending Response',
+        messages: [
+            { sender: 'customer', text: msg, createdAt: new Date().toISOString() }
+        ],
         createdAt: new Date().toISOString()
     };
     
@@ -2665,6 +2682,59 @@ document.getElementById('contact-form-inquiry').addEventListener('submit', (e) =
         };
 
         db.collection("mail").add(emailPayload)
+            .then(() => {
+                // Send automated receipt confirmation email to customer
+                const customerReceiptMail = {
+                    to: email,
+                    replyTo: 'lshaver@vault28cards.com',
+                    message: {
+                        subject: `We received your Vault 28 inquiry: ${subject}`,
+                        html: `
+                            <div style="background-color: #0c0f19; padding: 40px 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; text-align: center;">
+                                <!-- Brand Header -->
+                                <div style="max-width: 600px; margin: 0 auto; padding-bottom: 20px; text-align: left; border-bottom: 1px solid rgba(223, 183, 80, 0.25);">
+                                    <table style="width: 100%; border-collapse: collapse;">
+                                        <tr>
+                                            <td style="vertical-align: middle; width: 60px; padding-right: 15px;">
+                                                <img src="${logoUrl}" alt="Vault 28 Logo" style="width: 50px; height: 50px; border-radius: 50%; display: block; border: 1px solid rgba(223, 183, 80, 0.3);" />
+                                            </td>
+                                            <td style="vertical-align: middle;">
+                                                <h1 style="color: #ffffff; font-size: 22px; margin: 0; font-weight: 800; letter-spacing: 0.05em; text-transform: uppercase;">
+                                                    VAULT <span style="color: #dfb750;">28</span>
+                                                </h1>
+                                                <p style="color: #9ca3af; font-size: 11px; margin: 2px 0 0 0; text-transform: uppercase; letter-spacing: 0.1em; font-weight: 600;">Trading Co.</p>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </div>
+                                
+                                <!-- Main Card -->
+                                <div style="max-width: 600px; margin: 20px auto 0 auto; background-color: #121624; border: 1px solid #1f293d; border-radius: 12px; overflow: hidden; text-align: left; padding: 30px; color: #cbd5e1; font-size: 14px; line-height: 1.6;">
+                                    <h2 style="color: #ffffff; font-size: 18px; font-weight: 700; margin-top: 0;">Hi ${name},</h2>
+                                    <p>Thank you for reaching out to Vault 28 Trading Co.! We have received your inquiry regarding <strong>"${subject}"</strong>.</p>
+                                    <p>Our team is currently reviewing your message and we typically respond in <strong>under 24 hours</strong>.</p>
+                                    <p>You can track the status of your inquiry, chat with us online, or add more details by visiting your dedicated support link:</p>
+                                    
+                                    <div style="text-align: center; margin: 25px 0;">
+                                        <a href="${window.location.origin}/contact-thread?id=${newInquiry.id}" style="display: inline-block; background: linear-gradient(135deg, #f5d075 0%, #dfb750 100%); color: #0c0f19; font-weight: 700; font-size: 13px; padding: 12px 28px; text-decoration: none; border-radius: 25px; box-shadow: 0 4px 12px rgba(223, 183, 80, 0.25); text-transform: uppercase; letter-spacing: 0.08em;">View Inquiry Thread</a>
+                                    </div>
+                                    
+                                    <div style="border-top: 1px solid #1f293d; padding-top: 20px; margin-top: 20px; font-size: 13px; color: #94a3b8;">
+                                        <strong>Your message:</strong><br>
+                                        <div style="background-color: #0c0f19; padding: 12px; border-radius: 6px; border-left: 3px solid #dfb750; color: #cbd5e1; margin-top: 8px; white-space: pre-wrap;">${msg}</div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Footer -->
+                                <div style="max-width: 600px; margin: 25px auto 0 auto; text-align: center; color: #64748b; font-size: 11px;">
+                                    <p>© 2026 Vault 28 Trading Co. • Summerville, SC</p>
+                                </div>
+                            </div>
+                        `
+                    }
+                };
+                return db.collection("mail").add(customerReceiptMail);
+            })
             .then(() => {
                 showToast(`Thank you, ${name}! Your inquiry has been sent.`, "success");
                 document.getElementById('contact-form-inquiry').reset();
@@ -2926,10 +2996,22 @@ window.sendInquiryReply = function(inqId) {
     const inq = inquiries.find(i => i.id === inqId);
     if (!inq) return;
     
+    const dateNow = new Date().toISOString();
+    const currentMessages = inq.messages || [
+        { sender: 'customer', text: inq.message, createdAt: inq.createdAt }
+    ];
+    
+    currentMessages.push({
+        sender: 'owner',
+        text: replyText,
+        createdAt: dateNow
+    });
+    
     const replyData = {
         replyText,
-        repliedAt: new Date().toISOString(),
-        status: 'Waiting for Customer'
+        repliedAt: dateNow,
+        status: 'Waiting for Customer',
+        messages: currentMessages
     };
     
     if (isFirebaseActive) {
@@ -2939,7 +3021,7 @@ window.sendInquiryReply = function(inqId) {
                     to: inq.email,
                     replyTo: 'lshaver@vault28cards.com',
                     message: {
-                        subject: `Re: [Vault 28] ${inq.subject}`,
+                        subject: `Re: [Vault 28] Reply to your inquiry: ${inq.subject}`,
                         html: `
                             <div style="background-color: #0c0f19; padding: 40px 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; text-align: center;">
                                 <div style="max-width: 600px; margin: 0 auto; padding-bottom: 20px; text-align: left; border-bottom: 1px solid rgba(223, 183, 80, 0.25);">
@@ -2950,14 +3032,14 @@ window.sendInquiryReply = function(inqId) {
                                 </div>
                                 <div style="max-width: 600px; margin: 20px auto 0 auto; background-color: #121624; border: 1px solid #1f293d; border-radius: 12px; overflow: hidden; text-align: left; color: #cbd5e1; font-size: 14px; line-height: 1.6; padding: 30px;">
                                     <p style="color: #ffffff; font-weight: 600; font-size: 16px; margin-top: 0;">Hi ${inq.name},</p>
-                                    <p>Thanks for contacting Vault 28 Trading Co. Here is our response to your inquiry:</p>
+                                    <p>Lucas from Vault 28 Trading Co. has responded to your inquiry:</p>
                                     <div style="background-color: #0c0f19; border-left: 4px solid #dfb750; padding: 15px; border-radius: 6px; margin: 20px 0; color: #ffffff;">
-                                        ${replyText.replace(/\\n/g, '<br>')}
+                                        ${replyText.replace(/\n/g, '<br>')}
                                     </div>
-                                    <p style="border-top: 1px solid #1f293d; padding-top: 20px; margin-top: 20px; font-size: 13px; color: #94a3b8;">
-                                        Original Message:<br>
-                                        <span style="font-style: italic;">"${inq.message}"</span>
-                                    </p>
+                                    <p>You can reply directly to this email or chat with us online at your dedicated support thread:</p>
+                                    <div style="text-align: center; margin: 25px 0;">
+                                        <a href="${window.location.origin}/contact-thread?id=${inq.id}" style="display: inline-block; background: linear-gradient(135deg, #f5d075 0%, #dfb750 100%); color: #0c0f19; font-weight: 700; font-size: 13px; padding: 12px 28px; text-decoration: none; border-radius: 25px; box-shadow: 0 4px 12px rgba(223, 183, 80, 0.25); text-transform: uppercase; letter-spacing: 0.08em;">Open Support Thread</a>
+                                    </div>
                                 </div>
                                 <div style="max-width: 600px; margin: 25px auto 0 auto; text-align: center; color: #64748b; font-size: 11px;">
                                     <p>© 2026 Vault 28 Trading Co. • Summerville, SC</p>
@@ -2982,6 +3064,216 @@ window.sendInquiryReply = function(inqId) {
         showToast("Reply simulated in sandbox mode!", "success");
         updateInquiriesBadge();
         renderAdminInquiriesList();
+    }
+};
+
+window.loadCustomerThreadDetail = function(inqId) {
+    if (!inqId) return;
+    
+    const renderThread = (inq) => {
+        document.getElementById('customer-thread-subject').textContent = inq.subject;
+        document.getElementById('customer-thread-name').textContent = inq.name;
+        document.getElementById('customer-thread-email').textContent = inq.email;
+        
+        // Status badge
+        const badge = document.getElementById('customer-thread-status-badge');
+        const status = inq.status || 'Pending Response';
+        if (badge) {
+            badge.textContent = status;
+            badge.style.fontSize = '0.72rem';
+            badge.style.padding = '4px 10px';
+            badge.style.textTransform = 'uppercase';
+            badge.style.fontWeight = '700';
+            badge.style.letterSpacing = '0.05em';
+            badge.style.borderRadius = '4px';
+            badge.style.display = 'inline-block';
+            
+            if (status === 'Pending Response') {
+                badge.style.background = 'rgba(223,183,80,0.1)';
+                badge.style.border = '1px solid var(--accent-gold)';
+                badge.style.color = 'var(--accent-gold)';
+            } else if (status === 'Waiting for Customer') {
+                badge.style.background = 'rgba(59,130,246,0.1)';
+                badge.style.border = '1px solid #3b82f6';
+                badge.style.color = '#3b82f6';
+            } else if (status === 'Resolved') {
+                badge.style.background = 'rgba(16,185,129,0.1)';
+                badge.style.border = '1px solid #10b981';
+                badge.style.color = '#10b981';
+            }
+        }
+        
+        // Render messages
+        const chatLog = document.getElementById('customer-thread-chat-log');
+        chatLog.innerHTML = '';
+        
+        let msgs = inq.messages || [];
+        if (msgs.length === 0) {
+            msgs = [
+                { sender: 'customer', text: inq.message, createdAt: inq.createdAt }
+            ];
+            if (inq.replyText) {
+                msgs.push({ sender: 'owner', text: inq.replyText, createdAt: inq.repliedAt });
+            }
+        }
+        
+        msgs.forEach(m => {
+            const bubble = document.createElement('div');
+            const dateStr = new Date(m.createdAt).toLocaleString();
+            
+            if (m.sender === 'customer') {
+                bubble.style.maxWidth = '80%';
+                bubble.style.padding = '0.85rem 1.1rem';
+                bubble.style.borderRadius = '12px 12px 0 12px';
+                bubble.style.background = 'rgba(223,183,80,0.06)';
+                bubble.style.border = '1px solid rgba(223,183,80,0.15)';
+                bubble.style.color = 'var(--text-primary)';
+                bubble.style.marginLeft = 'auto';
+                bubble.style.lineHeight = '1.5';
+                bubble.innerHTML = `
+                    <p style="margin: 0; font-size: 0.92rem; white-space: pre-wrap; text-align: left;">${escapeHTML(m.text)}</p>
+                    <span style="display: block; font-size: 0.72rem; color: var(--text-muted); margin-top: 4px; text-align: right;">${dateStr}</span>
+                `;
+            } else {
+                bubble.style.maxWidth = '80%';
+                bubble.style.padding = '0.85rem 1.1rem';
+                bubble.style.borderRadius = '12px 12px 12px 0';
+                bubble.style.background = 'rgba(59,130,246,0.06)';
+                bubble.style.border = '1px solid rgba(59,130,246,0.15)';
+                bubble.style.color = 'var(--text-primary)';
+                bubble.style.marginRight = 'auto';
+                bubble.style.lineHeight = '1.5';
+                bubble.innerHTML = `
+                    <p style="margin: 0; font-size: 0.92rem; white-space: pre-wrap; text-align: left;">${escapeHTML(m.text)}</p>
+                    <span style="display: block; font-size: 0.72rem; color: var(--text-muted); margin-top: 4px; text-align: left;">${dateStr}</span>
+                `;
+            }
+            chatLog.appendChild(bubble);
+        });
+        
+        // Scroll chat log to bottom
+        setTimeout(() => {
+            chatLog.scrollTop = chatLog.scrollHeight;
+        }, 100);
+        
+        // Toggle reply form if resolved
+        if (status === 'Resolved') {
+            document.getElementById('customer-thread-reply-form').style.display = 'none';
+            document.getElementById('customer-thread-resolved-message').style.display = 'block';
+        } else {
+            document.getElementById('customer-thread-reply-form').style.display = 'flex';
+            document.getElementById('customer-thread-resolved-message').style.display = 'none';
+        }
+    };
+    
+    if (isFirebaseActive) {
+        db.collection("inquiries").doc(inqId).get()
+            .then(doc => {
+                if (doc.exists) {
+                    renderThread({ id: doc.id, ...doc.data() });
+                } else {
+                    showToast("Thread not found.", "error");
+                    switchView('seller-landing');
+                }
+            })
+            .catch(err => {
+                console.error("Error loading customer thread:", err);
+                showToast("Could not load thread.", "error");
+            });
+    } else {
+        const inq = inquiries.find(i => i.id === inqId);
+        if (inq) {
+            renderThread(inq);
+        } else {
+            showToast("Sandbox thread not found.", "error");
+            switchView('seller-landing');
+        }
+    }
+};
+
+window.sendCustomerThreadReply = function() {
+    const replyText = document.getElementById('customer-thread-reply-text').value.trim();
+    if (!replyText) {
+        showToast("Please enter a reply message.", "error");
+        return;
+    }
+    
+    if (!selectedInquiryId) return;
+    
+    if (isFirebaseActive) {
+        db.collection("inquiries").doc(selectedInquiryId).get()
+            .then(doc => {
+                if (!doc.exists) throw new Error("Inquiry not found");
+                const inq = doc.data();
+                const msgs = inq.messages || [{ sender: 'customer', text: inq.message, createdAt: inq.createdAt }];
+                
+                msgs.push({
+                    sender: 'customer',
+                    text: replyText,
+                    createdAt: new Date().toISOString()
+                });
+                
+                return db.collection("inquiries").doc(selectedInquiryId).update({
+                    messages: msgs,
+                    status: 'Pending Response'
+                }).then(() => {
+                    const ownerNotificationMail = {
+                        to: 'lshaver@vault28cards.com',
+                        replyTo: inq.email,
+                        message: {
+                            subject: `Customer Replied: ${inq.subject}`,
+                            html: `
+                                <div style="background-color: #0c0f19; padding: 40px 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; text-align: center;">
+                                    <div style="max-width: 600px; margin: 0 auto; padding-bottom: 20px; text-align: left; border-bottom: 1px solid rgba(223, 183, 80, 0.25);">
+                                        <h1 style="color: #ffffff; font-size: 22px; margin: 0; font-weight: 800; letter-spacing: 0.05em; text-transform: uppercase;">
+                                            VAULT <span style="color: #dfb750;">28</span>
+                                        </h1>
+                                        <p style="color: #9ca3af; font-size: 11px; margin: 2px 0 0 0; text-transform: uppercase; letter-spacing: 0.1em; font-weight: 600;">Trading Co.</p>
+                                    </div>
+                                    <div style="max-width: 600px; margin: 20px auto 0 auto; background-color: #121624; border: 1px solid #1f293d; border-radius: 12px; overflow: hidden; text-align: left; color: #cbd5e1; font-size: 14px; line-height: 1.6; padding: 30px;">
+                                        <p style="color: #ffffff; font-weight: 600; font-size: 16px; margin-top: 0;">Customer Replied</p>
+                                        <p>The customer <strong>${inq.name}</strong> (${inq.email}) has replied to their inquiry:</p>
+                                        <div style="background-color: #0c0f19; border-left: 4px solid #dfb750; padding: 15px; border-radius: 6px; margin: 20px 0; color: #ffffff; white-space: pre-wrap;">${replyText}</div>
+                                        <div style="text-align: center; margin-top: 30px;">
+                                            <a href="${window.location.origin}/?adminTab=inquiries" style="display: inline-block; background: linear-gradient(135deg, #f5d075 0%, #dfb750 100%); color: #0c0f19; font-weight: 700; font-size: 13px; padding: 12px 28px; text-decoration: none; border-radius: 25px; box-shadow: 0 4px 12px rgba(223, 183, 80, 0.25); text-transform: uppercase; letter-spacing: 0.08em;">Open Owner Console</a>
+                                        </div>
+                                    </div>
+                                    <div style="max-width: 600px; margin: 25px auto 0 auto; text-align: center; color: #64748b; font-size: 11px;">
+                                        <p>© 2026 Vault 28 Trading Co. • Summerville, SC</p>
+                                    </div>
+                                </div>
+                            `
+                        }
+                    };
+                    return db.collection("mail").add(ownerNotificationMail);
+                });
+            })
+            .then(() => {
+                showToast("Reply sent!", "success");
+                document.getElementById('customer-thread-reply-text').value = '';
+                loadCustomerThreadDetail(selectedInquiryId);
+            })
+            .catch(err => {
+                console.error("Error submitting customer reply:", err);
+                showToast("Could not send reply.", "error");
+            });
+    } else {
+        const inq = inquiries.find(i => i.id === selectedInquiryId);
+        if (inq) {
+            if (!inq.messages) {
+                inq.messages = [{ sender: 'customer', text: inq.message, createdAt: inq.createdAt }];
+            }
+            inq.messages.push({
+                sender: 'customer',
+                text: replyText,
+                createdAt: new Date().toISOString()
+            });
+            inq.status = 'Pending Response';
+            localStorage.setItem('v28_inquiries', JSON.stringify(inquiries));
+            showToast("Reply simulated in sandbox!", "success");
+            document.getElementById('customer-thread-reply-text').value = '';
+            loadCustomerThreadDetail(selectedInquiryId);
+        }
     }
 };
 
