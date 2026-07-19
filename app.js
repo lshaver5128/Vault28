@@ -704,16 +704,6 @@ function initDatabase() {
                     });
                     collections.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
                     
-                    // Seed only if database is completely empty and has never been seeded before
-                    if (snapshot.empty && OWNER_EMAILS.includes(user.email)) {
-                        db.collection("settings").doc("seed_metadata").get().then(doc => {
-                            if (!doc.exists) {
-                                seedCloudDatabase();
-                                db.collection("settings").doc("seed_metadata").set({ seededAt: new Date().toISOString() });
-                            }
-                        }).catch(err => console.warn("Error reading database seed metadata:", err));
-                    }
-                    
                     triggerUIRefresh();
                 });
 
