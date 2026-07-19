@@ -1432,13 +1432,13 @@ function renderCustomerDashboardInquiries() {
         
         if (status === 'Pending Response') {
             borderCol = 'var(--accent-gold)';
-            badgeHTML = `<span class="badge" style="font-size: 0.72rem; padding: 4px 10px; background: rgba(223,183,80,0.1); border: 1px solid var(--accent-gold); color: var(--accent-gold); text-transform: uppercase; font-weight: 700; border-radius: 4px; letter-spacing: 0.05em;">Pending Response</span>`;
+            badgeHTML = `<span class="badge" style="font-size: 0.85rem; padding: 4px 10px; background: rgba(223,183,80,0.1); border: 1px solid var(--accent-gold); color: var(--accent-gold); text-transform: uppercase; font-weight: 700; border-radius: 4px; letter-spacing: 0.05em;">Pending Response</span>`;
         } else if (status === 'Waiting for Customer') {
             borderCol = '#3b82f6';
-            badgeHTML = `<span class="badge" style="font-size: 0.72rem; padding: 4px 10px; background: rgba(59,130,246,0.1); border: 1px solid #3b82f6; color: #3b82f6; text-transform: uppercase; font-weight: 700; border-radius: 4px; letter-spacing: 0.05em;">Waiting for Response</span>`;
+            badgeHTML = `<span class="badge" style="font-size: 0.85rem; padding: 4px 10px; background: rgba(59,130,246,0.1); border: 1px solid #3b82f6; color: #3b82f6; text-transform: uppercase; font-weight: 700; border-radius: 4px; letter-spacing: 0.05em;">Waiting for Response</span>`;
         } else if (status === 'Resolved') {
             borderCol = '#10b981';
-            badgeHTML = `<span class="badge" style="font-size: 0.72rem; padding: 4px 10px; background: rgba(16,185,129,0.1); border: 1px solid #10b981; color: #10b981; text-transform: uppercase; font-weight: 700; border-radius: 4px; letter-spacing: 0.05em;">Resolved</span>`;
+            badgeHTML = `<span class="badge" style="font-size: 0.85rem; padding: 4px 10px; background: rgba(16,185,129,0.1); border: 1px solid #10b981; color: #10b981; text-transform: uppercase; font-weight: 700; border-radius: 4px; letter-spacing: 0.05em;">Resolved</span>`;
         }
         
         card.style.borderLeft = `4px solid ${borderCol}`;
@@ -1461,17 +1461,17 @@ function renderCustomerDashboardInquiries() {
                 if (m.sender === 'customer') {
                     repliesHTML += `
                         <div style="background: rgba(223, 183, 80, 0.02); border: 1px solid var(--border-color); border-radius: 6px; padding: 1rem; margin-top: 0.5rem;">
-                            <p style="color: var(--accent-gold); font-size: 0.78rem; text-transform: uppercase; font-weight: 700; margin: 0 0 0.5rem 0; letter-spacing: 0.05em;">You:</p>
-                            <p style="color: var(--text-primary); font-size: 0.9rem; margin: 0; line-height: 1.5; white-space: pre-wrap;">${escapeHTML(m.text)}</p>
-                            <p style="color: var(--text-muted); font-size: 0.75rem; margin-top: 0.5rem; margin-bottom: 0;">Sent: ${replyDate}</p>
+                            <p style="color: var(--accent-gold); font-size: 0.9rem; text-transform: uppercase; font-weight: 700; margin: 0 0 0.5rem 0; letter-spacing: 0.05em;">You:</p>
+                            <p style="color: var(--text-primary); font-size: 1.05rem; margin: 0; line-height: 1.5; white-space: pre-wrap;">${escapeHTML(m.text)}</p>
+                            <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 0.5rem; margin-bottom: 0;">Sent: ${replyDate}</p>
                         </div>
                     `;
                 } else {
                     repliesHTML += `
                         <div style="background: rgba(59, 130, 246, 0.03); border: 1px solid rgba(59, 130, 246, 0.15); border-radius: 6px; padding: 1rem; margin-top: 0.5rem;">
-                            <p style="color: #3b82f6; font-size: 0.78rem; text-transform: uppercase; font-weight: 700; margin: 0 0 0.5rem 0; letter-spacing: 0.05em;">Lucas (Vault 28 Owner):</p>
-                            <p style="color: var(--text-primary); font-size: 0.9rem; margin: 0; line-height: 1.5; white-space: pre-wrap;">${escapeHTML(m.text)}</p>
-                            <p style="color: var(--text-muted); font-size: 0.75rem; margin-top: 0.5rem; margin-bottom: 0;">Replied: ${replyDate}</p>
+                            <p style="color: #3b82f6; font-size: 0.9rem; text-transform: uppercase; font-weight: 700; margin: 0 0 0.5rem 0; letter-spacing: 0.05em;">Lucas (Vault 28 Owner):</p>
+                            <p style="color: var(--text-primary); font-size: 1.05rem; margin: 0; line-height: 1.5; white-space: pre-wrap;">${escapeHTML(m.text)}</p>
+                            <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 0.5rem; margin-bottom: 0;">Replied: ${replyDate}</p>
                         </div>
                     `;
                 }
@@ -1507,17 +1507,17 @@ function renderCustomerDashboardInquiries() {
         card.innerHTML = `
             <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 0.5rem;">
                 <div>
-                    <h4 style="margin: 0; font-size: 1.1rem; color: var(--text-primary); font-family: var(--font-title); text-transform: uppercase;">${escapeHTML(inq.subject)}</h4>
-                    <p style="margin: 4px 0 0 0; font-size: 0.85rem; color: var(--text-muted);">Inquiry ID: ${inq.id}</p>
+                    <h4 style="margin: 0; font-size: 1.25rem; color: var(--text-primary); font-family: var(--font-title); text-transform: uppercase;">${escapeHTML(inq.subject)}</h4>
+                    <p style="margin: 4px 0 0 0; font-size: 0.95rem; color: var(--text-muted);">Inquiry ID: ${inq.id}</p>
                 </div>
                 <div style="text-align: right; display: flex; flex-direction: column; align-items: flex-end; gap: 4px;">
-                    <span style="font-size: 0.8rem; color: var(--text-muted);">${new Date(inq.createdAt).toLocaleString()}</span>
+                    <span style="font-size: 0.9rem; color: var(--text-muted);">${new Date(inq.createdAt).toLocaleString()}</span>
                     <div>${badgeHTML}</div>
                 </div>
             </div>
             
-            <div style="background: rgba(0,0,0,0.2); border: 1px solid var(--border-color); border-radius: 6px; padding: 1rem; color: var(--text-secondary); font-size: 0.92rem; line-height: 1.5; white-space: pre-wrap;">
-                <span style="color: var(--accent-gold); font-size: 0.75rem; text-transform: uppercase; font-weight: 700; display: block; margin-bottom: 0.25rem; letter-spacing: 0.05em;">Original Message:</span>
+            <div style="background: rgba(0,0,0,0.2); border: 1px solid var(--border-color); border-radius: 6px; padding: 1.25rem; color: var(--text-secondary); font-size: 1.05rem; line-height: 1.5; white-space: pre-wrap;">
+                <span style="color: var(--accent-gold); font-size: 0.9rem; text-transform: uppercase; font-weight: 700; display: block; margin-bottom: 0.25rem; letter-spacing: 0.05em;">Original Message:</span>
                 ${escapeHTML(msgs[0].text)}
             </div>
             
@@ -3149,13 +3149,13 @@ function renderAdminInquiriesList() {
         let statusBadgeHTML = '';
         if (status === 'Pending Response') {
             borderCol = 'var(--accent-gold)';
-            statusBadgeHTML = `<span class="badge" style="font-size: 0.72rem; padding: 4px 10px; background: rgba(223,183,80,0.1); border: 1px solid var(--accent-gold); color: var(--accent-gold); text-transform: uppercase; font-weight: 700; letter-spacing: 0.05em; border-radius: 4px;">Pending Response</span>`;
+            statusBadgeHTML = `<span class="badge" style="font-size: 0.85rem; padding: 4px 10px; background: rgba(223,183,80,0.1); border: 1px solid var(--accent-gold); color: var(--accent-gold); text-transform: uppercase; font-weight: 700; letter-spacing: 0.05em; border-radius: 4px;">Pending Response</span>`;
         } else if (status === 'Waiting for Customer') {
             borderCol = '#3b82f6';
-            statusBadgeHTML = `<span class="badge" style="font-size: 0.72rem; padding: 4px 10px; background: rgba(59,130,246,0.1); border: 1px solid #3b82f6; color: #3b82f6; text-transform: uppercase; font-weight: 700; letter-spacing: 0.05em; border-radius: 4px;">Waiting for Customer</span>`;
+            statusBadgeHTML = `<span class="badge" style="font-size: 0.85rem; padding: 4px 10px; background: rgba(59,130,246,0.1); border: 1px solid #3b82f6; color: #3b82f6; text-transform: uppercase; font-weight: 700; letter-spacing: 0.05em; border-radius: 4px;">Waiting for Customer</span>`;
         } else if (status === 'Resolved') {
             borderCol = '#10b981';
-            statusBadgeHTML = `<span class="badge" style="font-size: 0.72rem; padding: 4px 10px; background: rgba(16,185,129,0.1); border: 1px solid #10b981; color: #10b981; text-transform: uppercase; font-weight: 700; letter-spacing: 0.05em; border-radius: 4px;">Resolved</span>`;
+            statusBadgeHTML = `<span class="badge" style="font-size: 0.85rem; padding: 4px 10px; background: rgba(16,185,129,0.1); border: 1px solid #10b981; color: #10b981; text-transform: uppercase; font-weight: 700; letter-spacing: 0.05em; border-radius: 4px;">Resolved</span>`;
         }
         
         card.style.borderLeft = `4px solid ${borderCol}`;
@@ -3181,17 +3181,17 @@ function renderAdminInquiriesList() {
                 if (m.sender === 'owner') {
                     repliesHTML += `
                         <div style="background: rgba(59, 130, 246, 0.03); border: 1px solid rgba(59, 130, 246, 0.15); border-radius: 6px; padding: 1rem; margin-top: 0.5rem;">
-                            <p style="color: #3b82f6; font-size: 0.78rem; text-transform: uppercase; font-weight: 700; margin: 0 0 0.5rem 0; letter-spacing: 0.05em;">Your Reply (Sent via Email):</p>
-                            <p style="color: var(--text-primary); font-size: 0.9rem; margin: 0; line-height: 1.5; white-space: pre-wrap;">${escapeHTML(m.text)}</p>
-                            <p style="color: var(--text-muted); font-size: 0.75rem; margin-top: 0.5rem; margin-bottom: 0;">Replied: ${replyDate}</p>
+                            <p style="color: #3b82f6; font-size: 0.9rem; text-transform: uppercase; font-weight: 700; margin: 0 0 0.5rem 0; letter-spacing: 0.05em;">Your Reply (Sent via Email):</p>
+                            <p style="color: var(--text-primary); font-size: 1.05rem; margin: 0; line-height: 1.5; white-space: pre-wrap;">${escapeHTML(m.text)}</p>
+                            <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 0.5rem; margin-bottom: 0;">Replied: ${replyDate}</p>
                         </div>
                     `;
                 } else {
                     repliesHTML += `
                         <div style="background: rgba(223, 183, 80, 0.02); border: 1px solid var(--border-color); border-radius: 6px; padding: 1rem; margin-top: 0.5rem;">
-                            <p style="color: var(--accent-gold); font-size: 0.78rem; text-transform: uppercase; font-weight: 700; margin: 0 0 0.5rem 0; letter-spacing: 0.05em;">Customer Reply:</p>
-                            <p style="color: var(--text-primary); font-size: 0.9rem; margin: 0; line-height: 1.5; white-space: pre-wrap;">${escapeHTML(m.text)}</p>
-                            <p style="color: var(--text-muted); font-size: 0.75rem; margin-top: 0.5rem; margin-bottom: 0;">Sent: ${replyDate}</p>
+                            <p style="color: var(--accent-gold); font-size: 0.9rem; text-transform: uppercase; font-weight: 700; margin: 0 0 0.5rem 0; letter-spacing: 0.05em;">Customer Reply:</p>
+                            <p style="color: var(--text-primary); font-size: 1.05rem; margin: 0; line-height: 1.5; white-space: pre-wrap;">${escapeHTML(m.text)}</p>
+                            <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 0.5rem; margin-bottom: 0;">Sent: ${replyDate}</p>
                         </div>
                     `;
                 }
@@ -3226,19 +3226,19 @@ function renderAdminInquiriesList() {
         card.innerHTML = `
             <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 0.5rem;">
                 <div>
-                    <h4 style="margin: 0; font-size: 1.1rem; color: var(--text-primary);">${escapeHTML(inq.name)} 
-                        <span style="font-weight: normal; font-size: 0.85rem; color: var(--text-muted); margin-left: 0.5rem;">(${escapeHTML(inq.email)})</span>
+                    <h4 style="margin: 0; font-size: 1.25rem; color: var(--text-primary);">${escapeHTML(inq.name)} 
+                        <span style="font-weight: normal; font-size: 0.95rem; color: var(--text-muted); margin-left: 0.5rem;">(${escapeHTML(inq.email)})</span>
                     </h4>
-                    <p style="color: var(--accent-gold); font-size: 0.88rem; margin: 4px 0 0 0; font-weight: 500;">Subject: ${escapeHTML(inq.subject)}</p>
+                    <p style="color: var(--accent-gold); font-size: 1.0rem; margin: 4px 0 0 0; font-weight: 500;">Subject: ${escapeHTML(inq.subject)}</p>
                 </div>
                 <div style="text-align: right; display: flex; flex-direction: column; align-items: flex-end; gap: 4px;">
-                    <span style="font-size: 0.8rem; color: var(--text-muted);">${dateStr}</span>
+                    <span style="font-size: 0.9rem; color: var(--text-muted);">${dateStr}</span>
                     <div>${statusBadgeHTML}</div>
                 </div>
             </div>
             
-            <div style="background: rgba(0,0,0,0.2); border: 1px solid var(--border-color); border-radius: 6px; padding: 1rem; color: var(--text-secondary); font-size: 0.92rem; line-height: 1.5; white-space: pre-wrap;">
-                <span style="color: var(--accent-gold); font-size: 0.75rem; text-transform: uppercase; font-weight: 700; display: block; margin-bottom: 0.25rem; letter-spacing: 0.05em;">Original Inquiry:</span>
+            <div style="background: rgba(0,0,0,0.2); border: 1px solid var(--border-color); border-radius: 6px; padding: 1.25rem; color: var(--text-secondary); font-size: 1.05rem; line-height: 1.5; white-space: pre-wrap;">
+                <span style="color: var(--accent-gold); font-size: 0.9rem; text-transform: uppercase; font-weight: 700; display: block; margin-bottom: 0.25rem; letter-spacing: 0.05em;">Original Inquiry:</span>
                 ${escapeHTML(msgs[0].text)}
             </div>
             
@@ -3410,7 +3410,7 @@ window.loadCustomerThreadDetail = function(inqId) {
         const badge = document.getElementById('customer-thread-status-badge');
         const status = inq.status || 'Pending Response';
         if (badge) {
-            badge.style.fontSize = '0.72rem';
+            badge.style.fontSize = '0.85rem';
             badge.style.padding = '4px 10px';
             badge.style.textTransform = 'uppercase';
             badge.style.fontWeight = '700';
