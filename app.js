@@ -537,13 +537,21 @@ function updateNavigationLinks(activeViewId) {
     
     if (currentActiveRole === 'seller') {
         const links = [
-            { label: 'Home', view: 'seller-landing' },
+            { label: 'Home', view: 'seller-landing' }
+        ];
+        
+        const isUserLoggedIn = isFirebaseActive ? !!firebase.auth().currentUser : (document.getElementById('user-profile-widget').style.display === 'flex');
+        if (isUserLoggedIn) {
+            links.push({ label: 'My Dashboard', view: 'seller-dashboard' });
+        }
+        
+        links.push(
             { label: 'Sell Your Collection', view: 'seller-submit' },
             { label: 'Shop', view: 'shop' },
             { label: 'How It Works', view: 'how-it-works' },
             { label: 'About Us', view: 'about' },
             { label: 'Contact', view: 'contact' }
-        ];
+        );
         
         links.forEach(link => {
             const el = document.createElement('a');
