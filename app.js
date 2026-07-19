@@ -1381,6 +1381,136 @@ document.getElementById('submission-form').addEventListener('submit', (e) => {
     if (isFirebaseActive) {
         db.collection("collections").doc(newCol.id).set(newCol)
             .then(() => {
+                // 1. Send receipt email to the seller thanking them
+                const sellerReceiptMail = {
+                    to: sellerEmail,
+                    message: {
+                        subject: `We've Received Your Collection Submission!`,
+                        html: `
+                            <div style="background-color: #0c0f19; padding: 40px 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; text-align: center;">
+                                <div style="max-width: 600px; margin: 0 auto; padding-bottom: 20px; text-align: left; border-bottom: 1px solid rgba(223, 183, 80, 0.25);">
+                                    <h1 style="color: #ffffff; font-size: 22px; margin: 0; font-weight: 800; letter-spacing: 0.05em; text-transform: uppercase;">
+                                        VAULT <span style="color: #dfb750;">28</span>
+                                    </h1>
+                                    <p style="color: #9ca3af; font-size: 11px; margin: 2px 0 0 0; text-transform: uppercase; letter-spacing: 0.1em; font-weight: 600;">Trading Co.</p>
+                                </div>
+                                <div style="max-width: 600px; margin: 20px auto 0 auto; background-color: #121624; border: 1px solid #1f293d; border-radius: 12px; overflow: hidden; text-align: left; color: #cbd5e1; font-size: 14px; line-height: 1.6; padding: 30px;">
+                                    <p style="color: #ffffff; font-weight: 600; font-size: 18px; margin-top: 0;">Hi ${sellerName},</p>
+                                    <p>Thank you for submitting your card collection lot to Vault 28! We have received your submission details and our Buying Desk is already reviewing them.</p>
+                                    
+                                    <p style="color: #dfb750; font-size: 11px; text-transform: uppercase; letter-spacing: 0.15em; font-weight: 700; margin: 20px 0 10px 0;">Submission Overview</p>
+                                    <div style="background-color: #0c0f19; border: 1px solid #1f293d; border-radius: 8px; padding: 15px; margin-bottom: 20px;">
+                                        <table style="width: 100%; border-collapse: collapse; font-size: 13px; color: #cbd5e1;">
+                                            <tr>
+                                                <td style="padding: 6px 0; color: #94a3b8; width: 140px;">Collection Type:</td>
+                                                <td style="padding: 6px 0; color: #ffffff; font-weight: 600;">${sport}</td>
+                                            </tr>
+                                            <tr>
+                                                <td style="padding: 6px 0; color: #94a3b8;">Item Count:</td>
+                                                <td style="padding: 6px 0; color: #ffffff; font-weight: 600;">~${qty} items</td>
+                                            </tr>
+                                            <tr>
+                                                <td style="padding: 6px 0; color: #94a3b8;">Asking Price:</td>
+                                                <td style="padding: 6px 0; color: #ffffff; font-weight: 600;">${asking > 0 ? '$' + asking : 'Not specified (looking for offer)'}</td>
+                                            </tr>
+                                            <tr>
+                                                <td style="padding: 6px 0; color: #94a3b8;">Preference:</td>
+                                                <td style="padding: 6px 0; color: #ffffff; font-weight: 600;">${deliveryPref}</td>
+                                            </tr>
+                                        </table>
+                                    </div>
+                                    
+                                    <p><strong>What's Next?</strong></p>
+                                    <p>Lucas will inspect your description, catalog items, and attached photos. We will reach back out to you via your preferred method (<strong>${sellerPref}</strong>) within 24 hours with either a direct cash purchase offer or request for more details.</p>
+                                    
+                                    <p>You can also track updates and communicate directly with us by logging into your account dashboard.</p>
+                                    
+                                    <div style="text-align: center; margin-top: 30px;">
+                                        <a href="${window.location.origin}/?tab=dashboard" style="display: inline-block; background: linear-gradient(135deg, #f5d075 0%, #dfb750 100%); color: #0c0f19; font-weight: 700; font-size: 13px; padding: 12px 28px; text-decoration: none; border-radius: 25px; box-shadow: 0 4px 12px rgba(223, 183, 80, 0.25); text-transform: uppercase; letter-spacing: 0.08em;">Go to My Dashboard</a>
+                                    </div>
+                                </div>
+                                <div style="max-width: 600px; margin: 25px auto 0 auto; text-align: center; color: #64748b; font-size: 11px;">
+                                    <p>This is an automated confirmation email for your collection submission to Vault 28 Trading Co.</p>
+                                    <p>© 2026 Vault 28 Trading Co. • Summerville, SC</p>
+                                </div>
+                            </div>
+                        `
+                    }
+                };
+
+                // 2. Send notification email to the owner (Lucas)
+                let generalPhotosHtml = '';
+                if (uploadedGeneralFiles && uploadedGeneralFiles.length > 0) {
+                    generalPhotosHtml = `
+                        <p style="color: #dfb750; font-size: 11px; text-transform: uppercase; letter-spacing: 0.15em; font-weight: 700; margin: 20px 0 10px 0;">Attached Photos</p>
+                        <div style="background-color: #0c0f19; border: 1px solid #1f293d; border-radius: 8px; padding: 15px; color: #cbd5e1; font-size: 14px;">
+                            ${uploadedGeneralFiles.map((f, i) => f.isVideo ? `<p style="font-size:12px; color:#94a3b8;">[Video Attachment ${i+1}]</p>` : `<img src="${f.base64}" alt="Collection Attachment ${i + 1}" style="max-width: 100%; border-radius: 6px; border: 1px solid #1f293d; margin-bottom: 10px; display: block;" />`).join('')}
+                        </div>
+                    `;
+                }
+
+                const ownerNotificationMail = {
+                    to: 'lshaver@vault28cards.com',
+                    replyTo: sellerEmail,
+                    message: {
+                        subject: `New Collection Lot Submitted: ${sellerName} - ${sport}`,
+                        html: `
+                            <div style="background-color: #0c0f19; padding: 40px 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; text-align: center;">
+                                <div style="max-width: 600px; margin: 0 auto; padding-bottom: 20px; text-align: left; border-bottom: 1px solid rgba(223, 183, 80, 0.25);">
+                                    <h1 style="color: #ffffff; font-size: 22px; margin: 0; font-weight: 800; letter-spacing: 0.05em; text-transform: uppercase;">
+                                        VAULT <span style="color: #dfb750;">28</span>
+                                    </h1>
+                                    <p style="color: #9ca3af; font-size: 11px; margin: 2px 0 0 0; text-transform: uppercase; letter-spacing: 0.1em; font-weight: 600;">Trading Co.</p>
+                                </div>
+                                <div style="max-width: 600px; margin: 20px auto 0 auto; background-color: #121624; border: 1px solid #1f293d; border-radius: 12px; overflow: hidden; text-align: left; color: #cbd5e1; font-size: 14px; line-height: 1.6; padding: 30px;">
+                                    <p style="color: #ffffff; font-weight: 600; font-size: 16px; margin-top: 0;">New Collection Submitted for Valuation</p>
+                                    <p>A new collection lot has been submitted by <strong>${sellerName}</strong> (${sellerEmail}, ${sellerPhone}).</p>
+                                    
+                                    <p style="color: #dfb750; font-size: 11px; text-transform: uppercase; letter-spacing: 0.15em; font-weight: 700; margin: 20px 0 10px 0;">Seller Info & Preferences</p>
+                                    <div style="background-color: #0c0f19; border: 1px solid #1f293d; border-radius: 8px; padding: 15px; margin-bottom: 20px;">
+                                        <table style="width: 100%; border-collapse: collapse; font-size: 13px; color: #cbd5e1;">
+                                            <tr><td style="padding: 4px 0; color: #94a3b8; width: 140px;">Seller Name:</td><td style="padding: 4px 0; color: #ffffff;">${sellerName}</td></tr>
+                                            <tr><td style="padding: 4px 0; color: #94a3b8;">Email Address:</td><td style="padding: 4px 0; color: #ffffff;">${sellerEmail}</td></tr>
+                                            <tr><td style="padding: 4px 0; color: #94a3b8;">Phone Number:</td><td style="padding: 4px 0; color: #ffffff;">${sellerPhone}</td></tr>
+                                            <tr><td style="padding: 4px 0; color: #94a3b8;">Location:</td><td style="padding: 4px 0; color: #ffffff;">${sellerLocation}</td></tr>
+                                            <tr><td style="padding: 4px 0; color: #94a3b8;">Contact Method:</td><td style="padding: 4px 0; color: #ffffff;">${sellerPref}</td></tr>
+                                        </table>
+                                    </div>
+
+                                    <p style="color: #dfb750; font-size: 11px; text-transform: uppercase; letter-spacing: 0.15em; font-weight: 700; margin: 20px 0 10px 0;">Collection Details</p>
+                                    <div style="background-color: #0c0f19; border: 1px solid #1f293d; border-radius: 8px; padding: 15px; margin-bottom: 20px;">
+                                        <table style="width: 100%; border-collapse: collapse; font-size: 13px; color: #cbd5e1;">
+                                            <tr><td style="padding: 4px 0; color: #94a3b8; width: 140px;">Collection Type:</td><td style="padding: 4px 0; color: #ffffff;">${sport}</td></tr>
+                                            <tr><td style="padding: 4px 0; color: #94a3b8;">Item Count:</td><td style="padding: 4px 0; color: #ffffff;">~${qty}</td></tr>
+                                            <tr><td style="padding: 4px 0; color: #94a3b8;">Estimated Value:</td><td style="padding: 4px 0; color: #ffffff;">$${estVal}</td></tr>
+                                            <tr><td style="padding: 4px 0; color: #94a3b8;">Asking Price:</td><td style="padding: 4px 0; color: #ffffff;">$${asking}</td></tr>
+                                            <tr><td style="padding: 4px 0; color: #94a3b8;">Delivery Preference:</td><td style="padding: 4px 0; color: #ffffff;">${deliveryPref}</td></tr>
+                                        </table>
+                                    </div>
+
+                                    <p style="color: #dfb750; font-size: 11px; text-transform: uppercase; letter-spacing: 0.15em; font-weight: 700; margin: 20px 0 10px 0;">Seller Description</p>
+                                    <div style="background-color: #0c0f19; border: 1px solid #1f293d; border-radius: 8px; padding: 15px; color: #ffffff; white-space: pre-wrap; font-size: 13px; line-height: 1.5; margin-bottom: 20px;">${desc}</div>
+
+                                    ${generalPhotosHtml}
+
+                                    <div style="text-align: center; margin-top: 30px;">
+                                        <a href="${window.location.origin}/?adminTab=collections" style="display: inline-block; background: linear-gradient(135deg, #f5d075 0%, #dfb750 100%); color: #0c0f19; font-weight: 700; font-size: 13px; padding: 12px 28px; text-decoration: none; border-radius: 25px; box-shadow: 0 4px 12px rgba(223, 183, 80, 0.25); text-transform: uppercase; letter-spacing: 0.08em;">Open Buying Desk Console</a>
+                                    </div>
+                                </div>
+                                <div style="max-width: 600px; margin: 25px auto 0 auto; text-align: center; color: #64748b; font-size: 11px;">
+                                    <p>© 2026 Vault 28 Trading Co. • Summerville, SC</p>
+                                </div>
+                            </div>
+                        `
+                    }
+                };
+
+                return Promise.all([
+                    db.collection("mail").add(sellerReceiptMail),
+                    db.collection("mail").add(ownerNotificationMail)
+                ]);
+            })
+            .then(() => {
                 document.getElementById('submission-card-box').style.display = 'none';
                 document.getElementById('submission-success-box').style.display = 'block';
                 showToast("Collection submitted successfully!", "success");

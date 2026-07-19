@@ -427,13 +427,20 @@
                 </div>
 
                 <!-- Form confirmation screen (hidden by default) -->
-                <div class="glass-card" id="submission-success-box" style="display: none; padding: 4rem 2rem; text-align: center;">
-                    <div style="font-size: 3rem; margin-bottom: 1.5rem;">📬</div>
-                    <h2 style="font-family: var(--font-title); font-size: 1.75rem; margin-bottom: 1rem;">Collection Submitted!</h2>
-                    <p style="color: var(--text-secondary); max-width: 500px; margin: 0 auto 2rem auto; line-height: 1.6;">
-                        Thank you for submitting your collection. We have cataloged your items securely in our database. Our valuation desk will review your details, inspect your photos, and reach out to you via your preferred contact method within 24 hours.
+                <div class="glass-card" id="submission-success-box" style="display: none; padding: 4rem 2.5rem; text-align: center; max-width: 650px; margin: 0 auto;">
+                    <div style="display: inline-flex; align-items: center; justify-content: center; width: 80px; height: 80px; border-radius: 50%; background: rgba(223, 183, 80, 0.1); border: 2px solid var(--accent-gold); margin-bottom: 2rem;">
+                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--accent-gold)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                    </div>
+                    <h2 style="font-family: var(--font-title); font-size: 2rem; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 1rem; color: var(--text-primary);">Submission Received!</h2>
+                    <p style="color: var(--text-secondary); font-size: 1.1rem; line-height: 1.7; max-width: 520px; margin: 0 auto 2rem auto;">
+                        Thank you for submitting your collection. An email confirmation has been sent to your inbox. Our Buying Desk is reviewing your description and uploaded photos, and we will get back to you with our cash offer within 24 hours.
                     </p>
-                    <button class="btn btn-primary" onclick="resetSubmissionFormState(); switchView('seller-landing');">Back to Homepage</button>
+                    <div style="display: flex; justify-content: center; gap: 1rem; flex-wrap: wrap;">
+                        <button class="btn btn-primary" onclick="resetSubmissionFormState(); switchView('seller-landing');">Back to Homepage</button>
+                        <button class="btn btn-secondary" onclick="resetSubmissionFormState(); switchView('seller-dashboard');">View My Dashboard</button>
+                    </div>
                 </div>
             </div>
         </section>
