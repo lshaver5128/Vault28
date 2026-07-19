@@ -22,7 +22,6 @@ const ROUTE_MAP = {
     'seller-dashboard': '/my-collections',
     'seller-detail': '/collection',
     'shop': '/shop',
-    'how-it-works': '/how-it-works',
     'about': '/about',
     'contact': '/contact',
     'customer-thread': '/contact-thread',
@@ -36,7 +35,6 @@ const PATH_MAP = {
     '/my-collections': 'seller-dashboard',
     '/collection': 'seller-detail',
     '/shop': 'shop',
-    '/how-it-works': 'how-it-works',
     '/about': 'about',
     '/contact': 'contact',
     '/contact-thread': 'customer-thread',
@@ -438,7 +436,6 @@ function switchView(viewId, pushState = true) {
         'seller-detail': document.getElementById('seller-detail'),
         'customer-thread': document.getElementById('customer-thread'),
         'shop': document.getElementById('shop'),
-        'how-it-works': document.getElementById('how-it-works'),
         'about': document.getElementById('about'),
         'contact': document.getElementById('contact'),
         'buyer-dashboard': document.getElementById('buyer-dashboard'),
@@ -549,7 +546,6 @@ function updateNavigationLinks(activeViewId) {
         links.push(
             { label: 'Sell Your Collection', view: 'seller-submit' },
             { label: 'Shop', view: 'shop' },
-            { label: 'How It Works', view: 'how-it-works' },
             { label: 'About Us', view: 'about' },
             { label: 'Contact', view: 'contact' }
         );
