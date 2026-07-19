@@ -586,6 +586,24 @@ function updateNavigationLinks(activeViewId) {
     }
 }
 
+function updateContactFormPreFill(user) {
+    const nameInput = document.getElementById('contact-inquiry-name');
+    const emailInput = document.getElementById('contact-inquiry-email');
+    if (!nameInput || !emailInput) return;
+    
+    if (user) {
+        nameInput.value = user.displayName || user.email.split('@')[0];
+        emailInput.value = user.email;
+        emailInput.readOnly = true;
+        emailInput.style.opacity = '0.7';
+    } else {
+        nameInput.value = '';
+        emailInput.value = '';
+        emailInput.readOnly = false;
+        emailInput.style.opacity = '1';
+    }
+}
+
 // Database Synchronization & Initializers
 function initDatabase() {
     if (isFirebaseActive) {
@@ -606,6 +624,7 @@ function initDatabase() {
                 
                 // Record user activity
                 recordUserActivity(user.uid, user.email, user.displayName, false);
+                updateContactFormPreFill(user);
                 
                 const roleLabel = document.getElementById('user-display-role');
                 const roleSwitcher = document.getElementById('role-switcher-wrapper');
@@ -637,6 +656,7 @@ function initDatabase() {
                         inquiries.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
                         updateInquiriesBadge();
                         renderAdminInquiriesList();
+                        renderCustomerDashboardInquiries();
                     });
 
                     // Only automatically redirect if they clicked a direct deep-link (like from an email)
@@ -706,6 +726,7 @@ function initDatabase() {
                 const toolbar = document.getElementById('admin-toolbar');
                 if (toolbar) toolbar.style.display = 'none';
                 
+                updateContactFormPreFill(null);
                 collections = [];
                 users = [];
                 setRole('seller');
