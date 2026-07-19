@@ -1453,16 +1453,36 @@ function renderCustomerDashboardInquiries() {
             }
         }
         
+        let originalPhotosHTML = '';
+        if (msgs[0].photos && msgs[0].photos.length > 0) {
+            originalPhotosHTML = `
+                <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.75rem;">
+                    ${msgs[0].photos.map(pSrc => `<img src="${pSrc}" style="max-height: 120px; max-width: 120px; object-fit: cover; border-radius: 6px; border: 1px solid var(--border-color); cursor: pointer;" onclick="window.open('${pSrc}', '_blank')">`).join('')}
+                </div>
+            `;
+        }
+
         let repliesHTML = '';
         if (msgs.length > 1) {
             for (let i = 1; i < msgs.length; i++) {
                 const m = msgs[i];
                 const replyDate = new Date(m.createdAt).toLocaleString();
+                
+                let msgPhotosHTML = '';
+                if (m.photos && m.photos.length > 0) {
+                    msgPhotosHTML = `
+                        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.75rem;">
+                            ${m.photos.map(pSrc => `<img src="${pSrc}" style="max-height: 120px; max-width: 120px; object-fit: cover; border-radius: 6px; border: 1px solid var(--border-color); cursor: pointer;" onclick="window.open('${pSrc}', '_blank')">`).join('')}
+                        </div>
+                    `;
+                }
+
                 if (m.sender === 'customer') {
                     repliesHTML += `
                         <div style="background: rgba(223, 183, 80, 0.02); border: 1px solid var(--border-color); border-radius: 6px; padding: 1rem; margin-top: 0.5rem;">
                             <p style="color: var(--accent-gold); font-size: 0.9rem; text-transform: uppercase; font-weight: 700; margin: 0 0 0.5rem 0; letter-spacing: 0.05em;">You:</p>
                             <p style="color: var(--text-primary); font-size: 1.05rem; margin: 0; line-height: 1.5; white-space: pre-wrap;">${escapeHTML(m.text)}</p>
+                            ${msgPhotosHTML}
                             <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 0.5rem; margin-bottom: 0;">Sent: ${replyDate}</p>
                         </div>
                     `;
@@ -1471,6 +1491,7 @@ function renderCustomerDashboardInquiries() {
                         <div style="background: rgba(59, 130, 246, 0.03); border: 1px solid rgba(59, 130, 246, 0.15); border-radius: 6px; padding: 1rem; margin-top: 0.5rem;">
                             <p style="color: #3b82f6; font-size: 0.9rem; text-transform: uppercase; font-weight: 700; margin: 0 0 0.5rem 0; letter-spacing: 0.05em;">Lucas (Vault 28 Owner):</p>
                             <p style="color: var(--text-primary); font-size: 1.05rem; margin: 0; line-height: 1.5; white-space: pre-wrap;">${escapeHTML(m.text)}</p>
+                            ${msgPhotosHTML}
                             <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 0.5rem; margin-bottom: 0;">Replied: ${replyDate}</p>
                         </div>
                     `;
@@ -1496,8 +1517,22 @@ function renderCustomerDashboardInquiries() {
              
         const replyFormHTML = `
             <div id="customer-reply-form-${inq.id}" style="display: none; flex-direction: column; gap: 0.75rem; border-top: 1px dashed var(--border-color); padding-top: 1rem; margin-top: 0.5rem;">
-                <textarea id="customer-reply-text-${inq.id}" placeholder="Type your reply to Lucas here..." rows="4" style="width: 100%; padding: 0.75rem; background: rgba(0,0,0,0.3); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-primary); font-family: inherit; font-size: 0.9rem; line-height: 1.5; resize: vertical;"></textarea>
-                <div style="display: flex; gap: 0.5rem;">
+                <textarea id="customer-reply-text-${inq.id}" placeholder="Type your reply to Lucas here..." rows="4" style="width: 100%; padding: 0.75rem; background: rgba(0,0,0,0.3); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-primary); font-family: inherit; font-size: 1.05rem; line-height: 1.5; resize: vertical;"></textarea>
+                
+                <!-- Reply Photos Upload -->
+                <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                    <label style="font-size: 1rem; font-weight: 600; color: var(--text-secondary);">Attach Photos (Optional)</label>
+                    <div style="display: flex; align-items: center; gap: 0.75rem;">
+                        <button class="btn btn-secondary btn-sm" onclick="document.getElementById('customer-reply-file-input-${inq.id}').click()" style="padding: 6px 12px; font-size: 0.9rem;">
+                            📎 Add Photos
+                        </button>
+                        <input type="file" id="customer-reply-file-input-${inq.id}" accept="image/*" multiple style="display: none;" onchange="handleReplyPhotosChange(this, '${inq.id}')">
+                        <span id="customer-reply-photo-count-${inq.id}" style="font-size: 0.85rem; color: var(--text-muted);">No files selected</span>
+                    </div>
+                    <div id="customer-reply-preview-${inq.id}" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(70px, 1fr)); gap: 0.5rem; margin-top: 0.25rem;"></div>
+                </div>
+
+                <div style="display: flex; gap: 0.5rem; margin-top: 0.5rem;">
                     <button class="btn btn-primary btn-sm" onclick="sendCustomerDashboardReply('${inq.id}')">Send Reply</button>
                     <button class="btn btn-secondary btn-sm" onclick="toggleCustomerReplyForm('${inq.id}', false)">Cancel</button>
                 </div>
@@ -1519,6 +1554,7 @@ function renderCustomerDashboardInquiries() {
             <div style="background: rgba(0,0,0,0.2); border: 1px solid var(--border-color); border-radius: 6px; padding: 1.25rem; color: var(--text-secondary); font-size: 1.05rem; line-height: 1.5; white-space: pre-wrap;">
                 <span style="color: var(--accent-gold); font-size: 0.9rem; text-transform: uppercase; font-weight: 700; display: block; margin-bottom: 0.25rem; letter-spacing: 0.05em;">Original Message:</span>
                 ${escapeHTML(msgs[0].text)}
+                ${originalPhotosHTML}
             </div>
             
             ${historyToggleHTML}
@@ -1560,12 +1596,51 @@ window.toggleThreadHistory = function(inqId, totalReplies, prefix = 'admin') {
     }
 };
 
+window.customerReplyPhotos = window.customerReplyPhotos || {};
+
+window.handleReplyPhotosChange = function(input, inqId) {
+    const previewDiv = document.getElementById(`customer-reply-preview-${inqId}`);
+    const countSpan = document.getElementById(`customer-reply-photo-count-${inqId}`);
+    if (!previewDiv || !countSpan) return;
+    
+    window.customerReplyPhotos[inqId] = [];
+    previewDiv.innerHTML = '';
+    
+    if (input.files.length === 0) {
+        countSpan.textContent = 'No files selected';
+        return;
+    }
+    
+    countSpan.textContent = `${input.files.length} file(s) selected`;
+    
+    Array.from(input.files).forEach((file) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const base64 = e.target.result;
+            window.customerReplyPhotos[inqId].push(base64);
+            
+            const thumb = document.createElement('div');
+            thumb.className = 'uploaded-preview-item';
+            thumb.style.position = 'relative';
+            thumb.style.width = '70px';
+            thumb.style.height = '70px';
+            thumb.innerHTML = `
+                <img src="${base64}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 4px; border: 1px solid var(--border-color);" />
+            `;
+            previewDiv.appendChild(thumb);
+        };
+        reader.readAsDataURL(file);
+    });
+};
+
 window.sendCustomerDashboardReply = function(inqId) {
     const replyText = document.getElementById(`customer-reply-text-${inqId}`).value.trim();
     if (!replyText) {
         showToast("Please enter a reply message.", "error");
         return;
     }
+    
+    const photos = window.customerReplyPhotos[inqId] || [];
     
     if (isFirebaseActive) {
         db.collection("inquiries").doc(inqId).get()
@@ -1577,13 +1652,25 @@ window.sendCustomerDashboardReply = function(inqId) {
                 msgs.push({
                     sender: 'customer',
                     text: replyText,
-                    createdAt: new Date().toISOString()
+                    createdAt: new Date().toISOString(),
+                    photos: photos
                 });
                 
                 return db.collection("inquiries").doc(inqId).update({
                     messages: msgs,
                     status: 'Pending Response'
                 }).then(() => {
+                    delete window.customerReplyPhotos[inqId];
+                    
+                    let replyPhotosEmailHtml = '';
+                    if (photos && photos.length > 0) {
+                        replyPhotosEmailHtml = `
+                            <p style="color: #dfb750; font-size: 11px; text-transform: uppercase; letter-spacing: 0.15em; font-weight: 700; margin: 20px 0 10px 0;">Attached Photos</p>
+                            <div style="background-color: #0c0f19; border: 1px solid #1f293d; border-radius: 8px; padding: 15px; color: #cbd5e1; font-size: 14px;">
+                                ${photos.map((src, index) => `<img src="${src}" alt="Reply Attachment ${index + 1}" style="max-width: 100%; border-radius: 6px; border: 1px solid #1f293d; margin-bottom: 10px; display: block;" />`).join('')}
+                            </div>
+                        `;
+                    }
                     const ownerNotificationMail = {
                         to: 'lshaver@vault28cards.com',
                         replyTo: inq.email,
@@ -1601,6 +1688,7 @@ window.sendCustomerDashboardReply = function(inqId) {
                                         <p style="color: #ffffff; font-weight: 600; font-size: 16px; margin-top: 0;">Customer Replied</p>
                                         <p>The customer <strong>${inq.name}</strong> (${inq.email}) has replied to their inquiry:</p>
                                         <div style="background-color: #0c0f19; border-left: 4px solid #dfb750; padding: 15px; border-radius: 6px; margin: 20px 0; color: #ffffff; white-space: pre-wrap;">${replyText}</div>
+                                        ${replyPhotosEmailHtml}
                                         <div style="text-align: center; margin-top: 30px;">
                                             <a href="${window.location.origin}/?adminTab=inquiries" style="display: inline-block; background: linear-gradient(135deg, #f5d075 0%, #dfb750 100%); color: #0c0f19; font-weight: 700; font-size: 13px; padding: 12px 28px; text-decoration: none; border-radius: 25px; box-shadow: 0 4px 12px rgba(223, 183, 80, 0.25); text-transform: uppercase; letter-spacing: 0.08em;">Open Owner Console</a>
                                         </div>
@@ -2882,7 +2970,7 @@ document.getElementById('contact-form-inquiry').addEventListener('submit', (e) =
         message: msg,
         status: 'Pending Response',
         messages: [
-            { sender: 'customer', text: msg, createdAt: new Date().toISOString() }
+            { sender: 'customer', text: msg, createdAt: new Date().toISOString(), photos: contactAttachedPhotos }
         ],
         createdAt: new Date().toISOString()
     };
@@ -2892,6 +2980,16 @@ document.getElementById('contact-form-inquiry').addEventListener('submit', (e) =
         db.collection("inquiries").doc(newInquiry.id).set(newInquiry);
         
         const logoUrl = `${window.location.origin}/assets/logo_transparent.png`;
+
+        let emailAttachedPhotosHtml = '';
+        if (contactAttachedPhotos && contactAttachedPhotos.length > 0) {
+            emailAttachedPhotosHtml = `
+                <p style="color: #dfb750; font-size: 11px; text-transform: uppercase; letter-spacing: 0.15em; font-weight: 700; margin: 20px 0 10px 0;">Attached Photos</p>
+                <div style="background-color: #0c0f19; border: 1px solid #1f293d; border-radius: 8px; padding: 15px; color: #cbd5e1; font-size: 14px;">
+                    ${contactAttachedPhotos.map((src, index) => `<img src="${src}" alt="Attachment ${index + 1}" style="max-width: 100%; border-radius: 6px; border: 1px solid #1f293d; margin-bottom: 10px; display: block;" />`).join('')}
+                </div>
+            `;
+        }
 
         // Write to mail collection to trigger the Firebase extension
         const emailPayload = {
@@ -2954,6 +3052,8 @@ document.getElementById('contact-form-inquiry').addEventListener('submit', (e) =
                                 
                                 <!-- Message Content Block -->
                                 <div style="background-color: #0c0f19; border: 1px solid #1f293d; border-radius: 8px; padding: 20px; color: #e2e8f0; font-size: 14px; line-height: 1.6; min-height: 80px; white-space: pre-wrap; border-left: 4px solid #dfb750; font-family: inherit;">${msg}</div>
+                                
+                                ${emailAttachedPhotosHtml}
                                 
                                 <!-- Action Button -->
                                 <div style="text-align: center; margin-top: 35px;">
@@ -3028,24 +3128,76 @@ document.getElementById('contact-form-inquiry').addEventListener('submit', (e) =
             })
             .then(() => {
                 showToast(`Thank you, ${name}! Your inquiry has been sent.`, "success");
+                contactAttachedPhotos = [];
+                const preview = document.getElementById('contact-images-preview');
+                if (preview) preview.innerHTML = '';
                 document.getElementById('contact-form-inquiry').reset();
             })
             .catch(err => {
                 console.error("Error creating trigger email document:", err);
                 // Fallback success notice if mail collection write fails but inquiries set succeeded
                 showToast(`Thank you, ${name}! Your inquiry has been sent.`, "success");
+                contactAttachedPhotos = [];
+                const preview = document.getElementById('contact-images-preview');
+                if (preview) preview.innerHTML = '';
                 document.getElementById('contact-form-inquiry').reset();
             });
     } else {
         inquiries.push(newInquiry);
         localStorage.setItem('v28_inquiries', JSON.stringify(inquiries));
         showToast(`Inquiry saved to local sandbox!`, "success");
+        contactAttachedPhotos = [];
+        const preview = document.getElementById('contact-images-preview');
+        if (preview) preview.innerHTML = '';
         document.getElementById('contact-form-inquiry').reset();
     }
 });
 
 
 // ==================== GLOBAL CONTROLS & BINDINGS ====================
+
+// Contact Form Attached Photos State
+let contactAttachedPhotos = [];
+
+// Bind dropzone listeners for Contact Inquiry Form
+setTimeout(() => {
+    const contactDropzone = document.getElementById('contact-dropzone');
+    const contactFileInput = document.getElementById('contact-file-input');
+    const contactPreview = document.getElementById('contact-images-preview');
+    
+    if (contactDropzone && contactFileInput && contactPreview) {
+        contactDropzone.addEventListener('click', () => contactFileInput.click());
+        
+        contactFileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                Array.from(e.target.files).forEach(file => {
+                    const reader = new FileReader();
+                    reader.onload = (el) => {
+                        const base64 = el.target.result;
+                        contactAttachedPhotos.push(base64);
+                        
+                        const thumb = document.createElement('div');
+                        thumb.className = 'uploaded-preview-item';
+                        thumb.style.position = 'relative';
+                        thumb.innerHTML = `
+                            <img src="${base64}" style="width: 80px; height: 80px; object-fit: cover; border-radius: 6px; border: 1px solid var(--border-color);" />
+                            <button type="button" class="uploaded-preview-remove" style="position: absolute; top: -5px; right: -5px; background: var(--accent-red); color: white; border: none; border-radius: 50%; width: 18px; height: 18px; font-size: 11px; cursor: pointer; display: flex; align-items: center; justify-content: center;">×</button>
+                        `;
+                        
+                        thumb.querySelector('button').addEventListener('click', () => {
+                            const idx = contactAttachedPhotos.indexOf(base64);
+                            if (idx > -1) contactAttachedPhotos.splice(idx, 1);
+                            thumb.remove();
+                        });
+                        
+                        contactPreview.appendChild(thumb);
+                    };
+                    reader.readAsDataURL(file);
+                });
+            }
+        });
+    }
+}, 500);
 
 document.getElementById('brand-logo').addEventListener('click', (e) => {
     e.preventDefault();
@@ -3173,16 +3325,36 @@ function renderAdminInquiriesList() {
             }
         }
         
+        let originalPhotosHTML = '';
+        if (msgs[0].photos && msgs[0].photos.length > 0) {
+            originalPhotosHTML = `
+                <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.75rem;">
+                    ${msgs[0].photos.map(pSrc => `<img src="${pSrc}" style="max-height: 120px; max-width: 120px; object-fit: cover; border-radius: 6px; border: 1px solid var(--border-color); cursor: pointer;" onclick="window.open('${pSrc}', '_blank')">`).join('')}
+                </div>
+            `;
+        }
+
         let repliesHTML = '';
         if (msgs.length > 1) {
             for (let i = 1; i < msgs.length; i++) {
                 const m = msgs[i];
                 const replyDate = new Date(m.createdAt).toLocaleString();
+                
+                let msgPhotosHTML = '';
+                if (m.photos && m.photos.length > 0) {
+                    msgPhotosHTML = `
+                        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.75rem;">
+                            ${m.photos.map(pSrc => `<img src="${pSrc}" style="max-height: 120px; max-width: 120px; object-fit: cover; border-radius: 6px; border: 1px solid var(--border-color); cursor: pointer;" onclick="window.open('${pSrc}', '_blank')">`).join('')}
+                        </div>
+                    `;
+                }
+
                 if (m.sender === 'owner') {
                     repliesHTML += `
                         <div style="background: rgba(59, 130, 246, 0.03); border: 1px solid rgba(59, 130, 246, 0.15); border-radius: 6px; padding: 1rem; margin-top: 0.5rem;">
                             <p style="color: #3b82f6; font-size: 0.9rem; text-transform: uppercase; font-weight: 700; margin: 0 0 0.5rem 0; letter-spacing: 0.05em;">Your Reply (Sent via Email):</p>
                             <p style="color: var(--text-primary); font-size: 1.05rem; margin: 0; line-height: 1.5; white-space: pre-wrap;">${escapeHTML(m.text)}</p>
+                            ${msgPhotosHTML}
                             <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 0.5rem; margin-bottom: 0;">Replied: ${replyDate}</p>
                         </div>
                     `;
@@ -3191,6 +3363,7 @@ function renderAdminInquiriesList() {
                         <div style="background: rgba(223, 183, 80, 0.02); border: 1px solid var(--border-color); border-radius: 6px; padding: 1rem; margin-top: 0.5rem;">
                             <p style="color: var(--accent-gold); font-size: 0.9rem; text-transform: uppercase; font-weight: 700; margin: 0 0 0.5rem 0; letter-spacing: 0.05em;">Customer Reply:</p>
                             <p style="color: var(--text-primary); font-size: 1.05rem; margin: 0; line-height: 1.5; white-space: pre-wrap;">${escapeHTML(m.text)}</p>
+                            ${msgPhotosHTML}
                             <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 0.5rem; margin-bottom: 0;">Sent: ${replyDate}</p>
                         </div>
                     `;
@@ -3240,6 +3413,7 @@ function renderAdminInquiriesList() {
             <div style="background: rgba(0,0,0,0.2); border: 1px solid var(--border-color); border-radius: 6px; padding: 1.25rem; color: var(--text-secondary); font-size: 1.05rem; line-height: 1.5; white-space: pre-wrap;">
                 <span style="color: var(--accent-gold); font-size: 0.9rem; text-transform: uppercase; font-weight: 700; display: block; margin-bottom: 0.25rem; letter-spacing: 0.05em;">Original Inquiry:</span>
                 ${escapeHTML(msgs[0].text)}
+                ${originalPhotosHTML}
             </div>
             
             ${historyToggleHTML}
@@ -3454,6 +3628,15 @@ window.loadCustomerThreadDetail = function(inqId) {
             const bubble = document.createElement('div');
             const dateStr = new Date(m.createdAt).toLocaleString();
             
+            let photosHTML = '';
+            if (m.photos && m.photos.length > 0) {
+                photosHTML = `
+                    <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.75rem; margin-bottom: 0.25rem;">
+                        ${m.photos.map(pSrc => `<img src="${pSrc}" style="max-height: 120px; max-width: 120px; object-fit: cover; border-radius: 6px; border: 1px solid var(--border-color); cursor: pointer;" onclick="window.open('${pSrc}', '_blank')">`).join('')}
+                    </div>
+                `;
+            }
+
             if (m.sender === 'customer') {
                 bubble.style.maxWidth = '80%';
                 bubble.style.padding = '0.85rem 1.1rem';
@@ -3464,8 +3647,9 @@ window.loadCustomerThreadDetail = function(inqId) {
                 bubble.style.marginLeft = 'auto';
                 bubble.style.lineHeight = '1.5';
                 bubble.innerHTML = `
-                    <p style="margin: 0; font-size: 0.92rem; white-space: pre-wrap; text-align: left;">${escapeHTML(m.text)}</p>
-                    <span style="display: block; font-size: 0.72rem; color: var(--text-muted); margin-top: 4px; text-align: right;">${dateStr}</span>
+                    <p style="margin: 0; font-size: 1.02rem; white-space: pre-wrap; text-align: left;">${escapeHTML(m.text)}</p>
+                    ${photosHTML}
+                    <span style="display: block; font-size: 0.85rem; color: var(--text-muted); margin-top: 4px; text-align: right;">${dateStr}</span>
                 `;
             } else {
                 bubble.style.maxWidth = '80%';
@@ -3477,8 +3661,9 @@ window.loadCustomerThreadDetail = function(inqId) {
                 bubble.style.marginRight = 'auto';
                 bubble.style.lineHeight = '1.5';
                 bubble.innerHTML = `
-                    <p style="margin: 0; font-size: 0.92rem; white-space: pre-wrap; text-align: left;">${escapeHTML(m.text)}</p>
-                    <span style="display: block; font-size: 0.72rem; color: var(--text-muted); margin-top: 4px; text-align: left;">${dateStr}</span>
+                    <p style="margin: 0; font-size: 1.02rem; white-space: pre-wrap; text-align: left;">${escapeHTML(m.text)}</p>
+                    ${photosHTML}
+                    <span style="display: block; font-size: 0.85rem; color: var(--text-muted); margin-top: 4px; text-align: left;">${dateStr}</span>
                 `;
             }
             chatLog.appendChild(bubble);
@@ -3542,6 +3727,43 @@ window.loadCustomerThreadDetail = function(inqId) {
     }
 };
 
+let threadReplyAttachedPhotos = [];
+
+window.handleThreadReplyPhotosChange = function(input) {
+    const previewDiv = document.getElementById('customer-thread-reply-preview');
+    const countSpan = document.getElementById('customer-thread-reply-photo-count');
+    if (!previewDiv || !countSpan) return;
+    
+    threadReplyAttachedPhotos = [];
+    previewDiv.innerHTML = '';
+    
+    if (input.files.length === 0) {
+        countSpan.textContent = 'No files selected';
+        return;
+    }
+    
+    countSpan.textContent = `${input.files.length} file(s) selected`;
+    
+    Array.from(input.files).forEach((file) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const base64 = e.target.result;
+            threadReplyAttachedPhotos.push(base64);
+            
+            const thumb = document.createElement('div');
+            thumb.className = 'uploaded-preview-item';
+            thumb.style.position = 'relative';
+            thumb.style.width = '70px';
+            thumb.style.height = '70px';
+            thumb.innerHTML = `
+                <img src="${base64}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 4px; border: 1px solid var(--border-color);" />
+            `;
+            previewDiv.appendChild(thumb);
+        };
+        reader.readAsDataURL(file);
+    });
+};
+
 window.sendCustomerThreadReply = function() {
     const replyText = document.getElementById('customer-thread-reply-text').value.trim();
     if (!replyText) {
@@ -3550,6 +3772,8 @@ window.sendCustomerThreadReply = function() {
     }
     
     if (!selectedInquiryId) return;
+    
+    const photos = threadReplyAttachedPhotos;
     
     if (isFirebaseActive) {
         db.collection("inquiries").doc(selectedInquiryId).get()
@@ -3561,13 +3785,31 @@ window.sendCustomerThreadReply = function() {
                 msgs.push({
                     sender: 'customer',
                     text: replyText,
-                    createdAt: new Date().toISOString()
+                    createdAt: new Date().toISOString(),
+                    photos: photos
                 });
                 
                 return db.collection("inquiries").doc(selectedInquiryId).update({
                     messages: msgs,
                     status: 'Pending Response'
                 }).then(() => {
+                    threadReplyAttachedPhotos = [];
+                    const preview = document.getElementById('customer-thread-reply-preview');
+                    if (preview) preview.innerHTML = '';
+                    const countSpan = document.getElementById('customer-thread-reply-photo-count');
+                    if (countSpan) countSpan.textContent = 'No files selected';
+                    const fileInput = document.getElementById('customer-thread-reply-file-input');
+                    if (fileInput) fileInput.value = '';
+                    
+                    let replyPhotosEmailHtml = '';
+                    if (photos && photos.length > 0) {
+                        replyPhotosEmailHtml = `
+                            <p style="color: #dfb750; font-size: 11px; text-transform: uppercase; letter-spacing: 0.15em; font-weight: 700; margin: 20px 0 10px 0;">Attached Photos</p>
+                            <div style="background-color: #0c0f19; border: 1px solid #1f293d; border-radius: 8px; padding: 15px; color: #cbd5e1; font-size: 14px;">
+                                ${photos.map((src, index) => `<img src="${src}" alt="Reply Attachment ${index + 1}" style="max-width: 100%; border-radius: 6px; border: 1px solid #1f293d; margin-bottom: 10px; display: block;" />`).join('')}
+                            </div>
+                        `;
+                    }
                     const ownerNotificationMail = {
                         to: 'lshaver@vault28cards.com',
                         replyTo: inq.email,
@@ -3585,6 +3827,7 @@ window.sendCustomerThreadReply = function() {
                                         <p style="color: #ffffff; font-weight: 600; font-size: 16px; margin-top: 0;">Customer Replied</p>
                                         <p>The customer <strong>${inq.name}</strong> (${inq.email}) has replied to their inquiry:</p>
                                         <div style="background-color: #0c0f19; border-left: 4px solid #dfb750; padding: 15px; border-radius: 6px; margin: 20px 0; color: #ffffff; white-space: pre-wrap;">${replyText}</div>
+                                        ${replyPhotosEmailHtml}
                                         <div style="text-align: center; margin-top: 30px;">
                                             <a href="${window.location.origin}/?adminTab=inquiries" style="display: inline-block; background: linear-gradient(135deg, #f5d075 0%, #dfb750 100%); color: #0c0f19; font-weight: 700; font-size: 13px; padding: 12px 28px; text-decoration: none; border-radius: 25px; box-shadow: 0 4px 12px rgba(223, 183, 80, 0.25); text-transform: uppercase; letter-spacing: 0.08em;">Open Owner Console</a>
                                         </div>
