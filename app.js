@@ -4275,6 +4275,19 @@ setTimeout(() => {
     }
 }, 500);
 
+// Hero image slideshow logic
+function initHeroSlider() {
+    const slides = document.querySelectorAll('.hero-slide');
+    if (slides.length === 0) return;
+    
+    let currentIndex = 0;
+    setInterval(() => {
+        slides[currentIndex].classList.remove('active');
+        currentIndex = (currentIndex + 1) % slides.length;
+        slides[currentIndex].classList.add('active');
+    }, 4500);
+}
+
 // DOM Init
 document.addEventListener('DOMContentLoaded', () => {
     const banner = document.getElementById('sandbox-banner');
@@ -4304,5 +4317,6 @@ document.addEventListener('DOMContentLoaded', () => {
     initDatabase();
     setRole('seller');
     initScrollReveal();
+    initHeroSlider();
     updateWizardUI();
 });

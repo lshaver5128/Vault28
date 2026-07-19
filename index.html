@@ -101,8 +101,10 @@
                     <!-- Ambient gold/cyan glowing ring behind the card mockup -->
                     <div class="graphic-glow-ring" style="position: absolute; width: 340px; height: 340px; background: radial-gradient(circle, rgba(223, 183, 80, 0.12) 0%, rgba(6, 182, 212, 0.08) 50%, transparent 100%); filter: blur(30px); border-radius: 50%; pointer-events: none;"></div>
                     
-                    <div class="floating-hero-image-wrapper" style="position: relative; border-radius: 16px; border: 1px solid rgba(255,255,255,0.08); background: rgba(24, 26, 31, 0.6); backdrop-filter: blur(12px); padding: 0.5rem; box-shadow: 0 20px 40px rgba(0,0,0,0.4), inset 0 1px 1px rgba(255,255,255,0.1); width: 100%; max-width: 360px; overflow: hidden; aspect-ratio: 1/1;">
-                        <img src="/assets/hero_cards.jpg" alt="Vault 28 Sports Cards" style="width: 100%; height: 100%; object-fit: cover; border-radius: 12px;" />
+                    <div class="floating-hero-image-wrapper" style="position: relative; border-radius: 16px; border: 1px solid rgba(255,255,255,0.08); background: rgba(24, 26, 31, 0.6); backdrop-filter: blur(12px); padding: 0.5rem; box-shadow: 0 20px 40px rgba(0,0,0,0.4), inset 0 1px 1px rgba(255,255,255,0.1); width: 100%; max-width: 360px; overflow: hidden; aspect-ratio: 1 / 1;" id="hero-image-slider">
+                        <img src="/assets/hero_cards.jpg" class="hero-slide active" alt="Vault 28 Sports Cards Graded" style="position: absolute; top: 0.5rem; left: 0.5rem; width: calc(100% - 1rem); height: calc(100% - 1rem); object-fit: cover; border-radius: 12px; transition: opacity 1.5s ease-in-out; opacity: 0; z-index: 1;" />
+                        <img src="/assets/hero_cards_2.jpg" class="hero-slide" alt="Vault 28 Sports Cards Wax Packs" style="position: absolute; top: 0.5rem; left: 0.5rem; width: calc(100% - 1rem); height: calc(100% - 1rem); object-fit: cover; border-radius: 12px; transition: opacity 1.5s ease-in-out; opacity: 0; z-index: 1;" />
+                        <img src="/assets/hero_cards_3.jpg" class="hero-slide" alt="Vault 28 Sports Cards Showcase" style="position: absolute; top: 0.5rem; left: 0.5rem; width: calc(100% - 1rem); height: calc(100% - 1rem); object-fit: cover; border-radius: 12px; transition: opacity 1.5s ease-in-out; opacity: 0; z-index: 1;" />
                     </div>
                 </div>
             </div>
@@ -119,7 +121,7 @@
             <!-- How It Works Section -->
             <div class="features-section reveal" style="margin-top: 5rem;">
                 <h2 class="section-title">How <span>It Works</span></h2>
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 2rem; margin-top: 2rem;">
+                <div class="reveal reveal-stagger" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 2rem; margin-top: 2rem;">
                     <div class="glass-card feature-card" style="text-align: center;">
                         <div class="feature-icon-wrapper" style="margin: 0 auto 1rem auto;">1</div>
                         <h3>Submit Details</h3>
@@ -141,7 +143,7 @@
             <!-- What We Buy Section -->
             <div class="reveal" style="padding: 4rem 0; border-top: 1px solid var(--border-color); margin-top: 5rem;">
                 <h2 class="section-title">What <span>We Buy</span></h2>
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; margin-top: 2rem; text-align: left;">
+                <div class="reveal reveal-stagger" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; margin-top: 2rem; text-align: left;">
                     <div class="glass-card feature-card">
                         <h3 style="color: var(--accent-cyan);">⚾ Baseball Cards</h3>
                         <p>Vintage Topps, Bowman, modern rookies, and chrome cards. Single high-end graded slabs, player lots, and raw vintage collections.</p>
@@ -172,7 +174,7 @@
             <!-- Why Sell to Vault 28 Section -->
             <div class="features-section reveal" style="border-top: 1px solid var(--border-color); padding-top: 5rem; margin-top: 5rem;">
                 <h2 class="section-title">Why Sell To <span>Vault 28</span>?</h2>
-                <div class="features-grid">
+                <div class="features-grid reveal reveal-stagger">
                     <div class="glass-card feature-card">
                         <div class="feature-icon-wrapper">✔️</div>
                         <h3>Simple Process</h3>
