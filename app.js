@@ -1541,9 +1541,27 @@ document.getElementById('submission-form').addEventListener('submit', (e) => {
         triggerUIRefresh();
     }
 });
-
-
 // ==================== SELLER DASHBOARD RENDERS ====================
+
+window.deleteCollectionFromDashboard = function(colId) {
+    if (!confirm("Are you sure you want to delete this collection submission? This action cannot be undone.")) return;
+    
+    if (isFirebaseActive) {
+        db.collection("collections").doc(colId).delete()
+            .then(() => {
+                showToast("Collection submission deleted.", "success");
+            })
+            .catch(err => {
+                console.error("Error deleting collection:", err);
+                showToast("Could not delete collection from database.", "error");
+            });
+    } else {
+        collections = collections.filter(c => c.id !== colId);
+        saveLocalCollections();
+        showToast("Collection submission deleted from sandbox.", "success");
+        triggerUIRefresh();
+    }
+};
 
 function renderSellerDashboard() {
     const listContainer = document.getElementById('seller-collections-list');
@@ -1596,11 +1614,25 @@ function renderSellerDashboard() {
                     </div>
                     <div class="collection-preview-row" style="margin-top:1rem;">${previewHtml}</div>
                 </div>
-                <div class="collection-card-footer">
-                    <span class="price-val" style="font-size:1.1rem;">${priceText}</span>
-                    <span style="font-size: 0.85rem; color: var(--accent-cyan); font-weight: 600;">Inspect Offer →</span>
+                <div class="collection-card-footer" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                    <span class="price-val" style="font-size:1.05rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 50%;">${priceText}</span>
+                    <div style="display: flex; gap: 0.5rem; align-items: center; justify-content: flex-end;">
+                        <button class="btn btn-secondary btn-sm delete-col-btn" style="padding: 4px 8px; font-size: 0.85rem; background: rgba(239, 68, 68, 0.08); border-color: rgba(239, 68, 68, 0.2); color: #ef4444; border-radius: 4px; display: inline-flex; align-items: center; gap: 3px;">
+                            🗑️ Delete
+                        </button>
+                        <span style="font-size: 0.85rem; color: var(--accent-cyan); font-weight: 600; white-space: nowrap;">Inspect Offer →</span>
+                    </div>
                 </div>
             `;
+            
+            const deleteBtn = card.querySelector('.delete-col-btn');
+            if (deleteBtn) {
+                deleteBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    window.deleteCollectionFromDashboard(col.id);
+                });
+            }
+            
             listContainer.appendChild(card);
         });
     }
