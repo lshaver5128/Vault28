@@ -402,16 +402,22 @@
 
         <!-- Seller View 3: My Collections Dashboard -->
         <section id="seller-dashboard" class="page-view">
-            <div style="max-width: 1000px; margin: 0 auto;">
+            <div style="max-width: 1000px; margin: 0 auto; text-align: left;">
                 <div class="content-header" style="margin-bottom: 2rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
                     <div>
-                        <h2 style="font-size: 2rem;">My Collections</h2>
-                        <p style="color: var(--text-secondary);">Track valuations, view counter-offers, and communicate with the Vault 28 Buying Desk.</p>
+                        <h2 style="font-size: 2rem; font-family: var(--font-title); text-transform: uppercase;">My Dashboard</h2>
+                        <p style="color: var(--text-secondary);">Track card collection valuations, view counter-offers, and communicate with the Buying Desk.</p>
                     </div>
                     <button class="btn btn-primary btn-sm" id="btn-dashboard-new">Submit New Collection</button>
                 </div>
                 
-                <div class="dashboard-grid" id="seller-collections-list">
+                <h3 style="font-size: 1.2rem; font-family: var(--font-title); text-transform: uppercase; margin-bottom: 1rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem; color: var(--text-primary); letter-spacing: 0.02em;">My Card Submissions</h3>
+                <div class="dashboard-grid" id="seller-collections-list" style="margin-bottom: 3.5rem;">
+                    <!-- Managed dynamically by app.js -->
+                </div>
+
+                <h3 style="font-size: 1.2rem; font-family: var(--font-title); text-transform: uppercase; margin-bottom: 1rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem; color: var(--text-primary); letter-spacing: 0.02em;">My General Inquiries</h3>
+                <div id="seller-inquiries-list" style="display: flex; flex-direction: column; gap: 1rem;">
                     <!-- Managed dynamically by app.js -->
                 </div>
             </div>

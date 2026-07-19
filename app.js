@@ -676,6 +676,20 @@ function initDatabase() {
                     triggerUIRefresh();
                 });
 
+                // Listen to inquiries matching user's email if they are a regular customer
+                if (!OWNER_EMAILS.includes(user.email)) {
+                    inquiriesListener = db.collection("inquiries").where("email", "==", user.email).onSnapshot((snapshot) => {
+                        inquiries = [];
+                        snapshot.forEach(doc => {
+                            inquiries.push({ id: doc.id, ...doc.data() });
+                        });
+                        inquiries.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+                        renderCustomerDashboardInquiries();
+                    }, (error) => {
+                        console.warn("Failed to listen to inquiries:", error);
+                    });
+                }
+
             } else {
                 document.getElementById('auth-widget').style.display = 'flex';
                 document.getElementById('user-profile-widget').style.display = 'none';
@@ -1299,51 +1313,123 @@ function renderSellerDashboard() {
                 <button class="btn btn-primary" onclick="switchView('seller-submit')">Submit My First Collection</button>
             </div>
         `;
+    } else {
+        collections.forEach(col => {
+            const card = document.createElement('div');
+            card.className = 'glass-card collection-card';
+            card.addEventListener('click', () => {
+                selectedCollectionId = col.id;
+                switchView('seller-detail');
+            });
+            
+            let badgeClass = 'badge-pending';
+            if (col.status === 'Reviewing' || col.status === 'Negotiating') badgeClass = 'badge-negotiating';
+            if (col.status === 'Offer Made') badgeClass = 'badge-offer';
+            if (col.status === 'Bought' || col.status === 'Purchased' || col.status === 'Accepted') badgeClass = 'badge-bought';
+            if (col.status === 'Declined') badgeClass = 'badge-declined';
+            
+            let previewHtml = '';
+            col.cards.slice(0, 4).forEach(c => {
+                previewHtml += `<img class="collection-preview-thumb" src="${c.image}">`;
+            });
+            if (col.cards.length > 4) {
+                previewHtml += `<div class="collection-preview-placeholder">+${col.cards.length - 4}</div>`;
+            }
+            
+            let priceText = `Asking: $${col.askingPrice.toLocaleString()}`;
+            if (col.status === 'Offer Made') priceText = `Offer: $${col.offerPrice.toLocaleString()}`;
+            if (col.status === 'Bought' || col.status === 'Purchased' || col.status === 'Accepted') priceText = `Bought: $${col.offerPrice.toLocaleString()}`;
+            
+            card.innerHTML = `
+                <div>
+                    <div class="collection-card-header">
+                        <span class="badge ${badgeClass}">${col.status}</span>
+                        <span style="font-size: 0.8rem; color: var(--text-muted);">${new Date(col.createdAt).toLocaleDateString()}</span>
+                    </div>
+                    <h3 class="collection-title">${col.title}</h3>
+                    <div class="collection-meta">
+                        <span>📦 ${col.qty} Items</span>
+                        <span>🃏 ${col.cards.length} Highlights</span>
+                    </div>
+                    <div class="collection-preview-row" style="margin-top:1rem;">${previewHtml}</div>
+                </div>
+                <div class="collection-card-footer">
+                    <span class="price-val" style="font-size:1.1rem;">${priceText}</span>
+                    <span style="font-size: 0.85rem; color: var(--accent-cyan); font-weight: 600;">Inspect Offer →</span>
+                </div>
+            `;
+            listContainer.appendChild(card);
+        });
+    }
+
+    renderCustomerDashboardInquiries();
+}
+
+function renderCustomerDashboardInquiries() {
+    const listContainer = document.getElementById('seller-inquiries-list');
+    if (!listContainer) return;
+    listContainer.innerHTML = '';
+    
+    const currentUser = firebase.auth().currentUser;
+    if (!currentUser) {
+        listContainer.innerHTML = `
+            <div class="glass-card" style="text-align: center; padding: 2rem; color: var(--text-secondary);">
+                <p style="font-size: 0.95rem; margin: 0;">Sign in to view your general contact inquiries.</p>
+            </div>
+        `;
         return;
     }
     
-    collections.forEach(col => {
+    // Filter inquiries by current user's email
+    const myInquiries = inquiries.filter(i => i.email && i.email.toLowerCase() === currentUser.email.toLowerCase());
+    
+    if (myInquiries.length === 0) {
+        listContainer.innerHTML = `
+            <div class="glass-card" style="text-align: center; padding: 2.5rem; color: var(--text-secondary); border: 1px dashed var(--border-color);">
+                <p style="font-size: 0.95rem; margin: 0; margin-bottom: 1rem;">You haven't submitted any general inquiries yet.</p>
+                <button class="btn btn-secondary btn-sm" onclick="switchView('contact')">Send an Inquiry</button>
+            </div>
+        `;
+        return;
+    }
+    
+    myInquiries.forEach(inq => {
         const card = document.createElement('div');
-        card.className = 'glass-card collection-card';
-        card.addEventListener('click', () => {
-            selectedCollectionId = col.id;
-            switchView('seller-detail');
-        });
+        card.className = 'glass-card';
+        card.style.padding = '1.25rem 1.5rem';
+        card.style.display = 'flex';
+        card.style.justifyContent = 'space-between';
+        card.style.alignItems = 'center';
+        card.style.flexWrap = 'wrap';
+        card.style.gap = '1rem';
         
-        let badgeClass = 'badge-pending';
-        if (col.status === 'Reviewing' || col.status === 'Negotiating') badgeClass = 'badge-negotiating';
-        if (col.status === 'Offer Made') badgeClass = 'badge-offer';
-        if (col.status === 'Bought' || col.status === 'Purchased' || col.status === 'Accepted') badgeClass = 'badge-bought';
-        if (col.status === 'Declined') badgeClass = 'badge-declined';
+        let borderCol = 'var(--accent-gold)';
+        let badgeHTML = '';
+        const status = inq.status || 'Pending Response';
         
-        let previewHtml = '';
-        col.cards.slice(0, 4).forEach(c => {
-            previewHtml += `<img class="collection-preview-thumb" src="${c.image}">`;
-        });
-        if (col.cards.length > 4) {
-            previewHtml += `<div class="collection-preview-placeholder">+${col.cards.length - 4}</div>`;
+        if (status === 'Pending Response') {
+            borderCol = 'var(--accent-gold)';
+            badgeHTML = `<span class="badge" style="font-size: 0.7rem; padding: 3px 8px; background: rgba(223,183,80,0.1); border: 1px solid var(--accent-gold); color: var(--accent-gold); text-transform: uppercase; font-weight: 700; border-radius: 4px; letter-spacing: 0.03em;">Pending Response</span>`;
+        } else if (status === 'Waiting for Customer') {
+            borderCol = '#3b82f6';
+            badgeHTML = `<span class="badge" style="font-size: 0.7rem; padding: 3px 8px; background: rgba(59,130,246,0.1); border: 1px solid #3b82f6; color: #3b82f6; text-transform: uppercase; font-weight: 700; border-radius: 4px; letter-spacing: 0.03em;">New Reply Received</span>`;
+        } else if (status === 'Resolved') {
+            borderCol = '#10b981';
+            badgeHTML = `<span class="badge" style="font-size: 0.7rem; padding: 3px 8px; background: rgba(16,185,129,0.1); border: 1px solid #10b981; color: #10b981; text-transform: uppercase; font-weight: 700; border-radius: 4px; letter-spacing: 0.03em;">Resolved</span>`;
         }
         
-        let priceText = `Asking: $${col.askingPrice.toLocaleString()}`;
-        if (col.status === 'Offer Made') priceText = `Offer: $${col.offerPrice.toLocaleString()}`;
-        if (col.status === 'Bought' || col.status === 'Purchased' || col.status === 'Accepted') priceText = `Bought: $${col.offerPrice.toLocaleString()}`;
+        card.style.borderLeft = `4px solid ${borderCol}`;
         
         card.innerHTML = `
-            <div>
-                <div class="collection-card-header">
-                    <span class="badge ${badgeClass}">${col.status}</span>
-                    <span style="font-size: 0.8rem; color: var(--text-muted);">${new Date(col.createdAt).toLocaleDateString()}</span>
+            <div style="flex: 1; min-width: 250px;">
+                <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.25rem; flex-wrap: wrap;">
+                    <h4 style="margin: 0; font-size: 1rem; color: var(--text-primary); font-family: var(--font-title); text-transform: uppercase;">${escapeHTML(inq.subject)}</h4>
+                    ${badgeHTML}
                 </div>
-                <h3 class="collection-title">${col.title}</h3>
-                <div class="collection-meta">
-                    <span>📦 ${col.qty} Items</span>
-                    <span>🃏 ${col.cards.length} Highlights</span>
-                </div>
-                <div class="collection-preview-row" style="margin-top:1rem;">${previewHtml}</div>
+                <p style="margin: 0; font-size: 0.82rem; color: var(--text-muted);">Submitted on ${new Date(inq.createdAt).toLocaleDateString()}</p>
             </div>
-            <div class="collection-card-footer">
-                <span class="price-val" style="font-size:1.1rem;">${priceText}</span>
-                <span style="font-size: 0.85rem; color: var(--accent-cyan); font-weight: 600;">Inspect Offer →</span>
+            <div>
+                <button class="btn btn-outline-cyan btn-sm" onclick="selectedInquiryId='${inq.id}'; switchView('customer-thread');">View Chat Thread →</button>
             </div>
         `;
         listContainer.appendChild(card);
