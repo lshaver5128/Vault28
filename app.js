@@ -1439,7 +1439,7 @@ function renderCustomerDashboardInquiries() {
             badgeHTML = `<span class="badge" style="font-size: 0.72rem; padding: 4px 10px; background: rgba(223,183,80,0.1); border: 1px solid var(--accent-gold); color: var(--accent-gold); text-transform: uppercase; font-weight: 700; border-radius: 4px; letter-spacing: 0.05em;">Pending Response</span>`;
         } else if (status === 'Waiting for Customer') {
             borderCol = '#3b82f6';
-            badgeHTML = `<span class="badge" style="font-size: 0.72rem; padding: 4px 10px; background: rgba(59,130,246,0.1); border: 1px solid #3b82f6; color: #3b82f6; text-transform: uppercase; font-weight: 700; border-radius: 4px; letter-spacing: 0.05em;">New Reply Received</span>`;
+            badgeHTML = `<span class="badge" style="font-size: 0.72rem; padding: 4px 10px; background: rgba(59,130,246,0.1); border: 1px solid #3b82f6; color: #3b82f6; text-transform: uppercase; font-weight: 700; border-radius: 4px; letter-spacing: 0.05em;">Waiting for Response</span>`;
         } else if (status === 'Resolved') {
             borderCol = '#10b981';
             badgeHTML = `<span class="badge" style="font-size: 0.72rem; padding: 4px 10px; background: rgba(16,185,129,0.1); border: 1px solid #10b981; color: #10b981; text-transform: uppercase; font-weight: 700; border-radius: 4px; letter-spacing: 0.05em;">Resolved</span>`;
@@ -1480,12 +1480,14 @@ function renderCustomerDashboardInquiries() {
             }
         });
         
-        const replyButtonHTML = status !== 'Resolved' ? 
-            `<button class="btn btn-primary btn-sm" onclick="toggleCustomerReplyForm('${inq.id}', true)">Reply to Message</button>` : 
-            `<div style="color: var(--accent-emerald); font-weight: 600; font-size: 0.9rem; display: flex; align-items: center; gap: 0.5rem;">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-                This inquiry has been marked as Resolved.
-             </div>`;
+        let replyButtonHTML = '';
+        if (status === 'Waiting for Customer') {
+            replyButtonHTML = `<button class="btn btn-primary btn-sm" onclick="toggleCustomerReplyForm('${inq.id}', true)">Reply to Message</button>`;
+        } else if (status === 'Pending Response') {
+            replyButtonHTML = `<span style="color: var(--text-muted); font-size: 0.85rem; font-style: italic; display: flex; align-items: center; gap: 0.5rem;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: var(--accent-gold);"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>We have received your message and will respond shortly.</span>`;
+        } else if (status === 'Resolved') {
+            replyButtonHTML = `<div style="color: var(--accent-emerald); font-weight: 600; font-size: 0.9rem; display: flex; align-items: center; gap: 0.5rem;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>This inquiry has been marked as Resolved.</div>`;
+        }
              
         const replyFormHTML = `
             <div id="customer-reply-form-${inq.id}" style="display: none; flex-direction: column; gap: 0.75rem; border-top: 1px dashed var(--border-color); padding-top: 1rem; margin-top: 0.5rem;">
@@ -3341,7 +3343,6 @@ window.loadCustomerThreadDetail = function(inqId) {
         const badge = document.getElementById('customer-thread-status-badge');
         const status = inq.status || 'Pending Response';
         if (badge) {
-            badge.textContent = status;
             badge.style.fontSize = '0.72rem';
             badge.style.padding = '4px 10px';
             badge.style.textTransform = 'uppercase';
@@ -3351,14 +3352,17 @@ window.loadCustomerThreadDetail = function(inqId) {
             badge.style.display = 'inline-block';
             
             if (status === 'Pending Response') {
+                badge.textContent = 'Pending Response';
                 badge.style.background = 'rgba(223,183,80,0.1)';
                 badge.style.border = '1px solid var(--accent-gold)';
                 badge.style.color = 'var(--accent-gold)';
             } else if (status === 'Waiting for Customer') {
+                badge.textContent = 'Waiting for Response';
                 badge.style.background = 'rgba(59,130,246,0.1)';
                 badge.style.border = '1px solid #3b82f6';
                 badge.style.color = '#3b82f6';
             } else if (status === 'Resolved') {
+                badge.textContent = 'Resolved';
                 badge.style.background = 'rgba(16,185,129,0.1)';
                 badge.style.border = '1px solid #10b981';
                 badge.style.color = '#10b981';
@@ -3418,13 +3422,31 @@ window.loadCustomerThreadDetail = function(inqId) {
             chatLog.scrollTop = chatLog.scrollHeight;
         }, 100);
         
-        // Toggle reply form if resolved
+        // Toggle reply form and support message banner
+        const msgBlock = document.getElementById('customer-thread-resolved-message');
         if (status === 'Resolved') {
             document.getElementById('customer-thread-reply-form').style.display = 'none';
-            document.getElementById('customer-thread-resolved-message').style.display = 'block';
+            msgBlock.style.display = 'block';
+            msgBlock.style.background = 'rgba(16, 185, 129, 0.05)';
+            msgBlock.style.borderColor = 'rgba(16, 185, 129, 0.15)';
+            msgBlock.style.color = 'var(--accent-emerald)';
+            msgBlock.innerHTML = `
+                <p style="font-weight: 600; margin: 0; font-size: 1.05rem;">This inquiry has been marked as Resolved.</p>
+                <p style="font-size: 0.85rem; margin-top: 0.25rem; color: var(--text-secondary); margin-bottom: 0;">If you have further questions, please submit a new contact form.</p>
+            `;
+        } else if (status === 'Pending Response') {
+            document.getElementById('customer-thread-reply-form').style.display = 'none';
+            msgBlock.style.display = 'block';
+            msgBlock.style.background = 'rgba(223, 183, 80, 0.05)';
+            msgBlock.style.borderColor = 'rgba(223, 183, 80, 0.15)';
+            msgBlock.style.color = 'var(--accent-gold)';
+            msgBlock.innerHTML = `
+                <p style="font-weight: 600; margin: 0; font-size: 1.02rem;">Pending Response</p>
+                <p style="font-size: 0.85rem; margin-top: 0.25rem; color: var(--text-secondary); margin-bottom: 0;">We have received your message and will respond shortly. You will receive an email once we reply.</p>
+            `;
         } else {
             document.getElementById('customer-thread-reply-form').style.display = 'flex';
-            document.getElementById('customer-thread-resolved-message').style.display = 'none';
+            msgBlock.style.display = 'none';
         }
     };
     
