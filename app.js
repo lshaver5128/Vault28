@@ -3027,6 +3027,53 @@ function renderShopCatalog() {
     else if (sortVal === 'title-asc') filtered.sort((a,b) => a.title.localeCompare(b.title));
     else filtered.sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt));
     
+    if (products.length === 0) {
+        grid.innerHTML = `
+            <div class="glass-card" style="grid-column: 1 / -1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 5rem 2rem; text-align: center; border: 1px dashed rgba(223, 183, 80, 0.2); background: linear-gradient(135deg, rgba(223, 183, 80, 0.02) 0%, rgba(24, 26, 31, 0.8) 100%); border-radius: 12px; margin-bottom: 2rem; width: 100%;">
+                <div style="font-size: 3.5rem; margin-bottom: 1.5rem; filter: drop-shadow(0 0 10px rgba(223, 183, 80, 0.3));">🏪</div>
+                <h3 style="font-size: 1.75rem; font-family: var(--font-title); font-weight: 700; color: #ffffff; margin: 0 0 0.75rem 0; letter-spacing: 0.02em;">Vault 28 Shop — Up & Coming</h3>
+                <p style="color: var(--text-secondary); max-width: 600px; line-height: 1.6; margin: 0 0 2rem 0; font-size: 0.95rem;">
+                    Our online store catalog is currently under development. Lucas is cataloging new inventory daily. Stay tuned for a curated showcase of graded singles, raw vintage cards, wax boxes, and sports memorabilia!
+                </p>
+                <div style="display: flex; gap: 1.5rem; flex-wrap: wrap; justify-content: center; width: 100%; max-width: 800px;">
+                    <div class="glass-card" style="flex: 1; min-width: 200px; padding: 1.5rem; text-align: left; opacity: 0.7; border-color: rgba(255,255,255,0.05); filter: blur(0.5px); position: relative; overflow: hidden;">
+                        <div style="background: rgba(255,255,255,0.05); width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; margin-bottom: 1rem;">⚾</div>
+                        <div style="height: 14px; background: rgba(255,255,255,0.1); border-radius: 4px; width: 60%; margin-bottom: 0.75rem;"></div>
+                        <div style="height: 10px; background: rgba(255,255,255,0.05); border-radius: 4px; width: 85%; margin-bottom: 0.5rem;"></div>
+                        <div style="height: 10px; background: rgba(255,255,255,0.05); border-radius: 4px; width: 40%; margin-bottom: 1.25rem;"></div>
+                        <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 0.75rem;">
+                            <div style="height: 14px; background: rgba(223, 183, 80, 0.15); border-radius: 4px; width: 30%;"></div>
+                            <div style="height: 10px; background: rgba(255,255,255,0.05); border-radius: 4px; width: 25%;"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="glass-card" style="flex: 1; min-width: 200px; padding: 1.5rem; text-align: left; opacity: 0.7; border-color: rgba(255,255,255,0.05); filter: blur(0.5px); position: relative; overflow: hidden;">
+                        <div style="background: rgba(255,255,255,0.05); width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; margin-bottom: 1rem;">🏀</div>
+                        <div style="height: 14px; background: rgba(255,255,255,0.1); border-radius: 4px; width: 70%; margin-bottom: 0.75rem;"></div>
+                        <div style="height: 10px; background: rgba(255,255,255,0.05); border-radius: 4px; width: 75%; margin-bottom: 0.5rem;"></div>
+                        <div style="height: 10px; background: rgba(255,255,255,0.05); border-radius: 4px; width: 50%; margin-bottom: 1.25rem;"></div>
+                        <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 0.75rem;">
+                            <div style="height: 14px; background: rgba(223, 183, 80, 0.15); border-radius: 4px; width: 35%;"></div>
+                            <div style="height: 10px; background: rgba(255,255,255,0.05); border-radius: 4px; width: 20%;"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="glass-card" style="flex: 1; min-width: 200px; padding: 1.5rem; text-align: left; opacity: 0.7; border-color: rgba(255,255,255,0.05); filter: blur(0.5px); position: relative; overflow: hidden;">
+                        <div style="background: rgba(255,255,255,0.05); width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; margin-bottom: 1rem;">🏈</div>
+                        <div style="height: 14px; background: rgba(255,255,255,0.1); border-radius: 4px; width: 65%; margin-bottom: 0.75rem;"></div>
+                        <div style="height: 10px; background: rgba(255,255,255,0.05); border-radius: 4px; width: 80%; margin-bottom: 0.5rem;"></div>
+                        <div style="height: 10px; background: rgba(255,255,255,0.05); border-radius: 4px; width: 45%; margin-bottom: 1.25rem;"></div>
+                        <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 0.75rem;">
+                            <div style="height: 14px; background: rgba(223, 183, 80, 0.15); border-radius: 4px; width: 40%;"></div>
+                            <div style="height: 10px; background: rgba(255,255,255,0.05); border-radius: 4px; width: 30%;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        return;
+    }
+    
     if (filtered.length === 0) {
         grid.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:4rem; color:var(--text-muted);">No products match your search filters.</div>`;
         return;
@@ -3147,10 +3194,57 @@ function renderFeaturedInventory() {
     if (!container) return;
     
     container.innerHTML = '';
+    if (products.length === 0) {
+        container.innerHTML = `
+            <div class="glass-card" style="grid-column: 1 / -1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 4rem 2rem; text-align: center; border: 1px dashed rgba(223, 183, 80, 0.2); background: linear-gradient(135deg, rgba(223, 183, 80, 0.02) 0%, rgba(24, 26, 31, 0.8) 100%); border-radius: 12px; margin-bottom: 2rem; width: 100%;">
+                <div style="font-size: 3rem; margin-bottom: 1.5rem; filter: drop-shadow(0 0 10px rgba(223, 183, 80, 0.3));">🃏</div>
+                <h3 style="font-size: 1.5rem; font-family: var(--font-title); font-weight: 700; color: #ffffff; margin: 0 0 0.75rem 0; letter-spacing: 0.02em;">Vault 28 Shop — Up & Coming</h3>
+                <p style="color: var(--text-secondary); max-width: 600px; line-height: 1.6; margin: 0 0 2rem 0; font-size: 0.95rem;">
+                    Our online store and inventory catalog are currently under development. Lucas is cataloging new inventory daily. Stay tuned for a curated showcase of graded singles, raw vintage cards, wax boxes, and sports memorabilia!
+                </p>
+                <div style="display: flex; gap: 1.5rem; flex-wrap: wrap; justify-content: center; width: 100%; max-width: 800px;">
+                    <div class="glass-card" style="flex: 1; min-width: 200px; padding: 1.5rem; text-align: left; opacity: 0.7; border-color: rgba(255,255,255,0.05); filter: blur(0.5px); position: relative; overflow: hidden;">
+                        <div style="background: rgba(255,255,255,0.05); width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; margin-bottom: 1rem;">⚾</div>
+                        <div style="height: 14px; background: rgba(255,255,255,0.1); border-radius: 4px; width: 60%; margin-bottom: 0.75rem;"></div>
+                        <div style="height: 10px; background: rgba(255,255,255,0.05); border-radius: 4px; width: 85%; margin-bottom: 0.5rem;"></div>
+                        <div style="height: 10px; background: rgba(255,255,255,0.05); border-radius: 4px; width: 40%; margin-bottom: 1.25rem;"></div>
+                        <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 0.75rem;">
+                            <div style="height: 14px; background: rgba(223, 183, 80, 0.15); border-radius: 4px; width: 30%;"></div>
+                            <div style="height: 10px; background: rgba(255,255,255,0.05); border-radius: 4px; width: 25%;"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="glass-card" style="flex: 1; min-width: 200px; padding: 1.5rem; text-align: left; opacity: 0.7; border-color: rgba(255,255,255,0.05); filter: blur(0.5px); position: relative; overflow: hidden;">
+                        <div style="background: rgba(255,255,255,0.05); width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; margin-bottom: 1rem;">🏀</div>
+                        <div style="height: 14px; background: rgba(255,255,255,0.1); border-radius: 4px; width: 70%; margin-bottom: 0.75rem;"></div>
+                        <div style="height: 10px; background: rgba(255,255,255,0.05); border-radius: 4px; width: 75%; margin-bottom: 0.5rem;"></div>
+                        <div style="height: 10px; background: rgba(255,255,255,0.05); border-radius: 4px; width: 50%; margin-bottom: 1.25rem;"></div>
+                        <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 0.75rem;">
+                            <div style="height: 14px; background: rgba(223, 183, 80, 0.15); border-radius: 4px; width: 35%;"></div>
+                            <div style="height: 10px; background: rgba(255,255,255,0.05); border-radius: 4px; width: 20%;"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="glass-card" style="flex: 1; min-width: 200px; padding: 1.5rem; text-align: left; opacity: 0.7; border-color: rgba(255,255,255,0.05); filter: blur(0.5px); position: relative; overflow: hidden;">
+                        <div style="background: rgba(255,255,255,0.05); width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; margin-bottom: 1rem;">🏈</div>
+                        <div style="height: 14px; background: rgba(255,255,255,0.1); border-radius: 4px; width: 65%; margin-bottom: 0.75rem;"></div>
+                        <div style="height: 10px; background: rgba(255,255,255,0.05); border-radius: 4px; width: 80%; margin-bottom: 0.5rem;"></div>
+                        <div style="height: 10px; background: rgba(255,255,255,0.05); border-radius: 4px; width: 45%; margin-bottom: 1.25rem;"></div>
+                        <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 0.75rem;">
+                            <div style="height: 14px; background: rgba(223, 183, 80, 0.15); border-radius: 4px; width: 40%;"></div>
+                            <div style="height: 10px; background: rgba(255,255,255,0.05); border-radius: 4px; width: 30%;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        return;
+    }
+    
     const active = products.filter(p => p.availability === 'Available').slice(0, 3);
     
     if (active.length === 0) {
-        container.innerHTML = `<div style="grid-column:1/-1; text-align:center; color:var(--text-muted);">No products currently featured.</div>`;
+        container.innerHTML = `<div style="grid-column:1/-1; text-align:center; color:var(--text-muted); padding: 2rem;">No products currently featured.</div>`;
         return;
     }
     
