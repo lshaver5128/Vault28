@@ -612,6 +612,16 @@ function initDatabase() {
                         updateInquiriesBadge();
                         renderAdminInquiriesList();
                     });
+
+                    // Check URL for adminTab parameter to auto-route owner
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const adminTabParam = urlParams.get('adminTab');
+                    if (adminTabParam) {
+                        setTimeout(() => {
+                            setRole('buyer');
+                            setAdminTab(adminTabParam);
+                        }, 250);
+                    }
                 } else {
                     roleLabel.textContent = "Seller Account";
                     roleLabel.style.color = "var(--text-secondary)";
