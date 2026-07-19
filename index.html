@@ -1003,12 +1003,32 @@
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
                             <div>
                                 <h3 style="font-size: 1.3rem; margin: 0;">Contact Inquiries</h3>
-                                <p style="color: var(--text-secondary); font-size: 0.85rem; margin-top: 0.25rem;">View and reply to general inquiries submitted via the Contact Us form.</p>
+                                <p style="color: var(--text-secondary); font-size: 0.85rem; margin-top: 0.25rem;">View, reply to, resolve, or delete general inquiries submitted via the Contact Us form.</p>
                             </div>
                             <div style="display: flex; gap: 0.75rem;">
                                 <div style="display: flex; align-items: center; gap: 0.5rem; background: rgba(0,0,0,0.25); border: 1px solid var(--border-color); padding: 6px 12px; border-radius: 6px; font-size: 0.82rem;">
                                     <span>Total Messages: <strong id="admin-stat-inquiries-total">0</strong></span>
                                 </div>
+                            </div>
+                        </div>
+
+                        <!-- Inquiry Filters Bar -->
+                        <div style="display: flex; gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap; background: rgba(255,255,255,0.02); padding: 1rem; border-radius: 8px; border: 1px solid var(--border-color);">
+                            <div style="display: flex; flex-direction: column; gap: 0.25rem; min-width: 180px;">
+                                <label style="font-size: 0.72rem; color: var(--text-secondary); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">Status Filter</label>
+                                <select id="inquiry-filter-status" onchange="renderAdminInquiriesList()" style="padding: 0.5rem; background: rgba(0,0,0,0.4); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-primary); font-size: 0.85rem; cursor: pointer; outline: none;">
+                                    <option value="all">All Inquiries</option>
+                                    <option value="Pending Response">Pending Response</option>
+                                    <option value="Waiting for Customer">Waiting for Customer</option>
+                                    <option value="Resolved">Resolved</option>
+                                </select>
+                            </div>
+                            <div style="display: flex; flex-direction: column; gap: 0.25rem; min-width: 150px;">
+                                <label style="font-size: 0.72rem; color: var(--text-secondary); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">Sort Order</label>
+                                <select id="inquiry-sort-order" onchange="renderAdminInquiriesList()" style="padding: 0.5rem; background: rgba(0,0,0,0.4); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-primary); font-size: 0.85rem; cursor: pointer; outline: none;">
+                                    <option value="newest">Newest First</option>
+                                    <option value="oldest">Oldest First</option>
+                                </select>
                             </div>
                         </div>
 

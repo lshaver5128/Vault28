@@ -2568,6 +2568,7 @@ document.getElementById('contact-form-inquiry').addEventListener('submit', (e) =
         email,
         subject,
         message: msg,
+        status: 'Pending Response',
         createdAt: new Date().toISOString()
     };
     
@@ -2726,9 +2727,9 @@ function initScrollReveal() {
 function updateInquiriesBadge() {
     const badge = document.getElementById('admin-badge-inquiries');
     if (badge) {
-        const unreplied = inquiries.filter(inq => !inq.replyText).length;
-        badge.textContent = unreplied;
-        badge.style.display = unreplied > 0 ? 'inline' : 'none';
+        const pendingCount = inquiries.filter(inq => (inq.status || 'Pending Response') === 'Pending Response').length;
+        badge.textContent = pendingCount;
+        badge.style.display = pendingCount > 0 ? 'inline' : 'none';
     }
     const statTotal = document.getElementById('admin-stat-inquiries-total');
     if (statTotal) {
@@ -2742,49 +2743,87 @@ function renderAdminInquiriesList() {
     
     container.innerHTML = '';
     
-    if (inquiries.length === 0) {
+    const filterStatus = document.getElementById('inquiry-filter-status')?.value || 'all';
+    const sortOrder = document.getElementById('inquiry-sort-order')?.value || 'newest';
+    
+    let filtered = [...inquiries];
+    if (filterStatus !== 'all') {
+        filtered = filtered.filter(inq => {
+            const stat = inq.status || 'Pending Response';
+            return stat === filterStatus;
+        });
+    }
+    
+    filtered.sort((a, b) => {
+        const timeA = new Date(a.createdAt || 0);
+        const timeB = new Date(b.createdAt || 0);
+        return sortOrder === 'newest' ? timeB - timeA : timeA - timeB;
+    });
+    
+    if (filtered.length === 0) {
         container.innerHTML = `
             <div style="text-align: center; padding: 3rem 1rem; color: var(--text-muted);">
-                <p style="font-size: 1.1rem; margin: 0;">No inquiries received yet.</p>
-                <p style="font-size: 0.85rem; margin-top: 0.25rem;">Any messages sent through the Contact Us form will appear here.</p>
+                <p style="font-size: 1.1rem; margin: 0;">No inquiries match the active filters.</p>
             </div>
         `;
         return;
     }
     
-    inquiries.forEach(inq => {
+    filtered.forEach(inq => {
         const dateStr = new Date(inq.createdAt).toLocaleString();
+        const status = inq.status || 'Pending Response';
         const hasReplied = !!inq.replyText;
         
         const card = document.createElement('div');
         card.className = 'glass-card';
         card.style.padding = '1.5rem';
-        card.style.borderLeft = hasReplied ? '4px solid var(--accent-emerald)' : '4px solid var(--accent-gold)';
+        
+        let borderCol = 'var(--accent-gold)';
+        let statusBadgeHTML = '';
+        if (status === 'Pending Response') {
+            borderCol = 'var(--accent-gold)';
+            statusBadgeHTML = `<span class="badge" style="font-size: 0.72rem; padding: 4px 10px; background: rgba(223,183,80,0.1); border: 1px solid var(--accent-gold); color: var(--accent-gold); text-transform: uppercase; font-weight: 700; letter-spacing: 0.05em; border-radius: 4px;">Pending Response</span>`;
+        } else if (status === 'Waiting for Customer') {
+            borderCol = 'var(--accent-cyan)';
+            statusBadgeHTML = `<span class="badge" style="font-size: 0.72rem; padding: 4px 10px; background: rgba(6,182,212,0.1); border: 1px solid var(--accent-cyan); color: var(--accent-cyan); text-transform: uppercase; font-weight: 700; letter-spacing: 0.05em; border-radius: 4px;">Waiting for Customer</span>`;
+        } else if (status === 'Resolved') {
+            borderCol = 'var(--accent-emerald)';
+            statusBadgeHTML = `<span class="badge" style="font-size: 0.72rem; padding: 4px 10px; background: rgba(16,185,129,0.1); border: 1px solid var(--accent-emerald); color: var(--accent-emerald); text-transform: uppercase; font-weight: 700; letter-spacing: 0.05em; border-radius: 4px;">Resolved</span>`;
+        }
+        
+        card.style.borderLeft = `4px solid ${borderCol}`;
         card.style.display = 'flex';
         card.style.flexDirection = 'column';
         card.style.gap = '1rem';
         
-        let replyBlock = '';
+        let repliesLogHTML = '';
         if (hasReplied) {
-            replyBlock = `
-                <div style="background: rgba(16, 185, 129, 0.05); border: 1px solid rgba(16, 185, 129, 0.15); border-radius: 6px; padding: 1rem; margin-top: 0.5rem;">
-                    <p style="color: var(--accent-emerald); font-size: 0.8rem; text-transform: uppercase; font-weight: 700; margin: 0 0 0.5rem 0;">Your Reply (Sent via Email):</p>
+            repliesLogHTML = `
+                <div style="background: rgba(16, 185, 129, 0.03); border: 1px solid var(--border-color); border-radius: 6px; padding: 1rem;">
+                    <p style="color: var(--accent-emerald); font-size: 0.78rem; text-transform: uppercase; font-weight: 700; margin: 0 0 0.5rem 0; letter-spacing: 0.05em;">Your Reply (Sent via Email):</p>
                     <p style="color: var(--text-primary); font-size: 0.9rem; margin: 0; line-height: 1.5; white-space: pre-wrap;">${escapeHTML(inq.replyText)}</p>
                     <p style="color: var(--text-muted); font-size: 0.75rem; margin-top: 0.5rem; margin-bottom: 0;">Replied at: ${new Date(inq.repliedAt).toLocaleString()}</p>
                 </div>
             `;
-        } else {
-            replyBlock = `
-                <div id="reply-form-${inq.id}" style="display: none; margin-top: 0.5rem; flex-direction: column; gap: 0.75rem;">
-                    <textarea id="reply-text-${inq.id}" placeholder="Type your email response here..." rows="4" style="width: 100%; padding: 0.75rem; background: rgba(0,0,0,0.3); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-primary); font-family: inherit; font-size: 0.9rem; line-height: 1.5; resize: vertical;"></textarea>
-                    <div style="display: flex; gap: 0.5rem;">
-                        <button class="btn btn-primary btn-sm" onclick="sendInquiryReply('${inq.id}')">Send Email Reply</button>
-                        <button class="btn btn-secondary btn-sm" onclick="toggleReplyForm('${inq.id}', false)">Cancel</button>
-                    </div>
-                </div>
-                <button class="btn btn-secondary btn-sm" id="btn-show-reply-${inq.id}" onclick="toggleReplyForm('${inq.id}', true)" style="align-self: flex-start; margin-top: 0.5rem;">Reply to Message</button>
-            `;
         }
+        
+        const resolveButtonHTML = status === 'Resolved' ? 
+            `<button class="btn btn-outline-gold btn-sm" onclick="toggleResolveInquiry('${inq.id}')">Mark Pending</button>` : 
+            `<button class="btn btn-outline-cyan btn-sm" onclick="toggleResolveInquiry('${inq.id}')">Mark Resolved</button>`;
+            
+        const replyButtonHTML = status !== 'Resolved' ? 
+            `<button class="btn btn-primary btn-sm" id="btn-show-reply-${inq.id}" onclick="toggleReplyForm('${inq.id}', true)">Reply to Message</button>` : 
+            '';
+            
+        const replyFormHTML = `
+            <div id="reply-form-${inq.id}" style="display: none; flex-direction: column; gap: 0.75rem; border-top: 1px dashed var(--border-color); padding-top: 1rem; margin-top: 0.5rem;">
+                <textarea id="reply-text-${inq.id}" placeholder="Type your email response here..." rows="4" style="width: 100%; padding: 0.75rem; background: rgba(0,0,0,0.3); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-primary); font-family: inherit; font-size: 0.9rem; line-height: 1.5; resize: vertical;"></textarea>
+                <div style="display: flex; gap: 0.5rem;">
+                    <button class="btn btn-primary btn-sm" onclick="sendInquiryReply('${inq.id}')">Send Email Reply</button>
+                    <button class="btn btn-secondary btn-sm" onclick="toggleReplyForm('${inq.id}', false)">Cancel</button>
+                </div>
+            </div>
+        `;
         
         card.innerHTML = `
             <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 0.5rem;">
@@ -2794,18 +2833,24 @@ function renderAdminInquiriesList() {
                     </h4>
                     <p style="color: var(--accent-gold); font-size: 0.88rem; margin: 4px 0 0 0; font-weight: 500;">Subject: ${escapeHTML(inq.subject)}</p>
                 </div>
-                <div style="text-align: right;">
+                <div style="text-align: right; display: flex; flex-direction: column; align-items: flex-end; gap: 4px;">
                     <span style="font-size: 0.8rem; color: var(--text-muted);">${dateStr}</span>
-                    <div style="margin-top: 4px;">
-                        ${hasReplied ? 
-                            '<span class="badge badge-success" style="font-size: 0.7rem; padding: 2px 6px;">Replied</span>' : 
-                            '<span class="badge badge-pending" style="font-size: 0.7rem; padding: 2px 6px; color: var(--accent-gold); background: rgba(223,183,80,0.1); border-color: rgba(223,183,80,0.2);">Pending</span>'
-                        }
-                    </div>
+                    <div>${statusBadgeHTML}</div>
                 </div>
             </div>
             <div style="background: rgba(0,0,0,0.2); border: 1px solid var(--border-color); border-radius: 6px; padding: 1rem; color: var(--text-secondary); font-size: 0.92rem; line-height: 1.5; white-space: pre-wrap;">${escapeHTML(inq.message)}</div>
-            ${replyBlock}
+            ${repliesLogHTML}
+            
+            <!-- CRM Controls -->
+            <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border-color); padding-top: 1rem; margin-top: 0.5rem; flex-wrap: wrap; gap: 0.75rem;">
+                <div style="display: flex; gap: 0.5rem;">
+                    ${replyButtonHTML}
+                    ${resolveButtonHTML}
+                </div>
+                <button class="btn btn-sm" onclick="deleteInquiry('${inq.id}')" style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2); color: #ef4444; font-weight: 600; padding: 6px 12px; border-radius: 6px; cursor: pointer; transition: all 0.2s;">Delete Inquiry</button>
+            </div>
+            
+            ${replyFormHTML}
         `;
         container.appendChild(card);
     });
@@ -2816,6 +2861,52 @@ window.toggleReplyForm = function(inqId, show) {
     const btn = document.getElementById(`btn-show-reply-${inqId}`);
     if (form) form.style.display = show ? 'flex' : 'none';
     if (btn) btn.style.display = show ? 'none' : 'block';
+};
+
+window.deleteInquiry = function(inqId) {
+    if (!confirm("Are you sure you want to delete this inquiry permanently? This action cannot be undone.")) return;
+    
+    if (isFirebaseActive) {
+        db.collection("inquiries").doc(inqId).delete()
+            .then(() => {
+                showToast("Inquiry deleted permanently.", "success");
+            })
+            .catch(err => {
+                console.error("Error deleting inquiry:", err);
+                showToast("Could not delete inquiry.", "error");
+            });
+    } else {
+        inquiries = inquiries.filter(i => i.id !== inqId);
+        localStorage.setItem('v28_inquiries', JSON.stringify(inquiries));
+        showToast("Inquiry deleted from sandbox.", "success");
+        updateInquiriesBadge();
+        renderAdminInquiriesList();
+    }
+};
+
+window.toggleResolveInquiry = function(inqId) {
+    const inq = inquiries.find(i => i.id === inqId);
+    if (!inq) return;
+    
+    const currentStatus = inq.status || 'Pending Response';
+    const newStatus = currentStatus === 'Resolved' ? 'Pending Response' : 'Resolved';
+    
+    if (isFirebaseActive) {
+        db.collection("inquiries").doc(inqId).update({ status: newStatus })
+            .then(() => {
+                showToast(`Inquiry marked as ${newStatus}.`, "success");
+            })
+            .catch(err => {
+                console.error("Error updating inquiry status:", err);
+                showToast("Could not update status.", "error");
+            });
+    } else {
+        inq.status = newStatus;
+        localStorage.setItem('v28_inquiries', JSON.stringify(inquiries));
+        showToast(`Inquiry status updated to ${newStatus}!`, "success");
+        updateInquiriesBadge();
+        renderAdminInquiriesList();
+    }
 };
 
 window.sendInquiryReply = function(inqId) {
@@ -2830,7 +2921,8 @@ window.sendInquiryReply = function(inqId) {
     
     const replyData = {
         replyText,
-        repliedAt: new Date().toISOString()
+        repliedAt: new Date().toISOString(),
+        status: 'Waiting for Customer'
     };
     
     if (isFirebaseActive) {
