@@ -450,7 +450,16 @@ function switchView(viewId, pushState = true) {
         VIEWS[viewId].classList.add('active');
     }
     
-    updateNavigationLinks(viewId);
+    // Call appropriate renderers when entering view states
+    if (viewId === 'seller-detail' && selectedCollectionId) {
+        renderSellerDetail(selectedCollectionId);
+    } else if (viewId === 'buyer-detail' && selectedCollectionId) {
+        renderBuyerDetail(selectedCollectionId);
+    } else if (viewId === 'seller-dashboard') {
+        renderSellerDashboard();
+    } else if (viewId === 'buyer-dashboard') {
+        renderBuyerDashboard();
+    }
     
     // HTML5 History pushState URL update
     if (pushState) {
@@ -1603,25 +1612,25 @@ function renderSellerDashboard() {
             
             card.innerHTML = `
                 <div>
-                    <div class="collection-card-header">
-                        <span class="badge ${badgeClass}">${col.status}</span>
-                        <span style="font-size: 0.8rem; color: var(--text-muted);">${new Date(col.createdAt).toLocaleDateString()}</span>
+                    <div class="collection-card-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+                        <div style="display: flex; align-items: center; gap: 0.5rem;">
+                            <span class="badge ${badgeClass}">${col.status}</span>
+                            <span style="font-size: 0.8rem; color: var(--text-muted);">${new Date(col.createdAt).toLocaleDateString()}</span>
+                        </div>
+                        <button class="delete-col-btn" style="background: rgba(239, 68, 68, 0.06); border: 1px solid rgba(239, 68, 68, 0.15); color: #ef4444; border-radius: 50%; width: 26px; height: 26px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s;" title="Delete Collection">
+                            🗑️
+                        </button>
                     </div>
-                    <h3 class="collection-title">${col.title}</h3>
+                    <h3 class="collection-title" style="margin-top: 0;">${col.title}</h3>
                     <div class="collection-meta">
                         <span>📦 ${col.qty} Items</span>
                         <span>🃏 ${col.cards.length} Highlights</span>
                     </div>
                     <div class="collection-preview-row" style="margin-top:1rem;">${previewHtml}</div>
                 </div>
-                <div class="collection-card-footer" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
-                    <span class="price-val" style="font-size:1.05rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 50%;">${priceText}</span>
-                    <div style="display: flex; gap: 0.5rem; align-items: center; justify-content: flex-end;">
-                        <button class="btn btn-secondary btn-sm delete-col-btn" style="padding: 4px 8px; font-size: 0.85rem; background: rgba(239, 68, 68, 0.08); border-color: rgba(239, 68, 68, 0.2); color: #ef4444; border-radius: 4px; display: inline-flex; align-items: center; gap: 3px;">
-                            🗑️ Delete
-                        </button>
-                        <span style="font-size: 0.85rem; color: var(--accent-cyan); font-weight: 600; white-space: nowrap;">Inspect Offer →</span>
-                    </div>
+                <div class="collection-card-footer" style="display: flex; justify-content: space-between; align-items: center; width: 100%; border-top: 1px solid var(--border-color); padding-top: 0.75rem; margin-top: 0.75rem;">
+                    <span class="price-val" style="font-size: 1.1rem; font-weight: 700; color: var(--text-primary);">${priceText}</span>
+                    <span style="font-size: 0.85rem; color: var(--accent-cyan); font-weight: 600;">Inspect Offer →</span>
                 </div>
             `;
             
@@ -2019,46 +2028,89 @@ function renderSellerDetail(id) {
     // Render Slabs
     const slabContainer = document.getElementById('seller-detail-slab-visuals');
     slabContainer.innerHTML = '';
-    col.cards.forEach(card => {
-        const gradeNum = card.grade.match(/\d+/) ? card.grade.match(/\d+/)[0] : '9';
-        const gradeText = card.grade.split(' ').slice(1).join(' ').toUpperCase() || 'MINT';
-        
-        const slab = document.createElement('div');
-        slab.className = 'card-slab';
-        slab.innerHTML = `
-            <div class="slab-label">
-                <div class="slab-label-brand">VAULT 28 GRADING</div>
-                <div class="slab-label-info">
-                    <span class="card-player">${card.player}</span>
-                    <span>${card.year} ${card.brand}</span>
-                </div>
-                <div class="slab-label-grade-box">
-                    <div class="slab-label-grade-num">${gradeNum}</div>
-                    <div class="slab-label-grade-text">${gradeText}</div>
-                </div>
+    if (!col.cards || col.cards.length === 0) {
+        slabContainer.innerHTML = `
+            <div class="glass-card" style="grid-column: 1 / -1; text-align: center; padding: 2.5rem 1.5rem; color: var(--text-secondary); border: 1px dashed rgba(255, 255, 255, 0.12); width: 100%;">
+                <p style="margin: 0; font-size: 0.95rem; font-weight: 500;">No Cataloged Highlights</p>
+                <p style="margin: 6px 0 0 0; font-size: 0.8rem; color: var(--text-muted);">No individual highlight card photos or grades were added for this lot.</p>
             </div>
-            <div class="slab-image-container"><img class="slab-image" src="${card.image}"></div>
-            <div class="slab-footer">${card.player}</div>
         `;
-        slabContainer.appendChild(slab);
-    });
+    } else {
+        col.cards.forEach(card => {
+            const gradeNum = card.grade.match(/\d+/) ? card.grade.match(/\d+/)[0] : '9';
+            const gradeText = card.grade.split(' ').slice(1).join(' ').toUpperCase() || 'MINT';
+            
+            const slab = document.createElement('div');
+            slab.className = 'card-slab';
+            slab.innerHTML = `
+                <div class="slab-label">
+                    <div class="slab-label-brand">VAULT 28 GRADING</div>
+                    <div class="slab-label-info">
+                        <span class="card-player">${card.player}</span>
+                        <span>${card.year} ${card.brand}</span>
+                    </div>
+                    <div class="slab-label-grade-box">
+                        <div class="slab-label-grade-num">${gradeNum}</div>
+                        <div class="slab-label-grade-text">${gradeText}</div>
+                    </div>
+                </div>
+                <div class="slab-image-container"><img class="slab-image" src="${card.image}"></div>
+                <div class="slab-footer">${card.player}</div>
+            `;
+            slabContainer.appendChild(slab);
+        });
+    }
+    
+    // Render General Images
+    const generalPhotosContainer = document.getElementById('seller-detail-general-photos');
+    const photosTitle = document.getElementById('seller-detail-photos-title');
+    if (generalPhotosContainer && photosTitle) {
+        generalPhotosContainer.innerHTML = '';
+        if (col.generalImages && col.generalImages.length > 0) {
+            photosTitle.style.display = 'block';
+            generalPhotosContainer.style.display = 'grid';
+            col.generalImages.forEach(img => {
+                const imgEl = document.createElement('div');
+                imgEl.style.position = 'relative';
+                imgEl.style.borderRadius = '8px';
+                imgEl.style.overflow = 'hidden';
+                imgEl.style.border = '1px solid var(--border-color)';
+                imgEl.style.aspectRatio = '1 / 1';
+                imgEl.innerHTML = `
+                    <img src="${img.base64}" style="width: 100%; height: 100%; object-fit: cover; cursor: pointer; transition: transform 0.2s;" onclick="window.open('${img.base64}', '_blank')" />
+                `;
+                generalPhotosContainer.appendChild(imgEl);
+            });
+        } else {
+            photosTitle.style.display = 'none';
+            generalPhotosContainer.style.display = 'none';
+        }
+    }
     
     // Table Details
     const listContainer = document.getElementById('seller-detail-cards-list');
     listContainer.innerHTML = '';
-    col.cards.forEach(c => {
-        const row = document.createElement('div');
-        row.className = 'card-item-row';
-        row.innerHTML = `
-            <img class="card-item-img" src="${c.image}">
-            <div class="card-item-details">
-                <div class="card-item-name">${c.player}</div>
-                <div class="card-item-meta">${c.year} ${c.brand}</div>
+    if (!col.cards || col.cards.length === 0) {
+        listContainer.innerHTML = `
+            <div class="glass-card" style="text-align: center; padding: 1.5rem; color: var(--text-secondary); border: 1px dashed rgba(255, 255, 255, 0.12); width: 100%;">
+                <p style="margin: 0; font-size: 0.85rem; color: var(--text-muted);">No cataloged item details available.</p>
             </div>
-            <div class="price-val" style="font-size:0.9rem;">${c.grade}</div>
         `;
-        listContainer.appendChild(row);
-    });
+    } else {
+        col.cards.forEach(c => {
+            const row = document.createElement('div');
+            row.className = 'card-item-row';
+            row.innerHTML = `
+                <img class="card-item-img" src="${c.image}">
+                <div class="card-item-details">
+                    <div class="card-item-name">${c.player}</div>
+                    <div class="card-item-meta">${c.year} ${c.brand}</div>
+                </div>
+                <div class="price-val" style="font-size:0.9rem;">${c.grade}</div>
+            `;
+            listContainer.appendChild(row);
+        });
+    }
 
     renderChatMessages('seller-chat-messages', col.messages, 'seller');
 }
