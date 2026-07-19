@@ -2791,11 +2791,11 @@ function renderAdminInquiriesList() {
             borderCol = 'var(--accent-gold)';
             statusBadgeHTML = `<span class="badge" style="font-size: 0.72rem; padding: 4px 10px; background: rgba(223,183,80,0.1); border: 1px solid var(--accent-gold); color: var(--accent-gold); text-transform: uppercase; font-weight: 700; letter-spacing: 0.05em; border-radius: 4px;">Pending Response</span>`;
         } else if (status === 'Waiting for Customer') {
-            borderCol = 'var(--accent-cyan)';
-            statusBadgeHTML = `<span class="badge" style="font-size: 0.72rem; padding: 4px 10px; background: rgba(6,182,212,0.1); border: 1px solid var(--accent-cyan); color: var(--accent-cyan); text-transform: uppercase; font-weight: 700; letter-spacing: 0.05em; border-radius: 4px;">Waiting for Customer</span>`;
+            borderCol = '#3b82f6';
+            statusBadgeHTML = `<span class="badge" style="font-size: 0.72rem; padding: 4px 10px; background: rgba(59,130,246,0.1); border: 1px solid #3b82f6; color: #3b82f6; text-transform: uppercase; font-weight: 700; letter-spacing: 0.05em; border-radius: 4px;">Waiting for Customer</span>`;
         } else if (status === 'Resolved') {
-            borderCol = 'var(--accent-emerald)';
-            statusBadgeHTML = `<span class="badge" style="font-size: 0.72rem; padding: 4px 10px; background: rgba(16,185,129,0.1); border: 1px solid var(--accent-emerald); color: var(--accent-emerald); text-transform: uppercase; font-weight: 700; letter-spacing: 0.05em; border-radius: 4px;">Resolved</span>`;
+            borderCol = '#10b981';
+            statusBadgeHTML = `<span class="badge" style="font-size: 0.72rem; padding: 4px 10px; background: rgba(16,185,129,0.1); border: 1px solid #10b981; color: #10b981; text-transform: uppercase; font-weight: 700; letter-spacing: 0.05em; border-radius: 4px;">Resolved</span>`;
         }
         
         card.style.borderLeft = `4px solid ${borderCol}`;
@@ -2849,7 +2849,7 @@ function renderAdminInquiriesList() {
             ${repliesLogHTML}
             
             <!-- CRM Controls -->
-            <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border-color); padding-top: 1rem; margin-top: 0.5rem; flex-wrap: wrap; gap: 0.75rem;">
+            <div id="controls-${inq.id}" style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border-color); padding-top: 1rem; margin-top: 0.5rem; flex-wrap: wrap; gap: 0.75rem;">
                 <div style="display: flex; gap: 0.5rem;">
                     ${replyButtonHTML}
                     ${resolveButtonHTML}
@@ -2865,9 +2865,9 @@ function renderAdminInquiriesList() {
 
 window.toggleReplyForm = function(inqId, show) {
     const form = document.getElementById(`reply-form-${inqId}`);
-    const btn = document.getElementById(`btn-show-reply-${inqId}`);
+    const controls = document.getElementById(`controls-${inqId}`);
     if (form) form.style.display = show ? 'flex' : 'none';
-    if (btn) btn.style.display = show ? 'none' : 'block';
+    if (controls) controls.style.display = show ? 'none' : 'flex';
 };
 
 window.deleteInquiry = function(inqId) {
