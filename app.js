@@ -1108,6 +1108,50 @@ document.getElementById('auth-form').addEventListener('submit', (e) => {
 
 // ==================== SELLER WIZARD SUBMISSIONS ====================
 
+// client-side image compression utility
+function compressImage(file, maxWidth = 1024, maxHeight = 1024, quality = 0.7) {
+    return new Promise((resolve, reject) => {
+        if (!file.type.startsWith('image/')) {
+            const reader = new FileReader();
+            reader.onload = (e) => resolve(e.target.result);
+            reader.onerror = (err) => reject(err);
+            reader.readAsDataURL(file);
+            return;
+        }
+        
+        const img = new Image();
+        img.src = URL.createObjectURL(file);
+        img.onload = () => {
+            let width = img.width;
+            let height = img.height;
+            
+            if (width > height) {
+                if (width > maxWidth) {
+                    height = Math.round((height * maxWidth) / width);
+                    width = maxWidth;
+                }
+            } else {
+                if (height > maxHeight) {
+                    width = Math.round((width * maxHeight) / height);
+                    height = maxHeight;
+                }
+            }
+            
+            const canvas = document.createElement('canvas');
+            canvas.width = width;
+            canvas.height = height;
+            
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, width, height);
+            
+            const compressedBase64 = canvas.toDataURL('image/jpeg', quality);
+            URL.revokeObjectURL(img.src);
+            resolve(compressedBase64);
+        };
+        img.onerror = (err) => reject(err);
+    });
+}
+
 // Highlight Dropzone Image uploads
 const cardDropzone = document.getElementById('card-dropzone');
 const cardFileInput = document.getElementById('card-file-input');
@@ -1117,21 +1161,24 @@ cardDropzone.addEventListener('click', () => cardFileInput.click());
 cardFileInput.addEventListener('change', (e) => {
     if (e.target.files.length > 0) {
         const file = e.target.files[0];
-        const reader = new FileReader();
-        reader.onload = (el) => {
-            uploadedCardImageBase64 = el.target.result;
-            cardPreview.innerHTML = `
-                <div class="uploaded-preview-item">
-                    <img src="${uploadedCardImageBase64}">
-                    <button type="button" class="uploaded-preview-remove" id="btn-remove-card-img">×</button>
-                </div>
-            `;
-            document.getElementById('btn-remove-card-img').addEventListener('click', () => {
-                uploadedCardImageBase64 = null;
-                cardPreview.innerHTML = '';
+        compressImage(file, 800, 800, 0.75)
+            .then(base64 => {
+                uploadedCardImageBase64 = base64;
+                cardPreview.innerHTML = `
+                    <div class="uploaded-preview-item">
+                        <img src="${uploadedCardImageBase64}">
+                        <button type="button" class="uploaded-preview-remove" id="btn-remove-card-img">×</button>
+                    </div>
+                `;
+                document.getElementById('btn-remove-card-img').addEventListener('click', () => {
+                    uploadedCardImageBase64 = null;
+                    cardPreview.innerHTML = '';
+                });
+            })
+            .catch(err => {
+                console.error("Compression failed:", err);
+                showToast("Failed to process image.", "error");
             });
-        };
-        reader.readAsDataURL(file);
     }
 });
 
@@ -1200,16 +1247,28 @@ const genPreview = document.getElementById('general-images-preview');
 genDropzone.addEventListener('click', () => genFileInput.click());
 genFileInput.addEventListener('change', (e) => {
     Array.from(e.target.files).forEach(file => {
-        const reader = new FileReader();
-        reader.onload = (el) => {
-            const base64 = el.target.result;
-            const isVideo = file.type.startsWith('video/');
-            const id = Math.random().toString(36).substr(2, 9);
-            
-            uploadedGeneralFiles.push({ id, base64, isVideo });
-            renderGeneralPreviewList();
-        };
-        reader.readAsDataURL(file);
+        const isVideo = file.type.startsWith('video/');
+        const id = Math.random().toString(36).substr(2, 9);
+        
+        if (isVideo) {
+            const reader = new FileReader();
+            reader.onload = (el) => {
+                const base64 = el.target.result;
+                uploadedGeneralFiles.push({ id, base64, isVideo: true });
+                renderGeneralPreviewList();
+            };
+            reader.readAsDataURL(file);
+        } else {
+            compressImage(file, 1024, 1024, 0.7)
+                .then(base64 => {
+                    uploadedGeneralFiles.push({ id, base64, isVideo: false });
+                    renderGeneralPreviewList();
+                })
+                .catch(err => {
+                    console.error("Compression failed:", err);
+                    showToast("Failed to process photo.", "error");
+                });
+        }
     });
 });
 
@@ -1246,6 +1305,11 @@ function resetSubmissionFormState() {
     cardPreview.innerHTML = '';
     genPreview.innerHTML = '';
     renderTempCardsList();
+    
+    // Reset wizard state
+    currentWizardStep = 1;
+    updateWizardUI();
+    
     document.getElementById('submission-success-box').style.display = 'none';
     document.getElementById('submission-card-box').style.display = 'block';
 }
@@ -1257,6 +1321,16 @@ document.getElementById('submission-form').addEventListener('submit', (e) => {
     if (isFirebaseActive && !firebase.auth().currentUser) {
         openAuthModal('login');
         showToast("Please register or sign in to submit your cards.", "error");
+        return;
+    }
+    
+    if (uploadedGeneralFiles.length === 0) {
+        showToast("Please upload at least one photo of your collection.", "error");
+        return;
+    }
+    
+    if (!document.getElementById('collection-ownership-check').checked) {
+        showToast("Please confirm that you legally own the collection.", "error");
         return;
     }
     
@@ -3871,6 +3945,134 @@ window.sendCustomerThreadReply = function() {
     }
 };
 
+// Step Wizard State Manager
+let currentWizardStep = 1;
+
+window.updateWizardUI = function() {
+    // Hide all panes
+    document.querySelectorAll('.wizard-pane').forEach(p => p.style.display = 'none');
+    // Show current pane
+    const activePane = document.getElementById('wizard-pane-' + currentWizardStep);
+    if (activePane) activePane.style.display = 'flex';
+    
+    // Update progress indicator nodes
+    document.querySelectorAll('.wizard-step-node').forEach((node, index) => {
+        const stepNum = index + 1;
+        const numCircle = node.querySelector('.step-num');
+        const textSpan = node.querySelector('span');
+        
+        if (stepNum < currentWizardStep) {
+            // Completed step
+            node.classList.add('completed');
+            node.classList.remove('active');
+            if (numCircle) {
+                numCircle.innerHTML = '✓';
+                numCircle.style.background = 'var(--accent-cyan)';
+                numCircle.style.borderColor = 'var(--accent-cyan)';
+                numCircle.style.color = 'var(--bg-primary)';
+            }
+            if (textSpan) textSpan.style.color = 'var(--accent-cyan)';
+        } else if (stepNum === currentWizardStep) {
+            // Active step
+            node.classList.add('active');
+            node.classList.remove('completed');
+            if (numCircle) {
+                numCircle.innerHTML = stepNum;
+                numCircle.style.background = 'var(--bg-secondary)';
+                numCircle.style.borderColor = 'var(--accent-cyan)';
+                numCircle.style.color = 'var(--accent-cyan)';
+            }
+            if (textSpan) textSpan.style.color = 'var(--text-primary)';
+        } else {
+            // Future step
+            node.classList.remove('active', 'completed');
+            if (numCircle) {
+                numCircle.innerHTML = stepNum;
+                numCircle.style.background = 'var(--bg-secondary)';
+                numCircle.style.borderColor = 'rgba(255,255,255,0.15)';
+                numCircle.style.color = 'var(--text-muted)';
+            }
+            if (textSpan) textSpan.style.color = 'var(--text-muted)';
+        }
+    });
+    
+    // Progress Line width
+    const progressBar = document.getElementById('wizard-progress-bar');
+    if (progressBar) {
+        if (currentWizardStep === 1) progressBar.style.width = '0%';
+        else if (currentWizardStep === 2) progressBar.style.width = '50%';
+        else if (currentWizardStep === 3) progressBar.style.width = '100%';
+    }
+    
+    // Update buttons
+    const btnPrev = document.getElementById('btn-wizard-prev');
+    const btnNext = document.getElementById('btn-wizard-next');
+    const btnSubmit = document.getElementById('btn-wizard-submit');
+    
+    if (currentWizardStep === 1) {
+        if (btnPrev) btnPrev.style.display = 'none';
+        if (btnNext) {
+            btnNext.style.display = 'inline-flex';
+            btnNext.style.marginLeft = 'auto';
+        }
+        if (btnSubmit) btnSubmit.style.display = 'none';
+    } else if (currentWizardStep === 2) {
+        if (btnPrev) btnPrev.style.display = 'inline-flex';
+        if (btnNext) {
+            btnNext.style.display = 'inline-flex';
+            btnNext.style.marginLeft = '0';
+        }
+        if (btnSubmit) btnSubmit.style.display = 'none';
+    } else if (currentWizardStep === 3) {
+        if (btnPrev) btnPrev.style.display = 'inline-flex';
+        if (btnNext) btnNext.style.display = 'none';
+        if (btnSubmit) {
+            btnSubmit.style.display = 'inline-flex';
+            btnSubmit.style.marginLeft = '0';
+        }
+    }
+};
+
+// Bind wizard navigation listeners
+setTimeout(() => {
+    const btnPrev = document.getElementById('btn-wizard-prev');
+    const btnNext = document.getElementById('btn-wizard-next');
+    
+    if (btnNext) {
+        btnNext.addEventListener('click', () => {
+            // Validate inputs in the current step pane
+            const activePane = document.getElementById('wizard-pane-' + currentWizardStep);
+            if (activePane) {
+                const inputs = activePane.querySelectorAll('input, select, textarea');
+                let allValid = true;
+                inputs.forEach(input => {
+                    if (!input.checkValidity()) {
+                        input.reportValidity();
+                        allValid = false;
+                    }
+                });
+                if (!allValid) return;
+            }
+            
+            if (currentWizardStep < 3) {
+                currentWizardStep++;
+                updateWizardUI();
+                window.scrollTo({ top: document.getElementById('submission-card-box').offsetTop - 120, behavior: 'smooth' });
+            }
+        });
+    }
+    
+    if (btnPrev) {
+        btnPrev.addEventListener('click', () => {
+            if (currentWizardStep > 1) {
+                currentWizardStep--;
+                updateWizardUI();
+                window.scrollTo({ top: document.getElementById('submission-card-box').offsetTop - 120, behavior: 'smooth' });
+            }
+        });
+    }
+}, 500);
+
 // DOM Init
 document.addEventListener('DOMContentLoaded', () => {
     const banner = document.getElementById('sandbox-banner');
@@ -3900,4 +4102,5 @@ document.addEventListener('DOMContentLoaded', () => {
     initDatabase();
     setRole('seller');
     initScrollReveal();
+    updateWizardUI();
 });

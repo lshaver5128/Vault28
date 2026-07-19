@@ -229,162 +229,200 @@
                     </div>
                 </div>
 
-                <div class="glass-card" id="submission-card-box">
+                <div class="glass-card" id="submission-card-box" style="padding: 2.5rem;">
+                    <!-- Step Progress Indicator -->
+                    <div class="wizard-steps-container" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 3rem; position: relative;">
+                        <div style="position: absolute; top: 18px; left: 16%; right: 16%; height: 2px; background: rgba(255,255,255,0.06); z-index: 1;"></div>
+                        <div id="wizard-progress-bar" style="position: absolute; top: 18px; left: 16%; width: 0%; height: 2px; background: var(--accent-cyan); z-index: 2; transition: width 0.3s ease;"></div>
+                        
+                        <div class="wizard-step-node active" id="step-node-1" style="position: relative; z-index: 3; display: flex; flex-direction: column; align-items: center; gap: 0.5rem; width: 33.33%;">
+                            <div class="step-num" style="width: 36px; height: 36px; border-radius: 50%; background: var(--bg-secondary); border: 2px solid var(--accent-cyan); color: var(--accent-cyan); display: flex; align-items: center; justify-content: center; font-weight: 700; font-family: var(--font-title); font-size: 0.95rem; transition: all 0.3s;">1</div>
+                            <span style="font-size: 0.85rem; font-weight: 600; color: var(--text-primary); font-family: var(--font-title); text-transform: uppercase; letter-spacing: 0.05em; transition: all 0.3s;">Contact Info</span>
+                        </div>
+                        
+                        <div class="wizard-step-node" id="step-node-2" style="position: relative; z-index: 3; display: flex; flex-direction: column; align-items: center; gap: 0.5rem; width: 33.33%;">
+                            <div class="step-num" style="width: 36px; height: 36px; border-radius: 50%; background: var(--bg-secondary); border: 2px solid rgba(255,255,255,0.15); color: var(--text-muted); display: flex; align-items: center; justify-content: center; font-weight: 700; font-family: var(--font-title); font-size: 0.95rem; transition: all 0.3s;">2</div>
+                            <span style="font-size: 0.85rem; font-weight: 600; color: var(--text-muted); font-family: var(--font-title); text-transform: uppercase; letter-spacing: 0.05em; transition: all 0.3s;">Collection Details</span>
+                        </div>
+                        
+                        <div class="wizard-step-node" id="step-node-3" style="position: relative; z-index: 3; display: flex; flex-direction: column; align-items: center; gap: 0.5rem; width: 33.33%;">
+                            <div class="step-num" style="width: 36px; height: 36px; border-radius: 50%; background: var(--bg-secondary); border: 2px solid rgba(255,255,255,0.15); color: var(--text-muted); display: flex; align-items: center; justify-content: center; font-weight: 700; font-family: var(--font-title); font-size: 0.95rem; transition: all 0.3s;">3</div>
+                            <span style="font-size: 0.85rem; font-weight: 600; color: var(--text-muted); font-family: var(--font-title); text-transform: uppercase; letter-spacing: 0.05em; transition: all 0.3s;">Photos & highlights</span>
+                        </div>
+                    </div>
+
                     <form id="submission-form" style="display: flex; flex-direction: column; gap: 1.5rem; text-align: left;">
                         
-                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.25rem;">
-                            <div class="form-group">
-                                <label for="collection-seller-name">Full Name <span style="color: var(--accent-red);">*</span></label>
-                                <input type="text" id="collection-seller-name" placeholder="e.g. John Doe" required>
+                        <!-- STEP 1: CONTACT INFO -->
+                        <div class="wizard-pane active" id="wizard-pane-1" style="display: flex; flex-direction: column; gap: 1.5rem;">
+                            <h3 style="font-size: 1.25rem; font-family: var(--font-title); text-transform: uppercase; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem; margin-bottom: 0.5rem; color: var(--accent-gold);">Step 1: Contact Information</h3>
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.25rem;">
+                                <div class="form-group">
+                                    <label for="collection-seller-name">Full Name <span style="color: var(--accent-red);">*</span></label>
+                                    <input type="text" id="collection-seller-name" placeholder="e.g. John Doe" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="collection-seller-email">Email Address <span style="color: var(--accent-red);">*</span></label>
+                                    <input type="email" id="collection-seller-email" placeholder="e.g. john@domain.com" required>
+                                </div>
                             </div>
-                            <div class="form-group">
-                                <label for="collection-seller-email">Email Address <span style="color: var(--accent-red);">*</span></label>
-                                <input type="email" id="collection-seller-email" placeholder="e.g. john@domain.com" required>
-                            </div>
-                        </div>
 
-                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.25rem;">
-                            <div class="form-group">
-                                <label for="collection-seller-phone">Phone Number <span style="color: var(--accent-red);">*</span></label>
-                                <input type="text" id="collection-seller-phone" placeholder="e.g. (843) 555-1234" required>
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.25rem;">
+                                <div class="form-group">
+                                    <label for="collection-seller-phone">Phone Number <span style="color: var(--accent-red);">*</span></label>
+                                    <input type="text" id="collection-seller-phone" placeholder="e.g. (843) 555-1234" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="collection-seller-pref">Preferred Contact Method</label>
+                                    <select id="collection-seller-pref">
+                                        <option value="Email">Email</option>
+                                        <option value="Phone Call">Phone Call</option>
+                                        <option value="Text Message">Text Message</option>
+                                    </select>
+                                </div>
                             </div>
-                            <div class="form-group">
-                                <label for="collection-seller-pref">Preferred Contact Method</label>
-                                <select id="collection-seller-pref">
-                                    <option value="Email">Email</option>
-                                    <option value="Phone Call">Phone Call</option>
-                                    <option value="Text Message">Text Message</option>
-                                </select>
-                            </div>
-                        </div>
 
-                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.25rem;">
                             <div class="form-group">
                                 <label for="collection-seller-location">City & State <span style="color: var(--accent-red);">*</span></label>
                                 <input type="text" id="collection-seller-location" placeholder="e.g. Summerville, SC" required>
                             </div>
-                            <div class="form-group">
-                                <label for="collection-sport">Type of Collection</label>
-                                <select id="collection-sport">
-                                    <option value="Baseball Cards">Baseball Cards</option>
-                                    <option value="Basketball Cards">Basketball Cards</option>
-                                    <option value="Football Cards">Football Cards</option>
-                                    <option value="Multi-Sport Cards">Multi-Sport Cards</option>
-                                    <option value="Sealed Boxes & Packs">Sealed Boxes & Packs</option>
-                                    <option value="Complete Factory Sets">Complete Factory Sets</option>
-                                </select>
-                            </div>
                         </div>
 
-                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1.25rem;">
-                            <div class="form-group">
-                                <label for="collection-qty">Approx. Item Count <span style="color: var(--accent-red);">*</span></label>
-                                <input type="number" id="collection-qty" placeholder="e.g. 500" required min="1">
-                            </div>
-                            <div class="form-group">
-                                <label for="collection-est-val">Estimated Value ($), if known</label>
-                                <input type="number" id="collection-est-val" placeholder="e.g. 1200" min="0">
-                            </div>
-                            <div class="form-group">
-                                <label for="collection-asking">Asking Price ($), if applicable</label>
-                                <input type="number" id="collection-asking" placeholder="e.g. 1000" min="0">
-                            </div>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="collection-desc">Description of Collection <span style="color: var(--accent-red);">*</span></label>
-                            <textarea id="collection-desc" rows="4" placeholder="Detail condition, key highlight cards, sets, years, and if items are graded or raw..." required></textarea>
-                        </div>
-
-                        <!-- Local/Shipping preference -->
-                        <div class="form-group">
-                            <label for="collection-delivery-pref">Pickup or Shipping Preference</label>
-                            <select id="collection-delivery-pref">
-                                <option value="Shipping Accepted">I will ship the collection (Secure Mail-in)</option>
-                                <option value="Local Pickup">Local Meetup / Pickup (Near Summerville, SC)</option>
-                            </select>
-                        </div>
-
-                        <!-- Custom inventory slab builder -->
-                        <div style="border: 1px solid var(--border-color); border-radius: 8px; padding: 1.5rem; background: rgba(0,0,0,0.15); margin-top: 1rem;">
-                            <h3 style="font-size: 1.1rem; margin-bottom: 0.25rem; font-family: var(--font-title);">Highlight Catalog (Optional)</h3>
-                            <p style="color: var(--text-secondary); font-size: 0.82rem; margin-bottom: 1.5rem;">Add key cards in your collection to build graded slab previews.</p>
-                            
-                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 1.25rem;">
+                        <!-- STEP 2: COLLECTION DETAILS -->
+                        <div class="wizard-pane" id="wizard-pane-2" style="display: none; flex-direction: column; gap: 1.5rem;">
+                            <h3 style="font-size: 1.25rem; font-family: var(--font-title); text-transform: uppercase; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem; margin-bottom: 0.5rem; color: var(--accent-gold);">Step 2: Collection Details</h3>
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.25rem;">
                                 <div class="form-group">
-                                    <label for="card-player" style="font-size: 0.8rem;">Player Name</label>
-                                    <input type="text" id="card-player" placeholder="e.g. Michael Jordan / Ken Griffey Jr.">
-                                </div>
-                                <div class="form-group" style="font-size: 0.8rem;">
-                                    <label for="card-brand">Brand / Set</label>
-                                    <input type="text" id="card-brand" placeholder="e.g. Fleer #57 / Topps Chrome">
-                                </div>
-                                <div class="form-group" style="font-size: 0.8rem;">
-                                    <label for="card-year">Year</label>
-                                    <input type="number" id="card-year" placeholder="e.g. 1986 / 2020" min="1900" max="2030">
-                                </div>
-                                <div class="form-group" style="font-size: 0.8rem;">
-                                    <label for="card-grade">Condition / Grade</label>
-                                    <select id="card-grade">
-                                        <option value="Raw (Near Mint or Better)">Raw (Near Mint+)</option>
-                                        <option value="Raw (Excellent/Light Play)">Raw (Excellent/Light Play)</option>
-                                        <option value="Raw (Moderate Play/Played)">Raw (Played)</option>
-                                        <option value="PSA 10 Gem Mint">PSA 10 Gem Mint</option>
-                                        <option value="PSA 9 Mint">PSA 9 Mint</option>
-                                        <option value="PSA 8 Near-Mint/Mint">PSA 8 Near-Mint/Mint</option>
-                                        <option value="BGS 9.5 Gem Mint">BGS 9.5 Gem Mint</option>
-                                        <option value="BGS 9 Mint">BGS 9 Mint</option>
+                                    <label for="collection-sport">Type of Collection</label>
+                                    <select id="collection-sport">
+                                        <option value="Baseball Cards">Baseball Cards</option>
+                                        <option value="Basketball Cards">Basketball Cards</option>
+                                        <option value="Football Cards">Football Cards</option>
+                                        <option value="Multi-Sport Cards">Multi-Sport Cards</option>
+                                        <option value="Sealed Boxes & Packs">Sealed Boxes & Packs</option>
+                                        <option value="Complete Factory Sets">Complete Factory Sets</option>
                                     </select>
                                 </div>
+                                <div class="form-group">
+                                    <label for="collection-qty">Approx. Item Count <span style="color: var(--accent-red);">*</span></label>
+                                    <input type="number" id="collection-qty" placeholder="e.g. 500" min="1" required>
+                                </div>
                             </div>
+
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1.25rem;">
+                                <div class="form-group">
+                                    <label for="collection-est-val">Estimated Value ($), if known</label>
+                                    <input type="number" id="collection-est-val" placeholder="e.g. 1200" min="0">
+                                </div>
+                                <div class="form-group">
+                                    <label for="collection-asking">Asking Price ($), if applicable</label>
+                                    <input type="number" id="collection-asking" placeholder="e.g. 1000" min="0">
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="collection-delivery-pref">Pickup or Shipping Preference</label>
+                                <select id="collection-delivery-pref">
+                                    <option value="Shipping Accepted">I will ship the collection (Secure Mail-in)</option>
+                                    <option value="Local Pickup">Local Meetup / Pickup (Near Summerville, SC)</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="collection-desc">Description of Collection <span style="color: var(--accent-red);">*</span></label>
+                                <textarea id="collection-desc" rows="4" placeholder="Detail condition, key highlight cards, sets, years, and if items are graded or raw..." required></textarea>
+                            </div>
+                        </div>
+
+                        <!-- STEP 3: PHOTOS & CATALOG -->
+                        <div class="wizard-pane" id="wizard-pane-3" style="display: none; flex-direction: column; gap: 1.5rem;">
+                            <h3 style="font-size: 1.25rem; font-family: var(--font-title); text-transform: uppercase; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem; margin-bottom: 0.5rem; color: var(--accent-gold);">Step 3: Upload Photos & Catalog highlights</h3>
                             
                             <!-- Image Drag & Drop Uploader -->
                             <div class="form-group">
-                                <label style="font-size: 0.8rem;">Card Photo (For graded slab background)</label>
-                                <div class="upload-dropzone" id="card-dropzone">
+                                <label>Upload Collection Photos / Videos <span style="color: var(--accent-red);">*</span></label>
+                                <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.5rem;">Please attach at least one photo of your collection so we can evaluate it.</p>
+                                <div class="upload-dropzone" id="general-dropzone">
                                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-bottom: 0.5rem; color: var(--text-muted);"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
-                                    <span>Drag & Drop card photo here, or <strong style="color: var(--accent-cyan);">Browse</strong></span>
-                                    <input type="file" id="card-file-input" accept="image/*" style="display: none;">
+                                    <span>Drag & Drop photos/videos here, or <strong style="color: var(--accent-cyan);">Browse Files</strong></span>
+                                    <input type="file" id="general-file-input" accept="image/*,video/*" multiple style="display: none;">
                                 </div>
-                                <div id="card-images-preview" style="margin-top: 0.75rem; display: flex; gap: 0.5rem; flex-wrap: wrap;"></div>
+                                <div id="general-images-preview" style="margin-top: 0.75rem; display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 0.5rem;"></div>
                             </div>
 
-                            <button type="button" class="btn btn-secondary btn-sm" id="btn-add-card-to-list" style="margin-top: 0.5rem;">
-                                ➕ Catalog Card Highlight
-                            </button>
+                            <!-- Custom inventory slab builder -->
+                            <div style="border: 1px solid var(--border-color); border-radius: 8px; padding: 1.5rem; background: rgba(0,0,0,0.15); margin-top: 0.5rem;">
+                                <h4 style="font-size: 1.1rem; margin-bottom: 0.25rem; font-family: var(--font-title); color: var(--accent-cyan);">Highlight Catalog (Optional)</h4>
+                                <p style="color: var(--text-secondary); font-size: 0.82rem; margin-bottom: 1.5rem;">Add individual key cards in your collection to build graded slab previews.</p>
+                                
+                                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 1.25rem;">
+                                    <div class="form-group">
+                                        <label for="card-player" style="font-size: 0.8rem;">Player Name</label>
+                                        <input type="text" id="card-player" placeholder="e.g. Michael Jordan">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="card-brand" style="font-size: 0.8rem;">Brand / Set</label>
+                                        <input type="text" id="card-brand" placeholder="e.g. Fleer #57">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="card-year" style="font-size: 0.8rem;">Year</label>
+                                        <input type="number" id="card-year" placeholder="e.g. 1986" min="1900" max="2030">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="card-grade" style="font-size: 0.8rem;">Grade</label>
+                                        <select id="card-grade">
+                                            <option value="Raw (Near Mint or Better)">Raw (Near Mint+)</option>
+                                            <option value="Raw (Excellent/Light Play)">Raw (Excellent/Light Play)</option>
+                                            <option value="Raw (Moderate Play/Played)">Raw (Played)</option>
+                                            <option value="PSA 10 Gem Mint">PSA 10 Gem Mint</option>
+                                            <option value="PSA 9 Mint">PSA 9 Mint</option>
+                                            <option value="PSA 8 Near-Mint/Mint">PSA 8 Near-Mint/Mint</option>
+                                            <option value="BGS 9.5 Gem Mint">BGS 9.5 Gem Mint</option>
+                                            <option value="BGS 9 Mint">BGS 9 Mint</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label style="font-size: 0.8rem;">Card Photo</label>
+                                    <div class="upload-dropzone" id="card-dropzone" style="padding: 1rem;">
+                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-bottom: 0.25rem; color: var(--text-muted);"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
+                                        <span>Drop card photo here or <strong>Browse</strong></span>
+                                        <input type="file" id="card-file-input" accept="image/*" style="display: none;">
+                                    </div>
+                                    <div id="card-images-preview" style="margin-top: 0.5rem; display: flex; gap: 0.5rem;"></div>
+                                </div>
 
-                            <div style="margin-top: 1.5rem;">
-                                <h4 style="font-size: 0.9rem; margin-bottom: 0.75rem;">Cataloged Highlights List (<span id="cards-count-badge">0</span>)</h4>
-                                <div class="temp-cards-list" id="temp-cards-list">
-                                    <div style="text-align: center; padding: 1.5rem; color: var(--text-muted); border: 1px dashed var(--border-color); border-radius: 8px; font-size: 0.9rem;">
-                                        No specific highlights cataloged yet.
+                                <button type="button" class="btn btn-secondary btn-sm" id="btn-add-card-to-list" style="margin-top: 0.5rem;">
+                                    ➕ Catalog Card Highlight
+                                </button>
+
+                                <div style="margin-top: 1.5rem;">
+                                    <h5 style="font-size: 0.95rem; margin-bottom: 0.75rem; font-weight: 600;">Cataloged Highlights List (<span id="cards-count-badge">0</span>)</h5>
+                                    <div class="temp-cards-list" id="temp-cards-list">
+                                        <div style="text-align: center; padding: 1.5rem; color: var(--text-muted); border: 1px dashed var(--border-color); border-radius: 8px; font-size: 0.95rem;">
+                                            No specific highlights cataloged yet.
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
 
-                        <!-- General Submission File Upload (multiple photos / video) -->
-                        <div class="form-group" style="margin-top: 1rem;">
-                            <label>Upload Collection Photos / Videos <span style="color: var(--accent-red);">*</span></label>
-                            <div class="upload-dropzone" id="general-dropzone">
-                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-bottom: 0.5rem; color: var(--text-muted);"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
-                                <span>Drag & Drop photos/videos here, or <strong style="color: var(--accent-cyan);">Browse Files</strong></span>
-                                <input type="file" id="general-file-input" accept="image/*,video/*" multiple style="display: none;">
+                            <!-- Ownership check -->
+                            <div style="display: flex; align-items: flex-start; gap: 0.75rem; margin-top: 1.5rem; border-top: 1px solid var(--border-color); padding-top: 1.5rem;">
+                                <input type="checkbox" id="collection-ownership-check" required style="width: auto; margin-top: 0.25rem; cursor: pointer;">
+                                <label for="collection-ownership-check" style="font-size: 1rem; color: var(--text-secondary); cursor: pointer; user-select: none;">
+                                    I confirm that I legally own the items in this collection and have the full authority to sell them. <span style="color: var(--accent-red);">*</span>
+                                </label>
                             </div>
-                            <div id="general-images-preview" style="margin-top: 0.75rem; display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 0.5rem;"></div>
                         </div>
 
-                        <!-- Ownership check -->
-                        <div style="display: flex; align-items: flex-start; gap: 0.75rem; margin-top: 1rem;">
-                            <input type="checkbox" id="collection-ownership-check" required style="width: auto; margin-top: 0.25rem; cursor: pointer;">
-                            <label for="collection-ownership-check" style="font-size: 0.9rem; color: var(--text-secondary); cursor: pointer; user-select: none;">
-                                I confirm that I legally own the items in this collection and have the full authority to sell them.
-                            </label>
+                        <!-- Wizard Navigation Bar -->
+                        <div class="wizard-navigation" style="display: flex; justify-content: space-between; align-items: center; margin-top: 1.5rem; border-top: 1px solid var(--border-color); padding-top: 1.5rem;">
+                            <button type="button" class="btn btn-secondary" id="btn-wizard-prev" style="display: none;">Back</button>
+                            <button type="button" class="btn btn-primary" id="btn-wizard-next" style="margin-left: auto;">Continue</button>
+                            <button type="submit" class="btn btn-primary" id="btn-wizard-submit" style="display: none; margin-left: auto;">Submit Collection</button>
                         </div>
 
-                        <button type="submit" class="btn btn-primary" style="margin-top: 1rem; width: 100%; padding: 0.9rem; font-size: 1.05rem;">
-                            Submit Collection for Valuation
-                        </button>
                     </form>
                 </div>
 

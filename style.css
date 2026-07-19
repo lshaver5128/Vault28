@@ -994,14 +994,36 @@ body.has-admin-bar main.container {
     letter-spacing: 0.02em;
 }
 
-/* Submission Wizard Forms */
-.wizard-step {
+/* Submission Wizard Panes */
+.wizard-pane {
     display: none;
+    flex-direction: column;
+    gap: 1.5rem;
 }
 
-.wizard-step.active {
-    display: block;
-    animation: fadeIn 0.3s ease;
+.wizard-pane.active {
+    display: flex;
+    animation: fadeIn 0.4s ease;
+}
+
+.wizard-step-node {
+    cursor: default;
+    transition: all 0.3s ease;
+}
+
+.wizard-step-node.completed .step-num {
+    box-shadow: 0 0 10px rgba(6, 182, 212, 0.4);
+}
+
+.wizard-step-node.active .step-num {
+    box-shadow: 0 0 12px rgba(6, 182, 212, 0.25);
+    animation: pulseGlow 2.5s infinite;
+}
+
+@keyframes pulseGlow {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.03); box-shadow: 0 0 15px rgba(6, 182, 212, 0.5); }
+    100% { transform: scale(1); }
 }
 
 .form-group {
