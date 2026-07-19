@@ -160,17 +160,17 @@ body.has-admin-bar header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    height: 120px;
+    height: 80px;
 }
 
 /* Content Container offsets for Fixed Header */
 main.container {
-    padding-top: 150px; /* 120px header height + padding */
+    padding-top: 110px; /* 80px header height + padding */
     transition: padding-top 0.3s ease;
 }
 
 body.has-admin-bar main.container {
-    padding-top: 190px; /* 120px header + 40px admin bar + padding */
+    padding-top: 150px; /* 80px header + 40px admin bar + padding */
 }
 
 /* Page Headers / Centered Title Groups */

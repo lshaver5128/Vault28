@@ -1481,7 +1481,7 @@ function renderCustomerDashboardInquiries() {
         let historyToggleHTML = '';
         if (msgs.length > 1) {
             historyToggleHTML = `
-                <button class="btn btn-secondary btn-sm" id="btn-toggle-history-${inq.id}" onclick="toggleThreadHistory('${inq.id}', ${msgs.length - 1})" style="align-self: flex-start; background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); font-weight: 600; padding: 6px 12px; border-radius: 6px;">Show Thread History (${msgs.length - 1} replies)</button>
+                <button class="btn btn-secondary btn-sm" id="customer-btn-toggle-history-${inq.id}" onclick="toggleThreadHistory('${inq.id}', ${msgs.length - 1}, 'customer')" style="align-self: flex-start; background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); font-weight: 600; padding: 6px 12px; border-radius: 6px;">Show Thread History (${msgs.length - 1} replies)</button>
             `;
         }
         
@@ -1524,7 +1524,7 @@ function renderCustomerDashboardInquiries() {
             ${historyToggleHTML}
             
             <!-- Collapsible Replies Container -->
-            <div id="thread-history-${inq.id}" style="display: none; flex-direction: column; gap: 0.75rem;">
+            <div id="customer-thread-history-${inq.id}" style="display: none; flex-direction: column; gap: 0.75rem;">
                 ${repliesHTML}
             </div>
             
@@ -1546,9 +1546,9 @@ window.toggleCustomerReplyForm = function(inqId, show) {
     if (controls) controls.style.display = show ? 'none' : 'flex';
 };
 
-window.toggleThreadHistory = function(inqId, totalReplies) {
-    const historyDiv = document.getElementById(`thread-history-${inqId}`);
-    const btn = document.getElementById(`btn-toggle-history-${inqId}`);
+window.toggleThreadHistory = function(inqId, totalReplies, prefix = 'admin') {
+    const historyDiv = document.getElementById(`${prefix}-thread-history-${inqId}`);
+    const btn = document.getElementById(`${prefix}-btn-toggle-history-${inqId}`);
     if (!historyDiv || !btn) return;
     
     if (historyDiv.style.display === 'none') {
@@ -3201,7 +3201,7 @@ function renderAdminInquiriesList() {
         let historyToggleHTML = '';
         if (msgs.length > 1) {
             historyToggleHTML = `
-                <button class="btn btn-secondary btn-sm" id="btn-toggle-history-${inq.id}" onclick="toggleThreadHistory('${inq.id}', ${msgs.length - 1})" style="align-self: flex-start; background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); font-weight: 600; padding: 6px 12px; border-radius: 6px;">Show Thread History (${msgs.length - 1} replies)</button>
+                <button class="btn btn-secondary btn-sm" id="admin-btn-toggle-history-${inq.id}" onclick="toggleThreadHistory('${inq.id}', ${msgs.length - 1}, 'admin')" style="align-self: flex-start; background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); font-weight: 600; padding: 6px 12px; border-radius: 6px;">Show Thread History (${msgs.length - 1} replies)</button>
             `;
         }
         
@@ -3245,7 +3245,7 @@ function renderAdminInquiriesList() {
             ${historyToggleHTML}
             
             <!-- Collapsible Replies Container -->
-            <div id="thread-history-${inq.id}" style="display: none; flex-direction: column; gap: 0.75rem;">
+            <div id="admin-thread-history-${inq.id}" style="display: none; flex-direction: column; gap: 0.75rem;">
                 ${repliesHTML}
             </div>
             
