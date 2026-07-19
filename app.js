@@ -450,6 +450,8 @@ function switchView(viewId, pushState = true) {
         VIEWS[viewId].classList.add('active');
     }
     
+    updateNavigationLinks(viewId);
+    
     // Call appropriate renderers when entering view states
     if (viewId === 'seller-detail' && selectedCollectionId) {
         renderSellerDetail(selectedCollectionId);
