@@ -1447,7 +1447,6 @@ function renderCustomerDashboardInquiries() {
         
         card.style.borderLeft = `4px solid ${borderCol}`;
         
-        // Build message log history
         let msgs = inq.messages || [];
         if (msgs.length === 0) {
             msgs = [
@@ -1458,27 +1457,37 @@ function renderCustomerDashboardInquiries() {
             }
         }
         
-        let conversationHTML = '';
-        msgs.forEach(m => {
-            const dateStr = new Date(m.createdAt).toLocaleString();
-            if (m.sender === 'customer') {
-                conversationHTML += `
-                    <div style="background: rgba(223, 183, 80, 0.02); border: 1px solid var(--border-color); border-radius: 6px; padding: 1rem;">
-                        <p style="color: var(--accent-gold); font-size: 0.78rem; text-transform: uppercase; font-weight: 700; margin: 0 0 0.5rem 0; letter-spacing: 0.05em;">You:</p>
-                        <p style="color: var(--text-primary); font-size: 0.9rem; margin: 0; line-height: 1.5; white-space: pre-wrap;">${escapeHTML(m.text)}</p>
-                        <p style="color: var(--text-muted); font-size: 0.75rem; margin-top: 0.5rem; margin-bottom: 0;">Sent: ${dateStr}</p>
-                    </div>
-                `;
-            } else {
-                conversationHTML += `
-                    <div style="background: rgba(59, 130, 246, 0.03); border: 1px solid rgba(59, 130, 246, 0.15); border-radius: 6px; padding: 1rem;">
-                        <p style="color: #3b82f6; font-size: 0.78rem; text-transform: uppercase; font-weight: 700; margin: 0 0 0.5rem 0; letter-spacing: 0.05em;">Lucas (Vault 28 Owner):</p>
-                        <p style="color: var(--text-primary); font-size: 0.9rem; margin: 0; line-height: 1.5; white-space: pre-wrap;">${escapeHTML(m.text)}</p>
-                        <p style="color: var(--text-muted); font-size: 0.75rem; margin-top: 0.5rem; margin-bottom: 0;">Replied: ${dateStr}</p>
-                    </div>
-                `;
+        let repliesHTML = '';
+        if (msgs.length > 1) {
+            for (let i = 1; i < msgs.length; i++) {
+                const m = msgs[i];
+                const replyDate = new Date(m.createdAt).toLocaleString();
+                if (m.sender === 'customer') {
+                    repliesHTML += `
+                        <div style="background: rgba(223, 183, 80, 0.02); border: 1px solid var(--border-color); border-radius: 6px; padding: 1rem; margin-top: 0.5rem;">
+                            <p style="color: var(--accent-gold); font-size: 0.78rem; text-transform: uppercase; font-weight: 700; margin: 0 0 0.5rem 0; letter-spacing: 0.05em;">You:</p>
+                            <p style="color: var(--text-primary); font-size: 0.9rem; margin: 0; line-height: 1.5; white-space: pre-wrap;">${escapeHTML(m.text)}</p>
+                            <p style="color: var(--text-muted); font-size: 0.75rem; margin-top: 0.5rem; margin-bottom: 0;">Sent: ${replyDate}</p>
+                        </div>
+                    `;
+                } else {
+                    repliesHTML += `
+                        <div style="background: rgba(59, 130, 246, 0.03); border: 1px solid rgba(59, 130, 246, 0.15); border-radius: 6px; padding: 1rem; margin-top: 0.5rem;">
+                            <p style="color: #3b82f6; font-size: 0.78rem; text-transform: uppercase; font-weight: 700; margin: 0 0 0.5rem 0; letter-spacing: 0.05em;">Lucas (Vault 28 Owner):</p>
+                            <p style="color: var(--text-primary); font-size: 0.9rem; margin: 0; line-height: 1.5; white-space: pre-wrap;">${escapeHTML(m.text)}</p>
+                            <p style="color: var(--text-muted); font-size: 0.75rem; margin-top: 0.5rem; margin-bottom: 0;">Replied: ${replyDate}</p>
+                        </div>
+                    `;
+                }
             }
-        });
+        }
+        
+        let historyToggleHTML = '';
+        if (msgs.length > 1) {
+            historyToggleHTML = `
+                <button class="btn btn-secondary btn-sm" id="btn-toggle-history-${inq.id}" onclick="toggleThreadHistory('${inq.id}', ${msgs.length - 1})" style="align-self: flex-start; background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); font-weight: 600; padding: 6px 12px; border-radius: 6px;">Show Thread History (${msgs.length - 1} replies)</button>
+            `;
+        }
         
         let replyButtonHTML = '';
         if (status === 'Waiting for Customer') {
@@ -1511,8 +1520,16 @@ function renderCustomerDashboardInquiries() {
                 </div>
             </div>
             
-            <div style="display: flex; flex-direction: column; gap: 0.75rem; margin-top: 0.5rem;">
-                ${conversationHTML}
+            <div style="background: rgba(0,0,0,0.2); border: 1px solid var(--border-color); border-radius: 6px; padding: 1rem; color: var(--text-secondary); font-size: 0.92rem; line-height: 1.5; white-space: pre-wrap;">
+                <span style="color: var(--accent-gold); font-size: 0.75rem; text-transform: uppercase; font-weight: 700; display: block; margin-bottom: 0.25rem; letter-spacing: 0.05em;">Original Message:</span>
+                ${escapeHTML(msgs[0].text)}
+            </div>
+            
+            ${historyToggleHTML}
+            
+            <!-- Collapsible Replies Container -->
+            <div id="thread-history-${inq.id}" style="display: none; flex-direction: column; gap: 0.75rem;">
+                ${repliesHTML}
             </div>
             
             <!-- Customer Dashboard Inquiry Controls -->
@@ -1531,6 +1548,20 @@ window.toggleCustomerReplyForm = function(inqId, show) {
     const controls = document.getElementById(`customer-controls-${inqId}`);
     if (form) form.style.display = show ? 'flex' : 'none';
     if (controls) controls.style.display = show ? 'none' : 'flex';
+};
+
+window.toggleThreadHistory = function(inqId, totalReplies) {
+    const historyDiv = document.getElementById(`thread-history-${inqId}`);
+    const btn = document.getElementById(`btn-toggle-history-${inqId}`);
+    if (!historyDiv || !btn) return;
+    
+    if (historyDiv.style.display === 'none') {
+        historyDiv.style.display = 'flex';
+        btn.textContent = 'Hide Thread History';
+    } else {
+        historyDiv.style.display = 'none';
+        btn.textContent = `Show Thread History (${totalReplies} replies)`;
+    }
 };
 
 window.sendCustomerDashboardReply = function(inqId) {
@@ -3113,7 +3144,6 @@ function renderAdminInquiriesList() {
     filtered.forEach(inq => {
         const dateStr = new Date(inq.createdAt).toLocaleString();
         const status = inq.status || 'Pending Response';
-        const hasReplied = !!inq.replyText;
         
         const card = document.createElement('div');
         card.className = 'glass-card';
@@ -3137,14 +3167,45 @@ function renderAdminInquiriesList() {
         card.style.flexDirection = 'column';
         card.style.gap = '1rem';
         
-        let repliesLogHTML = '';
-        if (hasReplied) {
-            repliesLogHTML = `
-                <div style="background: rgba(16, 185, 129, 0.03); border: 1px solid var(--border-color); border-radius: 6px; padding: 1rem;">
-                    <p style="color: var(--accent-emerald); font-size: 0.78rem; text-transform: uppercase; font-weight: 700; margin: 0 0 0.5rem 0; letter-spacing: 0.05em;">Your Reply (Sent via Email):</p>
-                    <p style="color: var(--text-primary); font-size: 0.9rem; margin: 0; line-height: 1.5; white-space: pre-wrap;">${escapeHTML(inq.replyText)}</p>
-                    <p style="color: var(--text-muted); font-size: 0.75rem; margin-top: 0.5rem; margin-bottom: 0;">Replied at: ${new Date(inq.repliedAt).toLocaleString()}</p>
-                </div>
+        let msgs = inq.messages || [];
+        if (msgs.length === 0) {
+            msgs = [
+                { sender: 'customer', text: inq.message, createdAt: inq.createdAt }
+            ];
+            if (inq.replyText) {
+                msgs.push({ sender: 'owner', text: inq.replyText, createdAt: inq.repliedAt });
+            }
+        }
+        
+        let repliesHTML = '';
+        if (msgs.length > 1) {
+            for (let i = 1; i < msgs.length; i++) {
+                const m = msgs[i];
+                const replyDate = new Date(m.createdAt).toLocaleString();
+                if (m.sender === 'owner') {
+                    repliesHTML += `
+                        <div style="background: rgba(59, 130, 246, 0.03); border: 1px solid rgba(59, 130, 246, 0.15); border-radius: 6px; padding: 1rem; margin-top: 0.5rem;">
+                            <p style="color: #3b82f6; font-size: 0.78rem; text-transform: uppercase; font-weight: 700; margin: 0 0 0.5rem 0; letter-spacing: 0.05em;">Your Reply (Sent via Email):</p>
+                            <p style="color: var(--text-primary); font-size: 0.9rem; margin: 0; line-height: 1.5; white-space: pre-wrap;">${escapeHTML(m.text)}</p>
+                            <p style="color: var(--text-muted); font-size: 0.75rem; margin-top: 0.5rem; margin-bottom: 0;">Replied: ${replyDate}</p>
+                        </div>
+                    `;
+                } else {
+                    repliesHTML += `
+                        <div style="background: rgba(223, 183, 80, 0.02); border: 1px solid var(--border-color); border-radius: 6px; padding: 1rem; margin-top: 0.5rem;">
+                            <p style="color: var(--accent-gold); font-size: 0.78rem; text-transform: uppercase; font-weight: 700; margin: 0 0 0.5rem 0; letter-spacing: 0.05em;">Customer Reply:</p>
+                            <p style="color: var(--text-primary); font-size: 0.9rem; margin: 0; line-height: 1.5; white-space: pre-wrap;">${escapeHTML(m.text)}</p>
+                            <p style="color: var(--text-muted); font-size: 0.75rem; margin-top: 0.5rem; margin-bottom: 0;">Sent: ${replyDate}</p>
+                        </div>
+                    `;
+                }
+            }
+        }
+        
+        let historyToggleHTML = '';
+        if (msgs.length > 1) {
+            historyToggleHTML = `
+                <button class="btn btn-secondary btn-sm" id="btn-toggle-history-${inq.id}" onclick="toggleThreadHistory('${inq.id}', ${msgs.length - 1})" style="align-self: flex-start; background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); font-weight: 600; padding: 6px 12px; border-radius: 6px;">Show Thread History (${msgs.length - 1} replies)</button>
             `;
         }
         
@@ -3179,8 +3240,18 @@ function renderAdminInquiriesList() {
                     <div>${statusBadgeHTML}</div>
                 </div>
             </div>
-            <div style="background: rgba(0,0,0,0.2); border: 1px solid var(--border-color); border-radius: 6px; padding: 1rem; color: var(--text-secondary); font-size: 0.92rem; line-height: 1.5; white-space: pre-wrap;">${escapeHTML(inq.message)}</div>
-            ${repliesLogHTML}
+            
+            <div style="background: rgba(0,0,0,0.2); border: 1px solid var(--border-color); border-radius: 6px; padding: 1rem; color: var(--text-secondary); font-size: 0.92rem; line-height: 1.5; white-space: pre-wrap;">
+                <span style="color: var(--accent-gold); font-size: 0.75rem; text-transform: uppercase; font-weight: 700; display: block; margin-bottom: 0.25rem; letter-spacing: 0.05em;">Original Inquiry:</span>
+                ${escapeHTML(msgs[0].text)}
+            </div>
+            
+            ${historyToggleHTML}
+            
+            <!-- Collapsible Replies Container -->
+            <div id="thread-history-${inq.id}" style="display: none; flex-direction: column; gap: 0.75rem;">
+                ${repliesHTML}
+            </div>
             
             <!-- CRM Controls -->
             <div id="controls-${inq.id}" style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border-color); padding-top: 1rem; margin-top: 0.5rem; flex-wrap: wrap; gap: 0.75rem;">
