@@ -478,11 +478,13 @@ function handleInitialRouting() {
     }
     
     if (adminTabParam) {
-        targetView = 'buyer-dashboard';
-        setTimeout(() => {
-            setRole('buyer');
-            setAdminTab(adminTabParam);
-        }, 150);
+        if (!isFirebaseActive || (firebase.auth().currentUser && OWNER_EMAILS.includes(firebase.auth().currentUser.email))) {
+            targetView = 'buyer-dashboard';
+            setTimeout(() => {
+                setRole('buyer');
+                setAdminTab(adminTabParam);
+            }, 150);
+        }
     }
     
     switchView(targetView, false);
@@ -613,15 +615,13 @@ function initDatabase() {
                         renderAdminInquiriesList();
                     });
 
-                    // Check URL for adminTab parameter to auto-route owner
+                    // Automatically default owner accounts to Buyer/Owner View
                     const urlParams = new URLSearchParams(window.location.search);
-                    const adminTabParam = urlParams.get('adminTab');
-                    if (adminTabParam) {
-                        setTimeout(() => {
-                            setRole('buyer');
-                            setAdminTab(adminTabParam);
-                        }, 250);
-                    }
+                    const adminTabParam = urlParams.get('adminTab') || 'submissions';
+                    setTimeout(() => {
+                        setRole('buyer');
+                        setAdminTab(adminTabParam);
+                    }, 200);
                 } else {
                     roleLabel.textContent = "Seller Account";
                     roleLabel.style.color = "var(--text-secondary)";
