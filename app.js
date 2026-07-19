@@ -436,6 +436,7 @@ function switchView(viewId, pushState = true) {
         'seller-submit': document.getElementById('seller-submit'),
         'seller-dashboard': document.getElementById('seller-dashboard'),
         'seller-detail': document.getElementById('seller-detail'),
+        'customer-thread': document.getElementById('customer-thread'),
         'shop': document.getElementById('shop'),
         'how-it-works': document.getElementById('how-it-works'),
         'about': document.getElementById('about'),
@@ -1409,7 +1410,6 @@ function renderCustomerDashboardInquiries() {
         return;
     }
     
-    // Filter inquiries by current user's email
     const myInquiries = inquiries.filter(i => i.email && i.email.toLowerCase() === currentUser.email.toLowerCase());
     
     if (myInquiries.length === 0) {
@@ -1425,11 +1425,9 @@ function renderCustomerDashboardInquiries() {
     myInquiries.forEach(inq => {
         const card = document.createElement('div');
         card.className = 'glass-card';
-        card.style.padding = '1.25rem 1.5rem';
+        card.style.padding = '1.5rem';
         card.style.display = 'flex';
-        card.style.justifyContent = 'space-between';
-        card.style.alignItems = 'center';
-        card.style.flexWrap = 'wrap';
+        card.style.flexDirection = 'column';
         card.style.gap = '1rem';
         
         let borderCol = 'var(--accent-gold)';
@@ -1438,32 +1436,181 @@ function renderCustomerDashboardInquiries() {
         
         if (status === 'Pending Response') {
             borderCol = 'var(--accent-gold)';
-            badgeHTML = `<span class="badge" style="font-size: 0.7rem; padding: 3px 8px; background: rgba(223,183,80,0.1); border: 1px solid var(--accent-gold); color: var(--accent-gold); text-transform: uppercase; font-weight: 700; border-radius: 4px; letter-spacing: 0.03em;">Pending Response</span>`;
+            badgeHTML = `<span class="badge" style="font-size: 0.72rem; padding: 4px 10px; background: rgba(223,183,80,0.1); border: 1px solid var(--accent-gold); color: var(--accent-gold); text-transform: uppercase; font-weight: 700; border-radius: 4px; letter-spacing: 0.05em;">Pending Response</span>`;
         } else if (status === 'Waiting for Customer') {
             borderCol = '#3b82f6';
-            badgeHTML = `<span class="badge" style="font-size: 0.7rem; padding: 3px 8px; background: rgba(59,130,246,0.1); border: 1px solid #3b82f6; color: #3b82f6; text-transform: uppercase; font-weight: 700; border-radius: 4px; letter-spacing: 0.03em;">New Reply Received</span>`;
+            badgeHTML = `<span class="badge" style="font-size: 0.72rem; padding: 4px 10px; background: rgba(59,130,246,0.1); border: 1px solid #3b82f6; color: #3b82f6; text-transform: uppercase; font-weight: 700; border-radius: 4px; letter-spacing: 0.05em;">New Reply Received</span>`;
         } else if (status === 'Resolved') {
             borderCol = '#10b981';
-            badgeHTML = `<span class="badge" style="font-size: 0.7rem; padding: 3px 8px; background: rgba(16,185,129,0.1); border: 1px solid #10b981; color: #10b981; text-transform: uppercase; font-weight: 700; border-radius: 4px; letter-spacing: 0.03em;">Resolved</span>`;
+            badgeHTML = `<span class="badge" style="font-size: 0.72rem; padding: 4px 10px; background: rgba(16,185,129,0.1); border: 1px solid #10b981; color: #10b981; text-transform: uppercase; font-weight: 700; border-radius: 4px; letter-spacing: 0.05em;">Resolved</span>`;
         }
         
         card.style.borderLeft = `4px solid ${borderCol}`;
         
-        card.innerHTML = `
-            <div style="flex: 1; min-width: 250px;">
-                <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.25rem; flex-wrap: wrap;">
-                    <h4 style="margin: 0; font-size: 1rem; color: var(--text-primary); font-family: var(--font-title); text-transform: uppercase;">${escapeHTML(inq.subject)}</h4>
-                    ${badgeHTML}
+        // Build message log history
+        let msgs = inq.messages || [];
+        if (msgs.length === 0) {
+            msgs = [
+                { sender: 'customer', text: inq.message, createdAt: inq.createdAt }
+            ];
+            if (inq.replyText) {
+                msgs.push({ sender: 'owner', text: inq.replyText, createdAt: inq.repliedAt });
+            }
+        }
+        
+        let conversationHTML = '';
+        msgs.forEach(m => {
+            const dateStr = new Date(m.createdAt).toLocaleString();
+            if (m.sender === 'customer') {
+                conversationHTML += `
+                    <div style="background: rgba(223, 183, 80, 0.02); border: 1px solid var(--border-color); border-radius: 6px; padding: 1rem;">
+                        <p style="color: var(--accent-gold); font-size: 0.78rem; text-transform: uppercase; font-weight: 700; margin: 0 0 0.5rem 0; letter-spacing: 0.05em;">You:</p>
+                        <p style="color: var(--text-primary); font-size: 0.9rem; margin: 0; line-height: 1.5; white-space: pre-wrap;">${escapeHTML(m.text)}</p>
+                        <p style="color: var(--text-muted); font-size: 0.75rem; margin-top: 0.5rem; margin-bottom: 0;">Sent: ${dateStr}</p>
+                    </div>
+                `;
+            } else {
+                conversationHTML += `
+                    <div style="background: rgba(59, 130, 246, 0.03); border: 1px solid rgba(59, 130, 246, 0.15); border-radius: 6px; padding: 1rem;">
+                        <p style="color: #3b82f6; font-size: 0.78rem; text-transform: uppercase; font-weight: 700; margin: 0 0 0.5rem 0; letter-spacing: 0.05em;">Lucas (Vault 28 Owner):</p>
+                        <p style="color: var(--text-primary); font-size: 0.9rem; margin: 0; line-height: 1.5; white-space: pre-wrap;">${escapeHTML(m.text)}</p>
+                        <p style="color: var(--text-muted); font-size: 0.75rem; margin-top: 0.5rem; margin-bottom: 0;">Replied: ${dateStr}</p>
+                    </div>
+                `;
+            }
+        });
+        
+        const replyButtonHTML = status !== 'Resolved' ? 
+            `<button class="btn btn-primary btn-sm" onclick="toggleCustomerReplyForm('${inq.id}', true)">Reply to Message</button>` : 
+            `<div style="color: var(--accent-emerald); font-weight: 600; font-size: 0.9rem; display: flex; align-items: center; gap: 0.5rem;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                This inquiry has been marked as Resolved.
+             </div>`;
+             
+        const replyFormHTML = `
+            <div id="customer-reply-form-${inq.id}" style="display: none; flex-direction: column; gap: 0.75rem; border-top: 1px dashed var(--border-color); padding-top: 1rem; margin-top: 0.5rem;">
+                <textarea id="customer-reply-text-${inq.id}" placeholder="Type your reply to Lucas here..." rows="4" style="width: 100%; padding: 0.75rem; background: rgba(0,0,0,0.3); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-primary); font-family: inherit; font-size: 0.9rem; line-height: 1.5; resize: vertical;"></textarea>
+                <div style="display: flex; gap: 0.5rem;">
+                    <button class="btn btn-primary btn-sm" onclick="sendCustomerDashboardReply('${inq.id}')">Send Reply</button>
+                    <button class="btn btn-secondary btn-sm" onclick="toggleCustomerReplyForm('${inq.id}', false)">Cancel</button>
                 </div>
-                <p style="margin: 0; font-size: 0.82rem; color: var(--text-muted);">Submitted on ${new Date(inq.createdAt).toLocaleDateString()}</p>
             </div>
-            <div>
-                <button class="btn btn-outline-cyan btn-sm" onclick="selectedInquiryId='${inq.id}'; switchView('customer-thread');">View Chat Thread →</button>
+        `;
+        
+        card.innerHTML = `
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 0.5rem;">
+                <div>
+                    <h4 style="margin: 0; font-size: 1.1rem; color: var(--text-primary); font-family: var(--font-title); text-transform: uppercase;">${escapeHTML(inq.subject)}</h4>
+                    <p style="margin: 4px 0 0 0; font-size: 0.85rem; color: var(--text-muted);">Inquiry ID: ${inq.id}</p>
+                </div>
+                <div style="text-align: right; display: flex; flex-direction: column; align-items: flex-end; gap: 4px;">
+                    <span style="font-size: 0.8rem; color: var(--text-muted);">${new Date(inq.createdAt).toLocaleString()}</span>
+                    <div>${badgeHTML}</div>
+                </div>
             </div>
+            
+            <div style="display: flex; flex-direction: column; gap: 0.75rem; margin-top: 0.5rem;">
+                ${conversationHTML}
+            </div>
+            
+            <!-- Customer Dashboard Inquiry Controls -->
+            <div id="customer-controls-${inq.id}" style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border-color); padding-top: 1rem; margin-top: 0.5rem;">
+                ${replyButtonHTML}
+            </div>
+            
+            ${replyFormHTML}
         `;
         listContainer.appendChild(card);
     });
 }
+
+window.toggleCustomerReplyForm = function(inqId, show) {
+    const form = document.getElementById(`customer-reply-form-${inqId}`);
+    const controls = document.getElementById(`customer-controls-${inqId}`);
+    if (form) form.style.display = show ? 'flex' : 'none';
+    if (controls) controls.style.display = show ? 'none' : 'flex';
+};
+
+window.sendCustomerDashboardReply = function(inqId) {
+    const replyText = document.getElementById(`customer-reply-text-${inqId}`).value.trim();
+    if (!replyText) {
+        showToast("Please enter a reply message.", "error");
+        return;
+    }
+    
+    if (isFirebaseActive) {
+        db.collection("inquiries").doc(inqId).get()
+            .then(doc => {
+                if (!doc.exists) throw new Error("Inquiry not found");
+                const inq = doc.data();
+                const msgs = inq.messages || [{ sender: 'customer', text: inq.message, createdAt: inq.createdAt }];
+                
+                msgs.push({
+                    sender: 'customer',
+                    text: replyText,
+                    createdAt: new Date().toISOString()
+                });
+                
+                return db.collection("inquiries").doc(inqId).update({
+                    messages: msgs,
+                    status: 'Pending Response'
+                }).then(() => {
+                    const ownerNotificationMail = {
+                        to: 'lshaver@vault28cards.com',
+                        replyTo: inq.email,
+                        message: {
+                            subject: `Customer Replied: ${inq.subject}`,
+                            html: `
+                                <div style="background-color: #0c0f19; padding: 40px 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; text-align: center;">
+                                    <div style="max-width: 600px; margin: 0 auto; padding-bottom: 20px; text-align: left; border-bottom: 1px solid rgba(223, 183, 80, 0.25);">
+                                        <h1 style="color: #ffffff; font-size: 22px; margin: 0; font-weight: 800; letter-spacing: 0.05em; text-transform: uppercase;">
+                                            VAULT <span style="color: #dfb750;">28</span>
+                                        </h1>
+                                        <p style="color: #9ca3af; font-size: 11px; margin: 2px 0 0 0; text-transform: uppercase; letter-spacing: 0.1em; font-weight: 600;">Trading Co.</p>
+                                    </div>
+                                    <div style="max-width: 600px; margin: 20px auto 0 auto; background-color: #121624; border: 1px solid #1f293d; border-radius: 12px; overflow: hidden; text-align: left; color: #cbd5e1; font-size: 14px; line-height: 1.6; padding: 30px;">
+                                        <p style="color: #ffffff; font-weight: 600; font-size: 16px; margin-top: 0;">Customer Replied</p>
+                                        <p>The customer <strong>${inq.name}</strong> (${inq.email}) has replied to their inquiry:</p>
+                                        <div style="background-color: #0c0f19; border-left: 4px solid #dfb750; padding: 15px; border-radius: 6px; margin: 20px 0; color: #ffffff; white-space: pre-wrap;">${replyText}</div>
+                                        <div style="text-align: center; margin-top: 30px;">
+                                            <a href="${window.location.origin}/?adminTab=inquiries" style="display: inline-block; background: linear-gradient(135deg, #f5d075 0%, #dfb750 100%); color: #0c0f19; font-weight: 700; font-size: 13px; padding: 12px 28px; text-decoration: none; border-radius: 25px; box-shadow: 0 4px 12px rgba(223, 183, 80, 0.25); text-transform: uppercase; letter-spacing: 0.08em;">Open Owner Console</a>
+                                        </div>
+                                    </div>
+                                    <div style="max-width: 600px; margin: 25px auto 0 auto; text-align: center; color: #64748b; font-size: 11px;">
+                                        <p>© 2026 Vault 28 Trading Co. • Summerville, SC</p>
+                                    </div>
+                                </div>
+                            `
+                        }
+                    };
+                    return db.collection("mail").add(ownerNotificationMail);
+                });
+            })
+            .then(() => {
+                showToast("Reply sent!", "success");
+            })
+            .catch(err => {
+                console.error("Error submitting customer reply:", err);
+                showToast("Could not send reply.", "error");
+            });
+    } else {
+        const inq = inquiries.find(i => i.id === inqId);
+        if (inq) {
+            if (!inq.messages) {
+                inq.messages = [{ sender: 'customer', text: inq.message, createdAt: inq.createdAt }];
+            }
+            inq.messages.push({
+                sender: 'customer',
+                text: replyText,
+                createdAt: new Date().toISOString()
+            });
+            inq.status = 'Pending Response';
+            localStorage.setItem('v28_inquiries', JSON.stringify(inquiries));
+            showToast("Reply simulated in sandbox!", "success");
+            renderCustomerDashboardInquiries();
+        }
+    }
+};
 
 function renderSellerDetail(id) {
     const col = collections.find(c => c.id === id);
