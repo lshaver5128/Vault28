@@ -71,6 +71,7 @@ let currentActiveRole = 'seller'; // 'seller' or 'buyer' (admin)
 let activeAdminTab = 'submissions'; // 'submissions', 'inventory', 'content'
 let currentEditingProductId = null;
 let selectedProductId = null; // Shop modal product ID
+let initialAdminTab = new URLSearchParams(window.location.search).get('adminTab');
 
 // Database listeners
 let collectionsListener = null;
@@ -469,7 +470,6 @@ function handleInitialRouting() {
     const path = window.location.pathname;
     const searchParams = new URLSearchParams(window.location.search);
     const id = searchParams.get('id');
-    const adminTabParam = searchParams.get('adminTab');
     
     let targetView = PATH_MAP[path] || 'seller-landing';
     
@@ -477,12 +477,14 @@ function handleInitialRouting() {
         selectedCollectionId = id;
     }
     
-    if (adminTabParam) {
+    if (initialAdminTab) {
         if (!isFirebaseActive || (firebase.auth().currentUser && OWNER_EMAILS.includes(firebase.auth().currentUser.email))) {
             targetView = 'buyer-dashboard';
+            const tabTarget = initialAdminTab;
+            initialAdminTab = null;
             setTimeout(() => {
                 setRole('buyer');
-                setAdminTab(adminTabParam);
+                setAdminTab(tabTarget);
             }, 150);
         }
     }
@@ -616,11 +618,11 @@ function initDatabase() {
                     });
 
                     // Automatically default owner accounts to Buyer/Owner View
-                    const urlParams = new URLSearchParams(window.location.search);
-                    const adminTabParam = urlParams.get('adminTab') || 'submissions';
+                    const tabTarget = initialAdminTab || 'submissions';
+                    initialAdminTab = null;
                     setTimeout(() => {
                         setRole('buyer');
-                        setAdminTab(adminTabParam);
+                        setAdminTab(tabTarget);
                     }, 200);
                 } else {
                     roleLabel.textContent = "Seller Account";
