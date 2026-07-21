@@ -2577,6 +2577,13 @@ function renderBuyerDetail(id) {
     document.getElementById('buyer-detail-seller-name').textContent = `${col.sellerName} (${col.sellerEmail} | ${col.sellerPhone})`;
     document.getElementById('buyer-detail-card-count').textContent = `${col.qty} items`;
     
+    // Populate Collection Overview details
+    document.getElementById('buyer-overview-sport').textContent = col.sport || 'Multi-Sport';
+    document.getElementById('buyer-overview-qty').textContent = `${(col.qty || 0).toLocaleString()} Items`;
+    document.getElementById('buyer-overview-est-val').textContent = col.estValue > 0 ? `$${col.estValue.toLocaleString()}` : 'N/A';
+    document.getElementById('buyer-overview-asking').textContent = `$${(col.askingPrice || 0).toLocaleString()}`;
+    document.getElementById('buyer-overview-desc').textContent = col.description || 'No description provided.';
+    
     const badge = document.getElementById('buyer-detail-status');
     badge.textContent = col.status;
     badge.className = 'badge';

@@ -1161,13 +1161,32 @@
                                     <label for="buyer-set-status-select" style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-bottom: 4px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">Submission Status</label>
                                     <select id="buyer-set-status-select" style="padding: 0.45rem 0.75rem; font-size: 0.82rem; border-radius: 6px; width: 140px; background: var(--bg-secondary); border: 1px solid var(--border-color); color: var(--text-primary); font-weight: 600; outline: none; cursor: pointer;">
                                         <option value="New">New</option>
-                                        <option value="Reviewing">Reviewing</option>
-                                        <option value="Offer Sent">Offer Sent</option>
-                                        <option value="Accepted">Accepted</option>
-                                        <option value="Declined">Declined</option>
-                                        <option value="Purchased">Purchased</option>
-                                    </select>
+                        <!-- Collection Overview Details Card -->
+                        <div class="glass-card" style="padding: 1.5rem; margin-bottom: 2rem; border-color: rgba(255,255,255,0.08); background: rgba(255,255,255,0.01);">
+                            <h3 style="font-size: 1.15rem; margin-bottom: 1rem; font-family: var(--font-title); color: var(--accent-cyan); display: flex; align-items: center; gap: 6px;">
+                                📋 Collection Overview
+                            </h3>
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 1.25rem; margin-bottom: 1.25rem;">
+                                <div>
+                                    <div style="font-size: 0.78rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase;">Sport / Category</div>
+                                    <div style="font-size: 1.05rem; font-weight: 700; margin-top: 2px;" id="buyer-overview-sport">-</div>
                                 </div>
+                                <div>
+                                    <div style="font-size: 0.78rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase;">Total Quantity</div>
+                                    <div style="font-size: 1.05rem; font-weight: 700; margin-top: 2px;" id="buyer-overview-qty">-</div>
+                                </div>
+                                <div>
+                                    <div style="font-size: 0.78rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase;">Estimated Value</div>
+                                    <div style="font-size: 1.05rem; font-weight: 700; margin-top: 2px; color: var(--accent-cyan);" id="buyer-overview-est-val">-</div>
+                                </div>
+                                <div>
+                                    <div style="font-size: 0.78rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase;">Asking Price</div>
+                                    <div style="font-size: 1.05rem; font-weight: 700; margin-top: 2px; color: var(--accent-gold);" id="buyer-overview-asking">-</div>
+                                </div>
+                            </div>
+                            <div style="border-top: 1px solid var(--border-color); padding-top: 1rem;">
+                                <div style="font-size: 0.78rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; margin-bottom: 6px;">Seller Description</div>
+                                <p style="font-size: 0.92rem; line-height: 1.5; color: var(--text-primary); margin: 0;" id="buyer-overview-desc">-</p>
                             </div>
                         </div>
 
@@ -1188,38 +1207,85 @@
                         </div>
                     </div>
                     
-                    <!-- Right: Live Chat box with seller -->
-                    <div class="chat-section">
-                        <div class="chat-header">
-                            <div style="display: flex; align-items: center; gap: 0.75rem;">
-                                <div class="chat-avatar" id="buyer-chat-avatar">S</div>
-                                <div style="text-align: left;">
-                                    <div style="font-size: 0.9rem; font-weight: 600;" id="buyer-chat-seller-title">Seller Name</div>
-                                    <div style="font-size: 0.72rem; color: var(--text-muted);" id="buyer-detail-card-count">0 items</div>
+                    <!-- Right Column: Valuation & Communication Hub -->
+                    <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+                        <!-- Valuation Form Controls -->
+                        <div class="glass-card" style="padding: 1.5rem; border-color: rgba(223, 183, 80, 0.35); box-shadow: 0 4px 20px rgba(223, 183, 80, 0.05); width: 100%;">
+                            <h3 style="font-size: 1.15rem; margin-bottom: 1.25rem; font-family: var(--font-title); color: var(--accent-gold); display: flex; align-items: center; gap: 6px;">
+                                🪙 Valuation & Offer Controls
+                            </h3>
+                            
+                            <div style="display: flex; flex-direction: column; gap: 1.25rem; margin-bottom: 1.25rem;">
+                                <div class="form-group">
+                                    <label style="font-weight: 600; font-size: 0.82rem; margin-bottom: 4px; display: block;">User's Asking Price</label>
+                                    <input type="text" id="buyer-val-asking" readonly style="background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border-color); color: var(--text-secondary); opacity: 0.85; font-weight: 700; cursor: not-allowed; padding: 0.6rem 0.8rem; border-radius: 6px; width: 100%; outline: none;">
+                                </div>
+                                <div class="form-group">
+                                    <label style="font-weight: 600; font-size: 0.82rem; margin-bottom: 4px; display: block;">Vault 28 Valuation Offer ($)</label>
+                                    <input type="number" id="buyer-val-offer" placeholder="Enter offer value..." style="background: rgba(0, 0, 0, 0.2); border: 1px solid var(--border-color); color: var(--text-primary); font-weight: 700; padding: 0.6rem 0.8rem; border-radius: 6px; width: 100%; outline: none;">
                                 </div>
                             </div>
-                            <div style="text-align: right;">
-                                <div style="font-size: 0.75rem; color: var(--text-muted); font-weight: 500;">ASKING PRICE</div>
-                                <div id="buyer-chat-header-price">$0</div>
+                            
+                            <div class="form-group" style="margin-bottom: 1.25rem;">
+                                <label for="buyer-offer-note" style="font-weight: 600; font-size: 0.82rem; margin-bottom: 4px; display: block;">Offer Description Notes (Will show in customer's chat)</label>
+                                <textarea id="buyer-offer-note" rows="2" placeholder="e.g. Based on PSA 8 sales, we can offer $4,800 package value..." style="background: rgba(0, 0, 0, 0.2); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 6px; padding: 0.6rem 0.8rem; width: 100%; font-family: inherit; font-size: 0.88rem; resize: vertical; outline: none;"></textarea>
+                            </div>
+                            
+                            <!-- Action Buttons stacked cleanly -->
+                            <div style="display: flex; flex-direction: column; gap: 0.75rem; margin-bottom: 1.25rem;">
+                                <button class="btn btn-primary" id="btn-buyer-send-offer" style="font-weight: 700; width: 100%; padding: 0.75rem; justify-content: center; box-shadow: 0 4px 15px rgba(223, 183, 80, 0.15);">Send Counter Offer</button>
+                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+                                    <button class="btn" id="btn-buyer-buy-asking" style="background: #10b981 !important; color: #000 !important; font-weight: 700; border: none; padding: 0.6rem; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 0.88rem;">Buy at Asking</button>
+                                    <button class="btn" id="btn-buyer-decline" style="background: rgba(239, 68, 68, 0.08) !important; border: 1px solid rgba(239, 68, 68, 0.2) !important; color: #ef4444 !important; font-weight: 700; padding: 0.6rem; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 0.88rem;">Decline</button>
+                                </div>
+                            </div>
+                            
+                            <div style="border-top: 1px solid var(--border-color); padding-top: 1rem; text-align: left;">
+                                <label for="buyer-set-status-select" style="font-size: 0.72rem; color: var(--text-muted); display: block; margin-bottom: 4px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">Submission Status</label>
+                                <select id="buyer-set-status-select" style="padding: 0.5rem 0.75rem; font-size: 0.85rem; border-radius: 6px; width: 100%; background: var(--bg-secondary); border: 1px solid var(--border-color); color: var(--text-primary); font-weight: 600; outline: none; cursor: pointer;">
+                                    <option value="New">New</option>
+                                    <option value="Reviewing">Reviewing</option>
+                                    <option value="Offer Sent">Offer Sent</option>
+                                    <option value="Accepted">Accepted</option>
+                                    <option value="Declined">Declined</option>
+                                    <option value="Purchased">Purchased</option>
+                                </select>
                             </div>
                         </div>
-                        
-                        <div class="chat-messages" id="buyer-chat-messages">
-                            <!-- Messages -->
-                        </div>
-                        
-                        <div class="chat-input-area">
-                            <div class="chat-suggestions" id="buyer-chat-suggestions">
-                                <span class="chat-suggestion-chip">Centering looks solid. Package offer sent!</span>
-                                <span class="chat-suggestion-chip">Please send close-ups of the corners.</span>
-                                <span class="chat-suggestion-chip">Payment has been wire transferred. tracking info?</span>
+
+                        <!-- Right: Live Chat box with seller -->
+                        <div class="chat-section" style="width: 100%; height: 500px; display: flex; flex-direction: column;">
+                            <div class="chat-header">
+                                <div style="display: flex; align-items: center; gap: 0.75rem;">
+                                    <div class="chat-avatar" id="buyer-chat-avatar">S</div>
+                                    <div style="text-align: left;">
+                                        <div style="font-size: 0.9rem; font-weight: 600;" id="buyer-chat-seller-title">Seller Name</div>
+                                        <div style="font-size: 0.72rem; color: var(--text-muted);" id="buyer-detail-card-count">0 items</div>
+                                    </div>
+                                </div>
+                                <div style="text-align: right;">
+                                    <div style="font-size: 0.75rem; color: var(--text-muted); font-weight: 500;">ASKING PRICE</div>
+                                    <div id="buyer-chat-header-price">$0</div>
+                                </div>
                             </div>
-                            <form class="chat-input-row" id="buyer-chat-form">
-                                <input type="text" class="chat-input" id="buyer-chat-input" placeholder="Message the seller...">
-                                <button type="submit" class="chat-send-btn">
-                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-                                </button>
-                            </form>
+                            
+                            <div class="chat-messages" id="buyer-chat-messages" style="flex-grow: 1;">
+                                <!-- Messages -->
+                            </div>
+                            
+                            <div class="chat-input-area">
+                                <div class="chat-suggestions" id="buyer-chat-suggestions">
+                                    <span class="chat-suggestion-chip">Centering looks solid. Package offer sent!</span>
+                                    <span class="chat-suggestion-chip">Please send close-ups of the corners.</span>
+                                    <span class="chat-suggestion-chip">Payment has been wire transferred. tracking info?</span>
+                                </div>
+                                <form class="chat-input-row" id="buyer-chat-form">
+                                    <input type="text" class="chat-input" id="buyer-chat-input" placeholder="Message the seller...">
+                                    <button type="submit" class="chat-send-btn">
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                                    </button>
+                                </form>
+                            </div>
                         </div>
                     </div>
                 </div>
