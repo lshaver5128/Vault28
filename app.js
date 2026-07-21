@@ -1110,15 +1110,29 @@ document.getElementById('auth-form').addEventListener('submit', (e) => {
             firebase.auth().signInWithEmailAndPassword(email, password)
                 .then((cred) => {
                     // Check if email is verified (exempt owner emails)
-                    if (!cred.user.emailVerified && !OWNER_EMAILS.includes(cred.user.email.toLowerCase())) {
-                        showToast("Please verify your email address. We sent a link to your inbox.", "warning");
-                        firebase.auth().signOut().then(() => {
-                            closeAuthModal();
-                        });
-                    } else {
+                    if (OWNER_EMAILS.includes(cred.user.email.toLowerCase())) {
                         closeAuthModal();
-                        showToast("Welcome back!", "success");
+                        showToast("Welcome back, Owner!", "success");
+                        return;
                     }
+                    
+                    db.collection("users").doc(cred.user.uid).get()
+                        .then(doc => {
+                            const data = doc.data();
+                            if (data && data.isVerified === false) {
+                                showToast("Please verify your email address. We sent a link to your inbox.", "warning");
+                                firebase.auth().signOut().then(() => {
+                                    closeAuthModal();
+                                });
+                            } else {
+                                closeAuthModal();
+                                showToast("Welcome back!", "success");
+                            }
+                        })
+                        .catch(err => {
+                            closeAuthModal();
+                            showToast("Welcome back!", "success");
+                        });
                 })
                 .catch(err => showToast(err.message, "error"))
                 .finally(() => {
@@ -1129,8 +1143,26 @@ document.getElementById('auth-form').addEventListener('submit', (e) => {
             firebase.auth().createUserWithEmailAndPassword(email, password)
                 .then(cred => {
                     cred.user.updateProfile({ displayName: name }).then(() => {
-                        // Send verification email link
-                        cred.user.sendEmailVerification()
+                        const referral = document.getElementById('auth-referral').value;
+                        recordUserActivity(cred.user.uid, cred.user.email, name, true, referral);
+                        
+                        // Send our own branded verification email
+                        const verifyUrl = `${window.location.origin}/?verifyUid=${cred.user.uid}`;
+                        const verifyMail = {
+                            to: cred.user.email,
+                            message: {
+                                subject: "Verify Your Vault 28 Account!",
+                                html: generateStandardEmailHtml(
+                                    `Welcome to Vault 28, ${name}!`,
+                                    `
+                                    <p>Thank you for creating an account with Vault 28 Trading Co.!</p>
+                                    <p>To finalize your registration and start submitting your collectibles for valuation, please verify your email address by clicking the button below.</p>
+                                    `,
+                                    `<a href="${verifyUrl}" style="display: inline-block; background: linear-gradient(135deg, #f5d075 0%, #dfb750 100%); color: #0c0f19; font-weight: 700; font-size: 13px; padding: 12px 28px; text-decoration: none; border-radius: 25px; box-shadow: 0 4px 12px rgba(223, 183, 80, 0.25); text-transform: uppercase; letter-spacing: 0.08em;">Verify Email Address</a>`
+                                )
+                            }
+                        };
+                        db.collection("mail").add(verifyMail)
                             .then(() => {
                                 showToast("Verification email sent! Please check your inbox and verify to activate your account.", "success");
                             })
@@ -1138,9 +1170,6 @@ document.getElementById('auth-form').addEventListener('submit', (e) => {
                                 console.warn("Failed to send verification email:", err);
                                 showToast("Could not send verification email link.", "error");
                             });
-                        
-                        const referral = document.getElementById('auth-referral').value;
-                        recordUserActivity(cred.user.uid, cred.user.email, name, true, referral);
                         
                         // Immediately sign out to enforce verification on next login
                         firebase.auth().signOut().then(() => {
@@ -2506,6 +2535,7 @@ function recordUserActivity(uid, email, displayName, isRegistering = false, refe
         };
         if (isRegistering) {
             data.registeredAt = timestamp;
+            data.isVerified = false; // Unverified by default until custom email link is clicked
             if (referralSource) {
                 data.referralSource = referralSource;
             }
@@ -2533,6 +2563,7 @@ function recordUserActivity(uid, email, displayName, isRegistering = false, refe
             };
             if (isRegistering) {
                 existingUser.registeredAt = timestamp;
+                existingUser.isVerified = false; // Sandbox default
                 if (referralSource) {
                     existingUser.referralSource = referralSource;
                 }
@@ -4818,6 +4849,41 @@ setTimeout(() => {
     }
 }, 500);
 
+// Check for email verification parameter on load
+function checkEmailVerificationParam() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const verifyUid = urlParams.get('verifyUid');
+    if (verifyUid) {
+        // Clear query parameters from URL without page reload
+        const newUrl = window.location.origin + window.location.pathname;
+        window.history.replaceState({}, document.title, newUrl);
+        
+        if (isFirebaseActive) {
+            db.collection("users").doc(verifyUid).update({
+                isVerified: true
+            }).then(() => {
+                showToast("Email verified successfully! You can now log in.", "success");
+                openAuthModal('login');
+            }).catch(err => {
+                console.error("Error verifying email:", err);
+                showToast("Failed to verify email. Please contact support.", "error");
+            });
+        } else {
+            // Local Sandbox
+            let localUsers = [];
+            const stored = localStorage.getItem('v28_users');
+            if (stored) localUsers = JSON.parse(stored);
+            const user = localUsers.find(u => u.uid === verifyUid);
+            if (user) {
+                user.isVerified = true;
+                localStorage.setItem('v28_users', JSON.stringify(localUsers));
+                showToast("Sandbox email verified successfully!", "success");
+                openAuthModal('login');
+            }
+        }
+    }
+}
+
 // Hero image slideshow logic
 function initHeroSlider() {
     const slides = document.querySelectorAll('.hero-slide');
@@ -4858,6 +4924,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     initDatabase();
+    checkEmailVerificationParam();
     setRole('seller');
     initScrollReveal();
     initHeroSlider();
