@@ -1427,6 +1427,19 @@ const firebaseConfig = {
                     <input type="text" id="auth-name" placeholder="e.g. John Doe">
                 </div>
                 
+                <!-- Referral source (Signup only) -->
+                <div class="form-group" id="auth-referral-group" style="display: none;">
+                    <label for="auth-referral">How did you hear about us?</label>
+                    <select id="auth-referral" style="padding: 0.55rem 0.75rem; background: rgba(0,0,0,0.2); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-primary); font-size: 0.88rem; width: 100%; outline: none; cursor: pointer;">
+                        <option value="" disabled selected>Select an option...</option>
+                        <option value="Google">Google Search</option>
+                        <option value="Facebook">Facebook</option>
+                        <option value="Instagram">Instagram</option>
+                        <option value="Friends/Family">Friends / Family</option>
+                        <option value="Other">Other Source</option>
+                    </select>
+                </div>
+                
                 <div class="form-group">
                     <label for="auth-email">Email Address</label>
                     <input type="email" id="auth-email" placeholder="e.g. name@domain.com" required>

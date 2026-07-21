@@ -938,6 +938,7 @@ function openAuthModal(mode = 'login') {
     const tabLogin = document.getElementById('tab-login');
     const tabSignup = document.getElementById('tab-signup');
     const nameGroup = document.getElementById('auth-name-group');
+    const referralGroup = document.getElementById('auth-referral-group');
     const btnSubmit = document.getElementById('btn-auth-submit');
     
     document.getElementById('auth-form').reset();
@@ -950,6 +951,7 @@ function openAuthModal(mode = 'login') {
         tabSignup.style.color = 'var(--text-secondary)';
         tabSignup.style.borderBottom = 'none';
         nameGroup.style.display = 'none';
+        if (referralGroup) referralGroup.style.display = 'none';
         btnSubmit.textContent = 'Log In';
     } else {
         tabSignup.style.color = 'var(--text-primary)';
@@ -957,6 +959,7 @@ function openAuthModal(mode = 'login') {
         tabLogin.style.color = 'var(--text-secondary)';
         tabLogin.style.borderBottom = 'none';
         nameGroup.style.display = 'block';
+        if (referralGroup) referralGroup.style.display = 'block';
         btnSubmit.textContent = 'Create Account';
     }
 }
@@ -1081,6 +1084,10 @@ document.getElementById('auth-form').addEventListener('submit', (e) => {
         showToast("Please fill in your full name.", "error");
         return;
     }
+    if (authModalMode === 'signup' && !document.getElementById('auth-referral').value) {
+        showToast("Please let us know how you heard about us.", "error");
+        return;
+    }
     if (!email || !email.includes('@') || email.indexOf('.') === -1) {
         showToast("Please enter a valid email address.", "error");
         return;
@@ -1132,7 +1139,8 @@ document.getElementById('auth-form').addEventListener('submit', (e) => {
                                 showToast("Could not send verification email link.", "error");
                             });
                         
-                        recordUserActivity(cred.user.uid, cred.user.email, name, true);
+                        const referral = document.getElementById('auth-referral').value;
+                        recordUserActivity(cred.user.uid, cred.user.email, name, true, referral);
                         
                         // Immediately sign out to enforce verification on next login
                         firebase.auth().signOut().then(() => {
@@ -1205,7 +1213,8 @@ document.getElementById('auth-form').addEventListener('submit', (e) => {
                 const toolbar = document.getElementById('admin-toolbar');
                 if (toolbar) toolbar.style.display = 'none';
                 
-                recordUserActivity(mockUid, email, name, true);
+                const referral = document.getElementById('auth-referral').value;
+                recordUserActivity(mockUid, email, name, true, referral);
                 closeAuthModal();
                 showToast(`Welcome, ${name}!`, "success");
                 triggerUIRefresh();
@@ -2388,7 +2397,7 @@ function escapeHTML(str) {
 }
 
 // User Session Presence Presence Management
-function recordUserActivity(uid, email, displayName, isRegistering = false) {
+function recordUserActivity(uid, email, displayName, isRegistering = false, referralSource = '') {
     const timestamp = new Date().toISOString();
     
     if (isFirebaseActive) {
@@ -2402,6 +2411,9 @@ function recordUserActivity(uid, email, displayName, isRegistering = false) {
         };
         if (isRegistering) {
             data.registeredAt = timestamp;
+            if (referralSource) {
+                data.referralSource = referralSource;
+            }
         }
         userDocRef.set(data, { merge: true }).catch(err => console.error("Error recording user activity:", err));
     } else {
@@ -2421,10 +2433,15 @@ function recordUserActivity(uid, email, displayName, isRegistering = false) {
                 uid: uid,
                 email: email,
                 displayName: displayName || email.split('@')[0],
-                registeredAt: timestamp,
                 lastSeenAt: timestamp,
                 isOnline: true
             };
+            if (isRegistering) {
+                existingUser.registeredAt = timestamp;
+                if (referralSource) {
+                    existingUser.referralSource = referralSource;
+                }
+            }
             localUsers.push(existingUser);
         }
         
@@ -2709,6 +2726,36 @@ function renderBuyerDetail(id) {
     renderChatMessages('buyer-chat-messages', col.messages, 'buyer');
 }
 
+// Send email notifications to sellers regarding updates/chats
+function sendMessageEmailToSeller(col, messageText, subjectText = "New Message from Vault 28 Buying Desk") {
+    if (!isFirebaseActive) return;
+    
+    const emailHtml = generateStandardEmailHtml(
+        `Message Regarding: "${col.title}"`,
+        `
+        <p>Hi ${col.sellerName},</p>
+        <p>Lucas from the Vault 28 Buying Desk has sent you an update regarding your collection submission:</p>
+        
+        <div style="background-color: #0c0f19; border: 1px solid #1f293d; border-radius: 8px; padding: 15px; margin: 20px 0; color: #ffffff; white-space: pre-wrap; font-size: 14px; line-height: 1.5;">${messageText}</div>
+        
+        <p>You can view the full details, chat history, and counter-offer status in your user dashboard at any time.</p>
+        `,
+        `<a href="${window.location.origin}/?tab=dashboard" style="display: inline-block; background: linear-gradient(135deg, #f5d075 0%, #dfb750 100%); color: #0c0f19; font-weight: 700; font-size: 13px; padding: 12px 28px; text-decoration: none; border-radius: 25px; box-shadow: 0 4px 12px rgba(223, 183, 80, 0.25); text-transform: uppercase; letter-spacing: 0.08em;">Open Customer Dashboard</a>`
+    );
+    
+    const mailObj = {
+        to: col.sellerEmail,
+        message: {
+            subject: subjectText,
+            html: emailHtml
+        }
+    };
+    
+    db.collection("mail").add(mailObj)
+        .then(() => console.log("Email notification queued for seller."))
+        .catch(err => console.error("Failed to queue seller email notification:", err));
+}
+
 // Buyer actions: send offers
 document.getElementById('btn-buyer-send-offer').addEventListener('click', () => {
     const offerVal = parseFloat(document.getElementById('buyer-val-offer').value);
@@ -2726,6 +2773,10 @@ document.getElementById('btn-buyer-send-offer').addEventListener('click', () => 
             status: 'Offer Made',
             offerPrice: offerVal,
             messages: firebase.firestore.FieldValue.arrayUnion(msg1, msg2)
+        }).then(() => {
+            const bodyText = note ? `New Counter Offer of $${offerVal.toLocaleString()}.\n\nOffer details notes:\n${note}` : `We have made a counter offer of $${offerVal.toLocaleString()} on your collection.`;
+            sendMessageEmailToSeller(col, bodyText, `New Valuation Offer Made: $${offerVal.toLocaleString()}`);
+            showToast("Offer counter sent and emailed successfully!", "success");
         });
     } else {
         col.status = 'Offer Made';
@@ -2768,7 +2819,10 @@ document.getElementById('buyer-chat-form').addEventListener('submit', (e) => {
         db.collection("collections").doc(selectedCollectionId).update({
             status: nextStatus,
             messages: firebase.firestore.FieldValue.arrayUnion(newMsg)
-        }).then(() => input.value = '');
+        }).then(() => {
+            input.value = '';
+            sendMessageEmailToSeller(col, text, "New Message from Vault 28 Buying Desk");
+        });
     } else {
         col.messages.push(newMsg);
         col.status = nextStatus;
@@ -2793,6 +2847,8 @@ document.getElementById('btn-buyer-buy-asking').addEventListener('click', () => 
             status: 'Accepted',
             offerPrice: col.askingPrice,
             messages: firebase.firestore.FieldValue.arrayUnion(msg1, msg2)
+        }).then(() => {
+            sendMessageEmailToSeller(col, `We accept your asking price of $${col.askingPrice.toLocaleString()}! Please pack the items securely and ship to our headquarters. Payout will be issued immediately upon arrival and checklist inspection.`, "Asking Price Accepted!");
         });
     } else {
         col.status = 'Accepted';
@@ -2817,6 +2873,8 @@ document.getElementById('btn-buyer-decline').addEventListener('click', () => {
         db.collection("collections").doc(selectedCollectionId).update({
             status: 'Declined',
             messages: firebase.firestore.FieldValue.arrayUnion(msg1, msg2)
+        }).then(() => {
+            sendMessageEmailToSeller(col, `Thank you for submitting your collectibles. Unfortunately, we are not purchasing these specific items at this time. Best of luck with your cards!`, "Collection Submission Update");
         });
     } else {
         col.status = 'Declined';
