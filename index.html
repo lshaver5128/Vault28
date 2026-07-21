@@ -1223,7 +1223,12 @@
                                     <input type="text" id="buyer-val-asking" readonly style="background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border-color); color: var(--text-secondary); opacity: 0.85; font-weight: 700; cursor: not-allowed; padding: 0.6rem 0.8rem; border-radius: 6px; width: 100%; outline: none;">
                                 </div>
                                 <div class="form-group">
-                                    <label style="font-weight: 600; font-size: 0.82rem; margin-bottom: 4px; display: block;">Vault 28 Valuation Offer ($)</label>
+                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                                        <label style="font-weight: 600; font-size: 0.82rem; margin: 0;">Vault 28 Valuation Offer ($)</label>
+                                        <button class="btn btn-sm" id="btn-buyer-ai-suggest" style="font-size: 0.68rem; padding: 2px 6px; background: rgba(223, 183, 80, 0.15); border: 1px solid var(--accent-gold); color: var(--accent-gold); border-radius: 4px; cursor: pointer; display: flex; align-items: center; gap: 4px; font-weight: 600; text-transform: uppercase;">
+                                            <span>✨ Auto-Value (AI)</span>
+                                        </button>
+                                    </div>
                                     <input type="number" id="buyer-val-offer" placeholder="Enter offer value..." style="background: rgba(0, 0, 0, 0.2); border: 1px solid var(--border-color); color: var(--text-primary); font-weight: 700; padding: 0.6rem 0.8rem; border-radius: 6px; width: 100%; outline: none;">
                                 </div>
                             </div>
@@ -1443,6 +1448,74 @@ const firebaseConfig = {
                 
                 <button type="submit" class="btn btn-primary" id="btn-auth-submit" style="width: 100%;">Log In</button>
             </form>
+        </div>
+    </div>
+
+    <!-- AI Valuation Assistant Modal -->
+    <div id="buyer-ai-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.85); z-index: 1002; align-items: center; justify-content: center; backdrop-filter: blur(4px);">
+        <div class="glass-card" style="max-width: 500px; width: 90%; position: relative; border-color: var(--accent-gold); box-shadow: var(--shadow-neon-gold); padding: 1.75rem;">
+            <button id="btn-close-ai-modal" style="position: absolute; top: 16px; right: 16px; background: none; border: none; color: var(--text-secondary); font-size: 1.5rem; cursor: pointer; line-height: 1;">×</button>
+            
+            <h3 style="font-family: var(--font-title); color: var(--accent-gold); margin-bottom: 1rem; display: flex; align-items: center; gap: 8px;">
+                ✨ AI Valuation Assistant
+            </h3>
+            
+            <div id="buyer-ai-loader" style="text-align: center; padding: 2rem 0;">
+                <div class="spinner" style="border: 3px solid rgba(255,255,255,0.1); border-top-color: var(--accent-gold); border-radius: 50%; width: 36px; height: 36px; animation: spin 1s linear infinite; margin: 0 auto 1rem auto;"></div>
+                <p style="color: var(--text-secondary); font-size: 0.9rem;" id="buyer-ai-loader-text">Analyzing photos and checking eBay sold listings...</p>
+            </div>
+            
+            <div id="buyer-ai-results" style="display: none; text-align: left; flex-direction: column; gap: 1.25rem;">
+                <div style="background: rgba(0,0,0,0.25); padding: 0.75rem; border-radius: 6px; border: 1px solid var(--border-color); font-size: 0.85rem; font-family: monospace; color: #10b981; max-height: 110px; overflow-y: auto; line-height: 1.4;" id="buyer-ai-log">
+                    <!-- Logs populated here -->
+                </div>
+                
+                <div>
+                    <h4 style="font-size: 0.85rem; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 0.5rem; font-weight: 700;">Market Valuation Summary</h4>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; background: rgba(255,255,255,0.02); padding: 1rem; border-radius: 8px; border: 1px solid var(--border-color);">
+                        <div>
+                            <span style="font-size: 0.72rem; color: var(--text-muted); display: block;">Highlights Est. Value</span>
+                            <strong id="ai-market-highlights" style="font-size: 1.05rem; color: var(--text-primary);">$0</strong>
+                        </div>
+                        <div>
+                            <span style="font-size: 0.72rem; color: var(--text-muted); display: block;">Bulk Lot Est. Value</span>
+                            <strong id="ai-market-bulk" style="font-size: 1.05rem; color: var(--text-primary);">$0</strong>
+                        </div>
+                        <div style="grid-column: 1 / -1; border-top: 1px solid var(--border-color); padding-top: 0.5rem; display: flex; justify-content: space-between; align-items: center;">
+                            <span style="font-size: 0.78rem; color: var(--text-muted); font-weight: 600;">Total Market Value</span>
+                            <strong id="ai-market-total" style="font-size: 1.15rem; color: var(--accent-cyan);">$0</strong>
+                        </div>
+                    </div>
+                </div>
+                
+                <div>
+                    <h4 style="font-size: 0.85rem; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 0.5rem; font-weight: 700;">Recommended Offer Range (Click to Select)</h4>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.5rem; text-align: center;">
+                        <div id="ai-offer-low" style="padding: 0.5rem; background: rgba(0,0,0,0.3); border-radius: 6px; cursor: pointer; border: 1px solid var(--border-color); transition: all 0.2s;">
+                            <span style="font-size: 0.65rem; color: var(--text-muted); display: block;">Conservative (65%)</span>
+                            <strong style="font-size: 0.9rem; color: var(--text-primary);">$0</strong>
+                        </div>
+                        <div id="ai-offer-med" style="padding: 0.5rem; background: rgba(223, 183, 80, 0.1); border-radius: 6px; cursor: pointer; border: 1px solid var(--accent-gold); transition: all 0.2s;">
+                            <span style="font-size: 0.65rem; color: var(--accent-gold); display: block;">Standard (75%)</span>
+                            <strong style="font-size: 0.95rem; color: var(--accent-gold);">$0</strong>
+                        </div>
+                        <div id="ai-offer-high" style="padding: 0.5rem; background: rgba(0,0,0,0.3); border-radius: 6px; cursor: pointer; border: 1px solid var(--border-color); transition: all 0.2s;">
+                            <span style="font-size: 0.65rem; color: var(--text-muted); display: block;">Aggressive (85%)</span>
+                            <strong style="font-size: 0.9rem; color: var(--text-primary);">$0</strong>
+                        </div>
+                    </div>
+                </div>
+                
+                <div>
+                    <h4 style="font-size: 0.85rem; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 0.5rem; font-weight: 700;">Generated Offer Note (Will show in customer's chat)</h4>
+                    <textarea id="ai-offer-note-preview" rows="3" style="width: 100%; background: rgba(0,0,0,0.25); border: 1px solid var(--border-color); border-radius: 6px; padding: 0.5rem; font-family: inherit; font-size: 0.82rem; color: var(--text-primary); resize: vertical; outline: none;"></textarea>
+                </div>
+                
+                <div style="display: flex; gap: 0.75rem; margin-top: 0.5rem;">
+                    <button class="btn btn-primary" id="btn-apply-ai-offer" style="flex-grow: 1; justify-content: center; font-weight: 700;">Apply Valuation & Notes</button>
+                    <button class="btn btn-secondary" id="btn-cancel-ai-offer" style="font-weight: 600;">Cancel</button>
+                </div>
+            </div>
         </div>
     </div>
 
