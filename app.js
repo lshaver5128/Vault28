@@ -941,6 +941,8 @@ function openAuthModal(mode = 'login') {
     const btnSubmit = document.getElementById('btn-auth-submit');
     
     document.getElementById('auth-form').reset();
+    const reqBox = document.getElementById('auth-password-requirements');
+    if (reqBox) reqBox.style.display = 'none';
     
     if (mode === 'login') {
         tabLogin.style.color = 'var(--text-primary)';
@@ -959,11 +961,87 @@ function openAuthModal(mode = 'login') {
     }
 }
 
-function closeAuthModal() { document.getElementById('auth-modal').style.display = 'none'; }
+function closeAuthModal() { 
+    document.getElementById('auth-modal').style.display = 'none'; 
+    const reqBox = document.getElementById('auth-password-requirements');
+    if (reqBox) reqBox.style.display = 'none';
+}
 
 document.getElementById('tab-login').addEventListener('click', () => openAuthModal('login'));
 document.getElementById('tab-signup').addEventListener('click', () => openAuthModal('signup'));
 document.getElementById('btn-close-auth-modal').addEventListener('click', closeAuthModal);
+
+// Dynamic Password strength checkers
+const authPasswordInput = document.getElementById('auth-password');
+if (authPasswordInput) {
+    authPasswordInput.addEventListener('input', () => {
+        const reqBox = document.getElementById('auth-password-requirements');
+        if (!reqBox) return;
+        
+        if (authModalMode === 'signup') {
+            reqBox.style.display = 'flex';
+            const val = authPasswordInput.value;
+            
+            // 1. Length >= 8
+            const reqLength = document.getElementById('req-length');
+            if (val.length >= 8) {
+                reqLength.innerHTML = '✔️ At least 8 characters';
+                reqLength.style.color = '#10b981';
+            } else {
+                reqLength.innerHTML = '❌ At least 8 characters';
+                reqLength.style.color = 'var(--text-secondary)';
+            }
+            
+            // 2. Upper & Lowercase
+            const reqCase = document.getElementById('req-case');
+            if (/[A-Z]/.test(val) && /[a-z]/.test(val)) {
+                reqCase.innerHTML = '✔️ Upper & lowercase letter';
+                reqCase.style.color = '#10b981';
+            } else {
+                reqCase.innerHTML = '❌ Upper & lowercase letter';
+                reqCase.style.color = 'var(--text-secondary)';
+            }
+            
+            // 3. One number
+            const reqNumber = document.getElementById('req-number');
+            if (/[0-9]/.test(val)) {
+                reqNumber.innerHTML = '✔️ At least one number';
+                reqNumber.style.color = '#10b981';
+            } else {
+                reqNumber.innerHTML = '❌ At least one number';
+                reqNumber.style.color = 'var(--text-secondary)';
+            }
+            
+            // 4. One special character
+            const reqSpecial = document.getElementById('req-special');
+            if (/[!@#$%^&*(),.?":{}|<>]/.test(val)) {
+                reqSpecial.innerHTML = '✔️ One special character (!@#$%^&*)';
+                reqSpecial.style.color = '#10b981';
+            } else {
+                reqSpecial.innerHTML = '❌ One special character (!@#$%^&*)';
+                reqSpecial.style.color = 'var(--text-secondary)';
+            }
+        } else {
+            reqBox.style.display = 'none';
+        }
+    });
+}
+
+function validatePasswordRequirements(password) {
+    if (password.length < 8) {
+        return "Password must be at least 8 characters long.";
+    }
+    if (!/[A-Z]/.test(password) || !/[a-z]/.test(password)) {
+        return "Password must contain both uppercase and lowercase letters.";
+    }
+    if (!/[0-9]/.test(password)) {
+        return "Password must contain at least one number.";
+    }
+    if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
+        return "Password must contain at least one special character.";
+    }
+    return null;
+}
 document.getElementById('btn-header-signin').addEventListener('click', () => openAuthModal('login'));
 document.getElementById('btn-header-signup').addEventListener('click', () => openAuthModal('signup'));
 document.getElementById('btn-header-signout').addEventListener('click', () => {
@@ -1007,9 +1085,14 @@ document.getElementById('auth-form').addEventListener('submit', (e) => {
         showToast("Please enter a valid email address.", "error");
         return;
     }
-    if (!password || password.length < 6) {
-        showToast("Password must be at least 6 characters.", "error");
-        return;
+    
+    // Enforce password requirements on registration/sign-up
+    if (authModalMode === 'signup') {
+        const passwordError = validatePasswordRequirements(password);
+        if (passwordError) {
+            showToast(passwordError, "error");
+            return;
+        }
     }
 
     btnSubmit.disabled = true;
@@ -1018,9 +1101,17 @@ document.getElementById('auth-form').addEventListener('submit', (e) => {
     if (isFirebaseActive) {
         if (authModalMode === 'login') {
             firebase.auth().signInWithEmailAndPassword(email, password)
-                .then(() => {
-                    closeAuthModal();
-                    showToast("Welcome back!", "success");
+                .then((cred) => {
+                    // Check if email is verified (exempt owner emails)
+                    if (!cred.user.emailVerified && !OWNER_EMAILS.includes(cred.user.email.toLowerCase())) {
+                        showToast("Please verify your email address. We sent a link to your inbox.", "warning");
+                        firebase.auth().signOut().then(() => {
+                            closeAuthModal();
+                        });
+                    } else {
+                        closeAuthModal();
+                        showToast("Welcome back!", "success");
+                    }
                 })
                 .catch(err => showToast(err.message, "error"))
                 .finally(() => {
@@ -1031,10 +1122,22 @@ document.getElementById('auth-form').addEventListener('submit', (e) => {
             firebase.auth().createUserWithEmailAndPassword(email, password)
                 .then(cred => {
                     cred.user.updateProfile({ displayName: name }).then(() => {
+                        // Send verification email link
+                        cred.user.sendEmailVerification()
+                            .then(() => {
+                                showToast("Verification email sent! Please check your inbox and verify to activate your account.", "success");
+                            })
+                            .catch(err => {
+                                console.warn("Failed to send verification email:", err);
+                                showToast("Could not send verification email link.", "error");
+                            });
+                        
                         recordUserActivity(cred.user.uid, cred.user.email, name, true);
-                        closeAuthModal();
-                        showToast(`Welcome, ${name}!`, "success");
-                        initDatabase();
+                        
+                        // Immediately sign out to enforce verification on next login
+                        firebase.auth().signOut().then(() => {
+                            closeAuthModal();
+                        });
                     });
                 })
                 .catch(err => showToast(err.message, "error"))

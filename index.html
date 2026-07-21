@@ -1351,7 +1351,16 @@ const firebaseConfig = {
                 
                 <div class="form-group" style="margin-bottom: 1.5rem;">
                     <label for="auth-password">Password</label>
-                    <input type="password" id="auth-password" placeholder="••••••••" required minlength="6">
+                    <input type="password" id="auth-password" placeholder="••••••••" required minlength="8">
+                    
+                    <!-- Password requirements checker panel -->
+                    <div id="auth-password-requirements" style="display: none; margin-top: 0.75rem; font-size: 0.75rem; color: var(--text-secondary); background: rgba(255,255,255,0.01); border: 1px solid var(--border-color); padding: 0.75rem; border-radius: 6px; flex-direction: column; gap: 6px; box-shadow: inset 0 1px 2px rgba(0,0,0,0.2);">
+                        <span style="font-weight: 700; color: var(--text-primary); margin-bottom: 2px;">Password Requirements:</span>
+                        <span id="req-length" style="display: flex; align-items: center; gap: 6px;">❌ At least 8 characters</span>
+                        <span id="req-case" style="display: flex; align-items: center; gap: 6px;">❌ Upper & lowercase letter</span>
+                        <span id="req-number" style="display: flex; align-items: center; gap: 6px;">❌ At least one number</span>
+                        <span id="req-special" style="display: flex; align-items: center; gap: 6px;">❌ One special character (!@#$%^&*)</span>
+                    </div>
                 </div>
                 
                 <button type="submit" class="btn btn-primary" id="btn-auth-submit" style="width: 100%;">Log In</button>
