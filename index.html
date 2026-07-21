@@ -1099,15 +1099,7 @@
                         <!-- Inquiries List -->
                         <div id="admin-inquiries-list" style="display: flex; flex-direction: column; gap: 1.5rem;">
                             <!-- Dynamic inquiry cards loaded via app.js -->
-                        </div>
-                    </div>
-                </div>
-
-            </div>
-        </section>
-
-        <!-- Admin View 2: Collection Review / Valuation Panel -->
-        <section id="buyer-detail" class="page-view">
+                       <section id="buyer-detail" class="page-view">
             <div style="max-width: 1200px; margin: 0 auto; text-align: left;">
                 <div class="content-header" style="margin-bottom: 2rem;">
                     <button class="btn btn-secondary btn-sm" id="btn-buyer-back-dashboard" style="margin-bottom: 1rem;">← Back to Admin Console</button>
@@ -1128,65 +1120,68 @@
                 <div class="detail-layout">
                     <!-- Left: Card highlights and detail tables -->
                     <div>
-                        <!-- Valuation Form Controls -->
-                        <div class="glass-card" style="padding: 1.5rem; margin-bottom: 2rem; border-color: rgba(223, 183, 80, 0.3); box-shadow: 0 4px 20px rgba(223, 183, 80, 0.05);">
-                            <h3 style="font-size: 1.15rem; margin-bottom: 1.25rem; font-family: var(--font-title); color: var(--accent-gold); display: flex; align-items: center; gap: 6px;">
-                                🪙 Valuation & Offer Controls
-                            </h3>
-                            
-                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; margin-bottom: 1rem;">
-                                <div class="form-group">
-                                    <label style="font-weight: 600; font-size: 0.82rem;">User's Asking Price</label>
-                                    <input type="text" id="buyer-val-asking" readonly style="background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border-color); color: var(--text-secondary); opacity: 0.85; font-weight: 700; cursor: not-allowed;">
-                                </div>
-                                <div class="form-group">
-                                    <label style="font-weight: 600; font-size: 0.82rem;">Vault 28 Valuation Offer ($)</label>
-                                    <input type="number" id="buyer-val-offer" placeholder="Enter offer value..." style="background: rgba(0, 0, 0, 0.2); border: 1px solid var(--border-color); color: var(--text-primary); font-weight: 700;">
-                                </div>
-                            </div>
-                            
-                            <div class="form-group" style="margin-bottom: 1.25rem;">
-                                <label for="buyer-offer-note" style="font-weight: 600; font-size: 0.82rem;">Offer Description Notes (Will show in customer's chat)</label>
-                                <textarea id="buyer-offer-note" rows="2" placeholder="e.g. Based on PSA 8 sales, we can offer $4,800 package value..." style="background: rgba(0, 0, 0, 0.2); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 6px; padding: 0.6rem 0.8rem; width: 100%; font-family: inherit; font-size: 0.88rem; resize: vertical; outline: none;"></textarea>
-                            </div>
-                            
-                            <div style="display: flex; gap: 0.75rem; flex-wrap: wrap; align-items: flex-end;">
-                                <div style="display: flex; gap: 0.5rem;">
-                                    <button class="btn btn-primary btn-sm" id="btn-buyer-send-offer" style="font-weight: 600;">Send Counter Offer</button>
-                                    <button class="btn btn-success btn-sm" id="btn-buyer-buy-asking" style="font-weight: 600;">Buy at Asking</button>
-                                    <button class="btn btn-secondary btn-sm" style="color: var(--accent-red); border-color: rgba(239, 68, 68, 0.2); font-weight: 600;" id="btn-buyer-decline">Decline</button>
-                                </div>
-                                
-                                <div style="margin-left: auto; text-align: left;">
-                                    <label for="buyer-set-status-select" style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-bottom: 4px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">Submission Status</label>
-                                    <select id="buyer-set-status-select" style="padding: 0.45rem 0.75rem; font-size: 0.82rem; border-radius: 6px; width: 140px; background: var(--bg-secondary); border: 1px solid var(--border-color); color: var(--text-primary); font-weight: 600; outline: none; cursor: pointer;">
-                                        <option value="New">New</option>
-                        <!-- Collection Overview Details Card -->
+                        <!-- Seller & Collection Info Card -->
                         <div class="glass-card" style="padding: 1.5rem; margin-bottom: 2rem; border-color: rgba(255,255,255,0.08); background: rgba(255,255,255,0.01);">
-                            <h3 style="font-size: 1.15rem; margin-bottom: 1rem; font-family: var(--font-title); color: var(--accent-cyan); display: flex; align-items: center; gap: 6px;">
-                                📋 Collection Overview
+                            <h3 style="font-size: 1.15rem; margin-bottom: 1.25rem; font-family: var(--font-title); color: var(--accent-cyan); display: flex; align-items: center; gap: 8px; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">
+                                📋 Seller Profile & Submission Details
                             </h3>
-                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 1.25rem; margin-bottom: 1.25rem;">
-                                <div>
-                                    <div style="font-size: 0.78rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase;">Sport / Category</div>
-                                    <div style="font-size: 1.05rem; font-weight: 700; margin-top: 2px;" id="buyer-overview-sport">-</div>
-                                </div>
-                                <div>
-                                    <div style="font-size: 0.78rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase;">Total Quantity</div>
-                                    <div style="font-size: 1.05rem; font-weight: 700; margin-top: 2px;" id="buyer-overview-qty">-</div>
-                                </div>
-                                <div>
-                                    <div style="font-size: 0.78rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase;">Estimated Value</div>
-                                    <div style="font-size: 1.05rem; font-weight: 700; margin-top: 2px; color: var(--accent-cyan);" id="buyer-overview-est-val">-</div>
-                                </div>
-                                <div>
-                                    <div style="font-size: 0.78rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase;">Asking Price</div>
-                                    <div style="font-size: 1.05rem; font-weight: 700; margin-top: 2px; color: var(--accent-gold);" id="buyer-overview-asking">-</div>
+                            
+                            <!-- Contact details -->
+                            <div style="margin-bottom: 1.5rem;">
+                                <h4 style="font-size: 0.85rem; color: var(--accent-gold); margin-bottom: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 700;">Seller Contact Info</h4>
+                                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem;">
+                                    <div>
+                                        <span style="font-size: 0.75rem; color: var(--text-muted); display: block;">Full Name</span>
+                                        <strong id="buyer-info-name" style="font-size: 0.95rem; color: var(--text-primary);">-</strong>
+                                    </div>
+                                    <div>
+                                        <span style="font-size: 0.75rem; color: var(--text-muted); display: block;">Email Address</span>
+                                        <strong id="buyer-info-email" style="font-size: 0.95rem; color: var(--text-primary);">-</strong>
+                                    </div>
+                                    <div>
+                                        <span style="font-size: 0.75rem; color: var(--text-muted); display: block;">Phone Number</span>
+                                        <strong id="buyer-info-phone" style="font-size: 0.95rem; color: var(--text-primary);">-</strong>
+                                    </div>
+                                    <div>
+                                        <span style="font-size: 0.75rem; color: var(--text-muted); display: block;">Preferred Contact</span>
+                                        <strong id="buyer-info-pref" style="font-size: 0.95rem; color: var(--text-primary);">-</strong>
+                                    </div>
+                                    <div>
+                                        <span style="font-size: 0.75rem; color: var(--text-muted); display: block;">Location</span>
+                                        <strong id="buyer-info-location" style="font-size: 0.95rem; color: var(--text-primary);">-</strong>
+                                    </div>
+                                    <div>
+                                        <span style="font-size: 0.75rem; color: var(--text-muted); display: block;">Delivery Method</span>
+                                        <strong id="buyer-info-delivery" style="font-size: 0.95rem; color: var(--text-primary);">-</strong>
+                                    </div>
                                 </div>
                             </div>
-                            <div style="border-top: 1px solid var(--border-color); padding-top: 1rem;">
-                                <div style="font-size: 0.78rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; margin-bottom: 6px;">Seller Description</div>
-                                <p style="font-size: 0.92rem; line-height: 1.5; color: var(--text-primary); margin: 0;" id="buyer-overview-desc">-</p>
+                            
+                            <!-- Collection Overview Specs -->
+                            <div style="border-top: 1px solid var(--border-color); padding-top: 1.25rem;">
+                                <h4 style="font-size: 0.85rem; color: var(--accent-gold); margin-bottom: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 700;">Collection Overview</h4>
+                                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 1rem; margin-bottom: 1rem;">
+                                    <div>
+                                        <span style="font-size: 0.75rem; color: var(--text-muted); display: block;">Sport/Category</span>
+                                        <strong id="buyer-overview-sport" style="font-size: 0.95rem; color: var(--text-primary);">-</strong>
+                                    </div>
+                                    <div>
+                                        <span style="font-size: 0.75rem; color: var(--text-muted); display: block;">Lot Quantity</span>
+                                        <strong id="buyer-overview-qty" style="font-size: 0.95rem; color: var(--text-primary);">-</strong>
+                                    </div>
+                                    <div>
+                                        <span style="font-size: 0.75rem; color: var(--text-muted); display: block;">Estimated Value</span>
+                                        <strong id="buyer-overview-est-val" style="font-size: 0.95rem; color: var(--accent-cyan);">-</strong>
+                                    </div>
+                                    <div>
+                                        <span style="font-size: 0.75rem; color: var(--text-muted); display: block;">Asking Price</span>
+                                        <strong id="buyer-overview-asking" style="font-size: 0.95rem; color: var(--accent-gold);">-</strong>
+                                    </div>
+                                </div>
+                                <div style="background: rgba(0,0,0,0.2); padding: 0.75rem; border-radius: 6px; border: 1px solid rgba(255,255,255,0.03);">
+                                    <span style="font-size: 0.72rem; color: var(--text-muted); display: block; margin-bottom: 4px; text-transform: uppercase; font-weight: 700; letter-spacing: 0.05em;">Seller Description</span>
+                                    <p id="buyer-overview-desc" style="font-size: 0.88rem; line-height: 1.45; color: var(--text-secondary); margin: 0;">No description provided.</p>
+                                </div>
                             </div>
                         </div>
 

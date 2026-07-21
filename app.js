@@ -2584,6 +2584,14 @@ function renderBuyerDetail(id) {
     document.getElementById('buyer-overview-asking').textContent = `$${(col.askingPrice || 0).toLocaleString()}`;
     document.getElementById('buyer-overview-desc').textContent = col.description || 'No description provided.';
     
+    // Populate Seller Contact Details
+    document.getElementById('buyer-info-name').textContent = col.sellerName;
+    document.getElementById('buyer-info-email').textContent = col.sellerEmail;
+    document.getElementById('buyer-info-phone').textContent = col.sellerPhone || 'N/A';
+    document.getElementById('buyer-info-pref').textContent = col.sellerPref || 'Email';
+    document.getElementById('buyer-info-location').textContent = col.sellerLocation || 'N/A';
+    document.getElementById('buyer-info-delivery').textContent = col.deliveryPref || 'Shipped';
+    
     const badge = document.getElementById('buyer-detail-status');
     badge.textContent = col.status;
     badge.className = 'badge';
