@@ -2224,6 +2224,48 @@ function renderSellerDetail(id) {
     renderChatMessages('seller-chat-messages', col.messages, 'seller');
 }
 
+// Chat Image attachment state and utility methods
+let sellerTempChatFiles = [];
+let buyerTempChatFiles = [];
+
+function renderChatAttachPreviews(type) {
+    const previewContainer = document.getElementById(type === 'seller' ? 'seller-chat-attach-preview' : 'buyer-chat-attach-preview');
+    const filesArray = type === 'seller' ? sellerTempChatFiles : buyerTempChatFiles;
+    
+    if (!previewContainer) return;
+    previewContainer.innerHTML = '';
+    
+    if (filesArray.length === 0) {
+        previewContainer.style.display = 'none';
+        return;
+    }
+    
+    previewContainer.style.display = 'flex';
+    filesArray.forEach((imgBase64, index) => {
+        const item = document.createElement('div');
+        item.style.position = 'relative';
+        item.style.width = '60px';
+        item.style.height = '60px';
+        item.style.borderRadius = '6px';
+        item.style.overflow = 'hidden';
+        item.style.border = '1px solid var(--border-color)';
+        item.innerHTML = `
+            <img src="${imgBase64}" style="width: 100%; height: 100%; object-fit: cover;">
+            <button type="button" style="position: absolute; top: 2px; right: 2px; background: rgba(0,0,0,0.6); color: #fff; border: none; border-radius: 50%; width: 16px; height: 16px; font-size: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center; line-height: 1;" onclick="removeChatAttachPreview('${type}', ${index})">×</button>
+        `;
+        previewContainer.appendChild(item);
+    });
+}
+
+window.removeChatAttachPreview = function(type, index) {
+    if (type === 'seller') {
+        sellerTempChatFiles.splice(index, 1);
+    } else {
+        buyerTempChatFiles.splice(index, 1);
+    }
+    renderChatAttachPreviews(type);
+};
+
 // Chat rendering helper
 function renderChatMessages(elementId, msgs, perspective) {
     const box = document.getElementById(elementId);
@@ -2235,9 +2277,21 @@ function renderChatMessages(elementId, msgs, perspective) {
         if (m.sender === 'system') {
             div.innerHTML = `<div class="chat-bubble-system">⚙️ ${m.text}</div>`;
         } else {
+            let imgsHtml = '';
+            if (m.images && m.images.length > 0) {
+                imgsHtml = `<div style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.5rem;">`;
+                m.images.forEach(img => {
+                    const imgSrc = img.base64 || img;
+                    imgsHtml += `<img src="${imgSrc}" style="max-width: 150px; max-height: 150px; border-radius: 6px; cursor: pointer; border: 1px solid var(--border-color); object-fit: cover;" onclick="window.open('${imgSrc}', '_blank')" />`;
+                });
+                imgsHtml += `</div>`;
+            }
             div.innerHTML = `
                 <div class="chat-bubble-sender">${m.senderName}</div>
-                <div class="chat-bubble">${m.text}</div>
+                <div class="chat-bubble">
+                    <div>${m.text}</div>
+                    ${imgsHtml}
+                </div>
             `;
         }
         box.appendChild(div);
@@ -2250,7 +2304,8 @@ document.getElementById('seller-chat-form').addEventListener('submit', (e) => {
     e.preventDefault();
     const input = document.getElementById('seller-chat-input');
     const text = input.value.trim();
-    if (!text || !selectedCollectionId) return;
+    if (!text && sellerTempChatFiles.length === 0) return;
+    if (!selectedCollectionId) return;
     
     const col = collections.find(c => c.id === selectedCollectionId);
     if (!col) return;
@@ -2264,6 +2319,9 @@ document.getElementById('seller-chat-form').addEventListener('submit', (e) => {
         text,
         timestamp: new Date().toISOString()
     };
+    if (sellerTempChatFiles.length > 0) {
+        newMsg.images = [...sellerTempChatFiles];
+    }
     
     const nextStatus = col.status === 'Offer Made' ? 'Negotiating' : col.status;
     
@@ -2271,16 +2329,53 @@ document.getElementById('seller-chat-form').addEventListener('submit', (e) => {
         db.collection("collections").doc(selectedCollectionId).update({
             status: nextStatus,
             messages: firebase.firestore.FieldValue.arrayUnion(newMsg)
-        }).then(() => input.value = '');
+        }).then(() => {
+            input.value = '';
+            sellerTempChatFiles = [];
+            renderChatAttachPreviews('seller');
+        });
     } else {
         col.messages.push(newMsg);
         col.status = nextStatus;
         saveLocalCollections();
         input.value = '';
+        sellerTempChatFiles = [];
+        renderChatAttachPreviews('seller');
         renderSellerDetail(selectedCollectionId);
         showToast("Message sent to local sandbox!", "success");
     }
 });
+
+// Seller Chat attachment event handlers
+setTimeout(() => {
+    const btnSellerAttach = document.getElementById('btn-seller-chat-attach');
+    const inputSellerAttach = document.getElementById('seller-chat-file-input');
+    
+    if (btnSellerAttach && inputSellerAttach) {
+        btnSellerAttach.addEventListener('click', () => inputSellerAttach.click());
+        inputSellerAttach.addEventListener('change', (e) => {
+            const files = Array.from(e.target.files);
+            if (files.length === 0) return;
+            
+            let loaded = 0;
+            files.forEach(file => {
+                compressImage(file, 800, 800, 0.75)
+                    .then(base64 => {
+                        sellerTempChatFiles.push(base64);
+                        loaded++;
+                        if (loaded === files.length) {
+                            renderChatAttachPreviews('seller');
+                        }
+                    })
+                    .catch(err => {
+                        console.error("Chat image compression error:", err);
+                        showToast("Failed to process one or more images.", "error");
+                    });
+            });
+            inputSellerAttach.value = '';
+        });
+    }
+}, 500);
 
 // ChatSuggestion Chips binding
 document.getElementById('seller-chat-suggestions').addEventListener('click', (e) => {
@@ -2801,7 +2896,8 @@ document.getElementById('buyer-chat-form').addEventListener('submit', (e) => {
     e.preventDefault();
     const input = document.getElementById('buyer-chat-input');
     const text = input.value.trim();
-    if (!text || !selectedCollectionId) return;
+    if (!text && buyerTempChatFiles.length === 0) return;
+    if (!selectedCollectionId) return;
     
     const col = collections.find(c => c.id === selectedCollectionId);
     if (!col) return;
@@ -2812,6 +2908,9 @@ document.getElementById('buyer-chat-form').addEventListener('submit', (e) => {
         text,
         timestamp: new Date().toISOString()
     };
+    if (buyerTempChatFiles.length > 0) {
+        newMsg.images = [...buyerTempChatFiles];
+    }
     
     const nextStatus = col.status === 'New' ? 'Reviewing' : col.status;
     
@@ -2821,17 +2920,56 @@ document.getElementById('buyer-chat-form').addEventListener('submit', (e) => {
             messages: firebase.firestore.FieldValue.arrayUnion(newMsg)
         }).then(() => {
             input.value = '';
-            sendMessageEmailToSeller(col, text, "New Message from Vault 28 Buying Desk");
+            buyerTempChatFiles = [];
+            renderChatAttachPreviews('buyer');
+            let emailText = text;
+            if (newMsg.images && newMsg.images.length > 0) {
+                emailText += `\n[Attached ${newMsg.images.length} new photo(s) in dashboard chat]`;
+            }
+            sendMessageEmailToSeller(col, emailText, "New Message from Vault 28 Buying Desk");
         });
     } else {
         col.messages.push(newMsg);
         col.status = nextStatus;
         saveLocalCollections();
         input.value = '';
+        buyerTempChatFiles = [];
+        renderChatAttachPreviews('buyer');
         renderBuyerDetail(selectedCollectionId);
         showToast("Message sent to local sandbox!", "success");
     }
 });
+
+// Buyer Chat attachment event handlers
+setTimeout(() => {
+    const btnBuyerAttach = document.getElementById('btn-buyer-chat-attach');
+    const inputBuyerAttach = document.getElementById('buyer-chat-file-input');
+    
+    if (btnBuyerAttach && inputBuyerAttach) {
+        btnBuyerAttach.addEventListener('click', () => inputBuyerAttach.click());
+        inputBuyerAttach.addEventListener('change', (e) => {
+            const files = Array.from(e.target.files);
+            if (files.length === 0) return;
+            
+            let loaded = 0;
+            files.forEach(file => {
+                compressImage(file, 800, 800, 0.75)
+                    .then(base64 => {
+                        buyerTempChatFiles.push(base64);
+                        loaded++;
+                        if (loaded === files.length) {
+                            renderChatAttachPreviews('buyer');
+                        }
+                    })
+                    .catch(err => {
+                        console.error("Chat image compression error:", err);
+                        showToast("Failed to process one or more images.", "error");
+                    });
+            });
+            inputBuyerAttach.value = '';
+        });
+    }
+}, 500);
 
 // Buyer buy at asking
 document.getElementById('btn-buyer-buy-asking').addEventListener('click', () => {

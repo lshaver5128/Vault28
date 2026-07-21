@@ -552,11 +552,17 @@
                                 <span class="chat-suggestion-chip">Are you available for local meetup today?</span>
                             </div>
                             <form class="chat-input-row" id="seller-chat-form">
+                                <button type="button" id="btn-seller-chat-attach" style="background: none; border: none; color: var(--text-secondary); cursor: pointer; padding: 0.5rem; display: flex; align-items: center; justify-content: center; transition: color 0.2s;" title="Attach photos">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                                </button>
+                                <input type="file" id="seller-chat-file-input" accept="image/*" multiple style="display: none;">
                                 <input type="text" class="chat-input" id="seller-chat-input" placeholder="Type a message to the buyer...">
                                 <button type="submit" class="chat-send-btn">
                                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
                                 </button>
                             </form>
+                            <!-- Seller Chat Attachment Previews -->
+                            <div id="seller-chat-attach-preview" style="display: none; gap: 0.5rem; margin-top: 0.5rem; flex-wrap: wrap; background: rgba(255,255,255,0.02); border: 1px solid var(--border-color); padding: 0.5rem; border-radius: 6px;"></div>
                         </div>
                     </div>
                 </div>
@@ -1287,11 +1293,17 @@
                                     <span class="chat-suggestion-chip">Payment has been wire transferred. tracking info?</span>
                                 </div>
                                 <form class="chat-input-row" id="buyer-chat-form">
+                                    <button type="button" id="btn-buyer-chat-attach" style="background: none; border: none; color: var(--text-secondary); cursor: pointer; padding: 0.5rem; display: flex; align-items: center; justify-content: center; transition: color 0.2s;" title="Attach photos">
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                                    </button>
+                                    <input type="file" id="buyer-chat-file-input" accept="image/*" multiple style="display: none;">
                                     <input type="text" class="chat-input" id="buyer-chat-input" placeholder="Message the seller...">
                                     <button type="submit" class="chat-send-btn">
                                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
                                     </button>
                                 </form>
+                                <!-- Buyer Chat Attachment Previews -->
+                                <div id="buyer-chat-attach-preview" style="display: none; gap: 0.5rem; margin-top: 0.5rem; flex-wrap: wrap; background: rgba(255,255,255,0.02); border: 1px solid var(--border-color); padding: 0.5rem; border-radius: 6px;"></div>
                             </div>
                         </div>
                     </div>
