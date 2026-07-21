@@ -1165,16 +1165,16 @@ document.getElementById('auth-form').addEventListener('submit', (e) => {
                         db.collection("mail").add(verifyMail)
                             .then(() => {
                                 showToast("Verification email sent! Please check your inbox and verify to activate your account.", "success");
+                                return firebase.auth().signOut();
                             })
                             .catch(err => {
                                 console.warn("Failed to send verification email:", err);
                                 showToast("Could not send verification email link.", "error");
+                                return firebase.auth().signOut();
+                            })
+                            .then(() => {
+                                closeAuthModal();
                             });
-                        
-                        // Immediately sign out to enforce verification on next login
-                        firebase.auth().signOut().then(() => {
-                            closeAuthModal();
-                        });
                     });
                 })
                 .catch(err => showToast(err.message, "error"))
