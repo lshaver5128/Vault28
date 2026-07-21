@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "@vercel/analytics": "^2.0.1",
     "jimp": "^1.6.1",
     "pngjs": "^7.0.0"
   }
