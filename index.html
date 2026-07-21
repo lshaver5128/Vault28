@@ -1129,33 +1129,37 @@
                     <!-- Left: Card highlights and detail tables -->
                     <div>
                         <!-- Valuation Form Controls -->
-                        <div class="glass-card" style="padding: 1.5rem; margin-bottom: 2rem; border-color: var(--accent-orange);">
-                            <h3 style="font-size: 1.15rem; margin-bottom: 1.25rem; font-family: var(--font-title); color: var(--accent-cyan);">Valuation Controls</h3>
+                        <div class="glass-card" style="padding: 1.5rem; margin-bottom: 2rem; border-color: rgba(223, 183, 80, 0.3); box-shadow: 0 4px 20px rgba(223, 183, 80, 0.05);">
+                            <h3 style="font-size: 1.15rem; margin-bottom: 1.25rem; font-family: var(--font-title); color: var(--accent-gold); display: flex; align-items: center; gap: 6px;">
+                                🪙 Valuation & Offer Controls
+                            </h3>
                             
                             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; margin-bottom: 1rem;">
                                 <div class="form-group">
-                                    <label>User's Asking Price</label>
-                                    <input type="text" id="buyer-val-asking" readonly style="background: rgba(0,0,0,0.3); border-color: rgba(255,255,255,0.03);">
+                                    <label style="font-weight: 600; font-size: 0.82rem;">User's Asking Price</label>
+                                    <input type="text" id="buyer-val-asking" readonly style="background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border-color); color: var(--text-secondary); opacity: 0.85; font-weight: 700; cursor: not-allowed;">
                                 </div>
                                 <div class="form-group">
-                                    <label>Vault 28 Valuation Offer ($)</label>
-                                    <input type="number" id="buyer-val-offer" placeholder="Enter offer value...">
+                                    <label style="font-weight: 600; font-size: 0.82rem;">Vault 28 Valuation Offer ($)</label>
+                                    <input type="number" id="buyer-val-offer" placeholder="Enter offer value..." style="background: rgba(0, 0, 0, 0.2); border: 1px solid var(--border-color); color: var(--text-primary); font-weight: 700;">
                                 </div>
                             </div>
                             
                             <div class="form-group" style="margin-bottom: 1.25rem;">
-                                <label for="buyer-offer-note">Offer Description Notes (Will show in customer's chat)</label>
-                                <textarea id="buyer-offer-note" rows="2" placeholder="e.g. Based on PSA 8 sales, we can offer $4,800 package value..."></textarea>
+                                <label for="buyer-offer-note" style="font-weight: 600; font-size: 0.82rem;">Offer Description Notes (Will show in customer's chat)</label>
+                                <textarea id="buyer-offer-note" rows="2" placeholder="e.g. Based on PSA 8 sales, we can offer $4,800 package value..." style="background: rgba(0, 0, 0, 0.2); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 6px; padding: 0.6rem 0.8rem; width: 100%; font-family: inherit; font-size: 0.88rem; resize: vertical; outline: none;"></textarea>
                             </div>
                             
-                            <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
-                                <button class="btn btn-primary btn-sm" id="btn-buyer-send-offer">Send Counter Offer</button>
-                                <button class="btn btn-success btn-sm" id="btn-buyer-buy-asking">Buy at Asking Price</button>
-                                <button class="btn btn-secondary btn-sm" style="color: var(--accent-red);" id="btn-buyer-decline">Decline Submission</button>
+                            <div style="display: flex; gap: 0.75rem; flex-wrap: wrap; align-items: flex-end;">
+                                <div style="display: flex; gap: 0.5rem;">
+                                    <button class="btn btn-primary btn-sm" id="btn-buyer-send-offer" style="font-weight: 600;">Send Counter Offer</button>
+                                    <button class="btn btn-success btn-sm" id="btn-buyer-buy-asking" style="font-weight: 600;">Buy at Asking</button>
+                                    <button class="btn btn-secondary btn-sm" style="color: var(--accent-red); border-color: rgba(239, 68, 68, 0.2); font-weight: 600;" id="btn-buyer-decline">Decline</button>
+                                </div>
                                 
-                                <div style="margin-left: auto;">
-                                    <label for="buyer-set-status-select" style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-bottom: 2px;">STATUS LABEL</label>
-                                    <select id="buyer-set-status-select" style="padding: 0.4rem; font-size: 0.8rem; border-radius: 6px; width: 140px;">
+                                <div style="margin-left: auto; text-align: left;">
+                                    <label for="buyer-set-status-select" style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-bottom: 4px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">Submission Status</label>
+                                    <select id="buyer-set-status-select" style="padding: 0.45rem 0.75rem; font-size: 0.82rem; border-radius: 6px; width: 140px; background: var(--bg-secondary); border: 1px solid var(--border-color); color: var(--text-primary); font-weight: 600; outline: none; cursor: pointer;">
                                         <option value="New">New</option>
                                         <option value="Reviewing">Reviewing</option>
                                         <option value="Offer Sent">Offer Sent</option>
@@ -1170,6 +1174,12 @@
                         <h3 style="font-size: 1.25rem; margin-bottom: 1rem;">Submitted Highlight Slabs</h3>
                         <div class="slab-visuals-grid" id="buyer-detail-slab-visuals">
                             <!-- Graded slabs rendered here -->
+                        </div>
+                        
+                        <!-- General uploaded photos gallery for admin inspection -->
+                        <h3 id="buyer-detail-photos-title" style="font-size: 1.25rem; margin-top: 2rem; margin-bottom: 1rem; text-align: left;">Uploaded Collection Photos</h3>
+                        <div id="buyer-detail-general-photos" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 1rem; margin-bottom: 2rem;">
+                            <!-- General images rendered here dynamically -->
                         </div>
                         
                         <h3 style="font-size: 1.25rem; margin-top: 2rem; margin-bottom: 1rem;">Collection Catalog details</h3>

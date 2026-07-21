@@ -2607,46 +2607,89 @@ function renderBuyerDetail(id) {
     // Slabs
     const slabContainer = document.getElementById('buyer-detail-slab-visuals');
     slabContainer.innerHTML = '';
-    col.cards.forEach(card => {
-        const gradeNum = card.grade.match(/\d+/) ? card.grade.match(/\d+/)[0] : '9';
-        const gradeText = card.grade.split(' ').slice(1).join(' ').toUpperCase() || 'MINT';
-        
-        const slab = document.createElement('div');
-        slab.className = 'card-slab';
-        slab.innerHTML = `
-            <div class="slab-label">
-                <div class="slab-label-brand">VAULT 28 GRADING</div>
-                <div class="slab-label-info">
-                    <span class="card-player">${card.player}</span>
-                    <span>${card.year} ${card.brand}</span>
-                </div>
-                <div class="slab-label-grade-box">
-                    <div class="slab-label-grade-num">${gradeNum}</div>
-                    <div class="slab-label-grade-text">${gradeText}</div>
-                </div>
+    if (!col.cards || col.cards.length === 0) {
+        slabContainer.innerHTML = `
+            <div class="glass-card" style="grid-column: 1 / -1; text-align: center; padding: 2.5rem 1.5rem; color: var(--text-secondary); border: 1px dashed rgba(255, 255, 255, 0.12); width: 100%;">
+                <p style="margin: 0; font-size: 0.95rem; font-weight: 500;">No Cataloged Highlights</p>
+                <p style="margin: 6px 0 0 0; font-size: 0.8rem; color: var(--text-muted);">No individual highlight card photos or grades were added for this lot.</p>
             </div>
-            <div class="slab-image-container"><img class="slab-image" src="${card.image}"></div>
-            <div class="slab-footer">${card.player}</div>
         `;
-        slabContainer.appendChild(slab);
-    });
+    } else {
+        col.cards.forEach(card => {
+            const gradeNum = card.grade.match(/\d+/) ? card.grade.match(/\d+/)[0] : '9';
+            const gradeText = card.grade.split(' ').slice(1).join(' ').toUpperCase() || 'MINT';
+            
+            const slab = document.createElement('div');
+            slab.className = 'card-slab';
+            slab.innerHTML = `
+                <div class="slab-label">
+                    <div class="slab-label-brand">VAULT 28 GRADING</div>
+                    <div class="slab-label-info">
+                        <span class="card-player">${card.player}</span>
+                        <span>${card.year} ${card.brand}</span>
+                    </div>
+                    <div class="slab-label-grade-box">
+                        <div class="slab-label-grade-num">${gradeNum}</div>
+                        <div class="slab-label-grade-text">${gradeText}</div>
+                    </div>
+                </div>
+                <div class="slab-image-container"><img class="slab-image" src="${card.image}"></div>
+                <div class="slab-footer">${card.player}</div>
+            `;
+            slabContainer.appendChild(slab);
+        });
+    }
+    
+    // Render General Images for Admin Inspection
+    const generalPhotosContainer = document.getElementById('buyer-detail-general-photos');
+    const photosTitle = document.getElementById('buyer-detail-photos-title');
+    if (generalPhotosContainer && photosTitle) {
+        generalPhotosContainer.innerHTML = '';
+        if (col.generalImages && col.generalImages.length > 0) {
+            photosTitle.style.display = 'block';
+            generalPhotosContainer.style.display = 'grid';
+            col.generalImages.forEach(img => {
+                const imgEl = document.createElement('div');
+                imgEl.style.position = 'relative';
+                imgEl.style.borderRadius = '8px';
+                imgEl.style.overflow = 'hidden';
+                imgEl.style.border = '1px solid var(--border-color)';
+                imgEl.style.aspectRatio = '1 / 1';
+                imgEl.innerHTML = `
+                    <img src="${img.base64}" style="width: 100%; height: 100%; object-fit: cover; cursor: pointer; transition: transform 0.2s;" onclick="window.open('${img.base64}', '_blank')" />
+                `;
+                generalPhotosContainer.appendChild(imgEl);
+            });
+        } else {
+            photosTitle.style.display = 'none';
+            generalPhotosContainer.style.display = 'none';
+        }
+    }
     
     // Table Details
     const listContainer = document.getElementById('buyer-detail-cards-list');
     listContainer.innerHTML = '';
-    col.cards.forEach(c => {
-        const row = document.createElement('div');
-        row.className = 'card-item-row';
-        row.innerHTML = `
-            <img class="card-item-img" src="${c.image}">
-            <div class="card-item-details">
-                <div class="card-item-name">${c.player}</div>
-                <div class="card-item-meta">${c.year} ${c.brand}</div>
+    if (!col.cards || col.cards.length === 0) {
+        listContainer.innerHTML = `
+            <div class="glass-card" style="text-align: center; padding: 1.5rem; color: var(--text-secondary); border: 1px dashed rgba(255, 255, 255, 0.12); width: 100%;">
+                <p style="margin: 0; font-size: 0.85rem; color: var(--text-muted);">No cataloged item details available.</p>
             </div>
-            <div class="price-val" style="font-size:0.9rem;">${c.grade}</div>
         `;
-        listContainer.appendChild(row);
-    });
+    } else {
+        col.cards.forEach(c => {
+            const row = document.createElement('div');
+            row.className = 'card-item-row';
+            row.innerHTML = `
+                <img class="card-item-img" src="${c.image}">
+                <div class="card-item-details">
+                    <div class="card-item-name">${c.player}</div>
+                    <div class="card-item-meta">${c.year} ${c.brand}</div>
+                </div>
+                <div class="price-val" style="font-size:0.9rem;">${c.grade}</div>
+            `;
+            listContainer.appendChild(row);
+        });
+    }
 
     renderChatMessages('buyer-chat-messages', col.messages, 'buyer');
 }
