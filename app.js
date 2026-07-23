@@ -2634,7 +2634,7 @@ function renderAdminUsersTable() {
     if (totalUsers === 0) {
         tableBody.innerHTML = `
             <tr>
-                <td colspan="5" style="text-align: center; padding: 3rem; color: var(--text-muted);">
+                <td colspan="6" style="text-align: center; padding: 3rem; color: var(--text-muted);">
                     <div style="font-size: 1.5rem; margin-bottom: 0.5rem;">👥</div>
                     No registered user accounts found.
                 </td>
@@ -2653,6 +2653,9 @@ function renderAdminUsersTable() {
             ? `<span class="badge badge-success" style="box-shadow: 0 0 8px rgba(16,185,129,0.3); font-weight:600;"><span class="pulse-dot" style="display:inline-block; width: 6px; height: 6px; background:#fff; border-radius:50%; margin-right:5px; vertical-align:middle; animation: adminPulse 1.5s infinite alternate;"></span>Online</span>` 
             : `<span class="badge badge-muted" style="color: var(--text-muted); background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); padding: 4px 8px; border-radius: 4px; font-size: 0.72rem; text-transform: uppercase;">Offline</span>`;
             
+        // Render action button to let Lucas clean up deleted dummy users
+        const deleteButton = `<button class="btn btn-secondary" style="padding: 4px 8px; border-color: rgba(239, 68, 68, 0.4); color: var(--accent-red); font-size: 0.72rem; min-width: auto; height: auto;" onclick="deleteUserDoc('${user.uid}', '${escapeHTML(user.email)}')">Delete</button>`;
+        
         const tr = document.createElement('tr');
         tr.innerHTML = `
             <td style="font-weight: 600; color: var(--text-primary);">${escapeHTML(user.displayName || 'No Name')}</td>
@@ -2660,10 +2663,37 @@ function renderAdminUsersTable() {
             <td style="color: var(--text-secondary); font-size: 0.85rem;">${regDate}</td>
             <td style="color: var(--text-secondary); font-size: 0.85rem;">${lastSeen}</td>
             <td>${statusBadge}</td>
+            <td style="text-align: right;">${deleteButton}</td>
         `;
         tableBody.appendChild(tr);
     });
 }
+
+// Admin cleaning helper to delete obsolete/dummy user documents from Firestore
+window.deleteUserDoc = function(uid, email) {
+    if (!confirm(`Are you sure you want to delete the user document for "${email}" from the database? This cannot be undone.`)) return;
+    
+    if (isFirebaseActive) {
+        db.collection("users").doc(uid).delete()
+            .then(() => {
+                showToast(`User document for ${email} deleted successfully.`, "success");
+            })
+            .catch(err => {
+                console.error("Error deleting user document:", err);
+                showToast("Failed to delete user document.", "error");
+            });
+    } else {
+        // Local Sandbox
+        let localUsers = [];
+        const stored = localStorage.getItem('v28_users');
+        if (stored) localUsers = JSON.parse(stored);
+        localUsers = localUsers.filter(u => u.uid !== uid);
+        localStorage.setItem('v28_users', JSON.stringify(localUsers));
+        users = localUsers;
+        renderAdminUsersTable();
+        showToast("Sandbox user document deleted.", "success");
+    }
+};
 
 // Periodically refresh the user status table (every 30 seconds) to maintain accuracy
 setInterval(() => {
