@@ -1107,18 +1107,28 @@ document.getElementById('auth-form').addEventListener('submit', (e) => {
     
     if (isFirebaseActive) {
         if (authModalMode === 'login') {
-            firebase.auth().signInWithEmailAndPassword(email, password)
-                .then((cred) => {
-                    // Check if email is verified (exempt owner emails)
-                    if (OWNER_EMAILS.includes(cred.user.email.toLowerCase())) {
-                        closeAuthModal();
-                        showToast("Welcome back, Owner!", "success");
+            // First: Check if email exists in database
+            db.collection("users").where("email", "==", email.toLowerCase()).get()
+                .then(snapshot => {
+                    if (snapshot.empty && !OWNER_EMAILS.includes(email.toLowerCase())) {
+                        showToast("Account with this email does not exist. Please register first.", "error");
+                        btnSubmit.disabled = false;
+                        btnSubmit.textContent = 'Log In';
                         return;
                     }
                     
-                    db.collection("users").doc(cred.user.uid).get()
-                        .then(doc => {
-                            const data = doc.data();
+                    // Second: Authenticate credentials via Auth service
+                    firebase.auth().signInWithEmailAndPassword(email, password)
+                        .then((cred) => {
+                            // Check if email is verified (exempt owner emails)
+                            if (OWNER_EMAILS.includes(cred.user.email.toLowerCase())) {
+                                closeAuthModal();
+                                showToast("Welcome back, Owner!", "success");
+                                return;
+                            }
+                            
+                            const doc = snapshot.docs[0];
+                            const data = doc ? doc.data() : null;
                             if (data && data.isVerified === false) {
                                 showToast("Please verify your email address. We sent a link to your inbox.", "warning");
                                 firebase.auth().signOut().then(() => {
@@ -1130,14 +1140,30 @@ document.getElementById('auth-form').addEventListener('submit', (e) => {
                             }
                         })
                         .catch(err => {
-                            closeAuthModal();
-                            showToast("Welcome back!", "success");
+                            if (err.code === 'auth/wrong-password') {
+                                showToast("Incorrect password. Please try again.", "error");
+                            } else {
+                                showToast("Incorrect password. Please try again.", "error");
+                            }
+                        })
+                        .finally(() => {
+                            btnSubmit.disabled = false;
+                            btnSubmit.textContent = 'Log In';
                         });
                 })
-                .catch(err => showToast(err.message, "error"))
-                .finally(() => {
-                    btnSubmit.disabled = false;
-                    btnSubmit.textContent = 'Log In';
+                .catch(err => {
+                    console.error("Database lookup error during login:", err);
+                    // Fallback directly to normal login if lookup fails
+                    firebase.auth().signInWithEmailAndPassword(email, password)
+                        .then((cred) => {
+                            closeAuthModal();
+                            showToast("Welcome back!", "success");
+                        })
+                        .catch(loginErr => showToast(loginErr.message, "error"))
+                        .finally(() => {
+                            btnSubmit.disabled = false;
+                            btnSubmit.textContent = 'Log In';
+                        });
                 });
         } else {
             firebase.auth().createUserWithEmailAndPassword(email, password)
@@ -1150,6 +1176,7 @@ document.getElementById('auth-form').addEventListener('submit', (e) => {
                         const verifyUrl = `${window.location.origin}/?verifyUid=${cred.user.uid}`;
                         const verifyMail = {
                             to: cred.user.email,
+                            from: "Vault 28 <noreply@vault28cards.com>",
                             message: {
                                 subject: "Verify Your Vault 28 Account!",
                                 html: generateStandardEmailHtml(
@@ -1194,8 +1221,17 @@ document.getElementById('auth-form').addEventListener('submit', (e) => {
                 if (stored) localUsers = JSON.parse(stored);
                 else localUsers = [...DEFAULT_USERS];
                 
-                // Allow logging back in as the owner
-                if (OWNER_EMAILS.includes(email.toLowerCase())) {
+                // First: Check if email exists
+                const foundUser = localUsers.find(u => u.email.toLowerCase() === email.toLowerCase());
+                const isOwner = OWNER_EMAILS.includes(email.toLowerCase());
+                
+                if (!foundUser && !isOwner) {
+                    showToast("Account with this email does not exist. Please register first.", "error");
+                    return;
+                }
+                
+                // Second: Check password
+                if (isOwner) {
                     document.getElementById('auth-widget').style.display = 'none';
                     document.getElementById('user-profile-widget').style.display = 'flex';
                     document.getElementById('user-display-name').textContent = "Lucas Shaver";
@@ -1209,26 +1245,24 @@ document.getElementById('auth-form').addEventListener('submit', (e) => {
                     closeAuthModal();
                     showToast("Welcome back, Lucas!", "success");
                     triggerUIRefresh();
-                    return;
-                }
-                
-                const foundUser = localUsers.find(u => u.email.toLowerCase() === email.toLowerCase());
-                if (foundUser) {
-                    document.getElementById('auth-widget').style.display = 'none';
-                    document.getElementById('user-profile-widget').style.display = 'flex';
-                    document.getElementById('user-display-name').textContent = foundUser.displayName;
-                    document.getElementById('user-display-role').textContent = "Seller Account";
-                    document.getElementById('role-switcher-wrapper').style.display = 'none';
-                    document.body.classList.remove('has-admin-bar');
-                    const toolbar = document.getElementById('admin-toolbar');
-                    if (toolbar) toolbar.style.display = 'none';
-                    
-                    recordUserActivity(foundUser.uid, foundUser.email, foundUser.displayName, false);
-                    closeAuthModal();
-                    showToast("Welcome back!", "success");
-                    triggerUIRefresh();
                 } else {
-                    showToast("Account not found. Please register in sandbox mode.", "error");
+                    if (foundUser.password && foundUser.password !== password) {
+                        showToast("Incorrect password. Please try again.", "error");
+                    } else {
+                        document.getElementById('auth-widget').style.display = 'none';
+                        document.getElementById('user-profile-widget').style.display = 'flex';
+                        document.getElementById('user-display-name').textContent = foundUser.displayName;
+                        document.getElementById('user-display-role').textContent = "Seller Account";
+                        document.getElementById('role-switcher-wrapper').style.display = 'none';
+                        document.body.classList.remove('has-admin-bar');
+                        const toolbar = document.getElementById('admin-toolbar');
+                        if (toolbar) toolbar.style.display = 'none';
+                        
+                        recordUserActivity(foundUser.uid, foundUser.email, foundUser.displayName, false);
+                        closeAuthModal();
+                        showToast("Welcome back!", "success");
+                        triggerUIRefresh();
+                    }
                 }
             } else {
                 const mockUid = 'mock-user-' + Math.random().toString(36).substr(2, 9);
@@ -1244,6 +1278,17 @@ document.getElementById('auth-form').addEventListener('submit', (e) => {
                 
                 const referral = document.getElementById('auth-referral').value;
                 recordUserActivity(mockUid, email, name, true, referral);
+                
+                // Store password in local sandbox user profile
+                let localUsers = [];
+                const stored = localStorage.getItem('v28_users');
+                if (stored) localUsers = JSON.parse(stored);
+                const sandboxUser = localUsers.find(u => u.uid === mockUid);
+                if (sandboxUser) {
+                    sandboxUser.password = password;
+                    localStorage.setItem('v28_users', JSON.stringify(localUsers));
+                }
+                
                 closeAuthModal();
                 showToast(`Welcome, ${name}!`, "success");
                 triggerUIRefresh();
@@ -1574,6 +1619,7 @@ document.getElementById('submission-form').addEventListener('submit', (e) => {
                 // 1. Send receipt email to the seller thanking them
                 const sellerReceiptMail = {
                     to: sellerEmail,
+                    from: "Vault 28 <noreply@vault28cards.com>",
                     message: {
                         subject: `We've Received Your Collection Submission!`,
                         html: generateStandardEmailHtml(
@@ -1625,6 +1671,7 @@ document.getElementById('submission-form').addEventListener('submit', (e) => {
 
                 const ownerNotificationMail = {
                     to: 'lshaver@vault28cards.com',
+                    from: "Vault 28 <noreply@vault28cards.com>",
                     replyTo: sellerEmail,
                     message: {
                         subject: `New Collection Lot Submitted: ${sellerName} - ${sport}`,
@@ -2069,6 +2116,7 @@ window.sendCustomerDashboardReply = function(inqId) {
                     }
                     const ownerNotificationMail = {
                         to: 'lshaver@vault28cards.com',
+                        from: "Vault 28 <noreply@vault28cards.com>",
                         replyTo: inq.email,
                         message: {
                             subject: `Customer Replied: ${inq.subject}`,
@@ -2922,6 +2970,7 @@ function sendMessageEmailToSeller(col, messageText, subjectText = "New Message f
     
     const mailObj = {
         to: col.sellerEmail,
+        from: "Vault 28 <noreply@vault28cards.com>",
         message: {
             subject: subjectText,
             html: emailHtml
@@ -3998,6 +4047,7 @@ document.getElementById('contact-form-inquiry').addEventListener('submit', (e) =
         // Write to mail collection to trigger the Firebase extension
         const emailPayload = {
             to: 'lshaver@vault28cards.com',
+            from: "Vault 28 <noreply@vault28cards.com>",
             message: {
                 subject: `New Vault 28 Inquiry: ${subject}`,
                 html: generateStandardEmailHtml(
@@ -4034,6 +4084,7 @@ document.getElementById('contact-form-inquiry').addEventListener('submit', (e) =
                 // Send automated receipt confirmation email to customer
                 const customerReceiptMail = {
                     to: email,
+                    from: "Vault 28 <noreply@vault28cards.com>",
                     replyTo: 'lshaver@vault28cards.com',
                     message: {
                         subject: `We received your Vault 28 inquiry: ${subject}`,
@@ -4453,6 +4504,7 @@ window.sendInquiryReply = function(inqId) {
             .then(() => {
                 const replyMail = {
                     to: inq.email,
+                    from: "Vault 28 <noreply@vault28cards.com>",
                     replyTo: 'lshaver@vault28cards.com',
                     message: {
                         subject: `Re: [Vault 28] Reply to your inquiry: ${inq.subject}`,
@@ -4726,6 +4778,7 @@ window.sendCustomerThreadReply = function() {
                     }
                     const ownerNotificationMail = {
                         to: 'lshaver@vault28cards.com',
+                        from: "Vault 28 <noreply@vault28cards.com>",
                         replyTo: inq.email,
                         message: {
                             subject: `Customer Replied: ${inq.subject}`,
