@@ -2667,9 +2667,28 @@ function renderAdminUsersTable() {
         return (now - lastSeenDate) < activeTimeThreshold;
     };
     
+    // Group by email to filter out duplicate/obsolete profile documents (keeping only the latest registered/last seen one)
+    const uniqueUsersMap = new Map();
+    users.forEach(user => {
+        const email = (user.email || '').toLowerCase().trim();
+        if (!email) return;
+        if (!uniqueUsersMap.has(email)) {
+            uniqueUsersMap.set(email, user);
+        } else {
+            const existing = uniqueUsersMap.get(email);
+            const existingTime = new Date(existing.lastSeenAt || existing.registeredAt || 0);
+            const currentTime = new Date(user.lastSeenAt || user.registeredAt || 0);
+            if (currentTime > existingTime) {
+                uniqueUsersMap.set(email, user);
+            }
+        }
+    });
+    
+    const displayUsers = Array.from(uniqueUsersMap.values());
+    
     // Update stats
-    const totalUsers = users.length;
-    const onlineUsers = users.filter(u => isUserOnline(u)).length;
+    const totalUsers = displayUsers.length;
+    const onlineUsers = displayUsers.filter(u => isUserOnline(u)).length;
     
     const statTotal = document.getElementById('admin-stat-users-total');
     const statOnline = document.getElementById('admin-stat-users-online');
@@ -2691,7 +2710,7 @@ function renderAdminUsersTable() {
         return;
     }
     
-    users.forEach(user => {
+    displayUsers.forEach(user => {
         const regDate = user.registeredAt ? new Date(user.registeredAt).toLocaleString() : 'N/A';
         const lastSeen = user.lastSeenAt ? new Date(user.lastSeenAt).toLocaleString() : 'N/A';
         
