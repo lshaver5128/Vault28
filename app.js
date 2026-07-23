@@ -2608,9 +2608,20 @@ function renderAdminUsersTable() {
     
     tableBody.innerHTML = '';
     
+    // Inactivity threshold: 5 minutes in milliseconds
+    const activeTimeThreshold = 5 * 60 * 1000;
+    const now = new Date();
+    
+    const isUserOnline = (u) => {
+        if (!u.isOnline) return false;
+        if (!u.lastSeenAt) return false;
+        const lastSeenDate = new Date(u.lastSeenAt);
+        return (now - lastSeenDate) < activeTimeThreshold;
+    };
+    
     // Update stats
     const totalUsers = users.length;
-    const onlineUsers = users.filter(u => u.isOnline).length;
+    const onlineUsers = users.filter(u => isUserOnline(u)).length;
     
     const statTotal = document.getElementById('admin-stat-users-total');
     const statOnline = document.getElementById('admin-stat-users-online');
@@ -2636,9 +2647,11 @@ function renderAdminUsersTable() {
         const regDate = user.registeredAt ? new Date(user.registeredAt).toLocaleString() : 'N/A';
         const lastSeen = user.lastSeenAt ? new Date(user.lastSeenAt).toLocaleString() : 'N/A';
         
-        const statusBadge = user.isOnline 
+        const isOnline = isUserOnline(user);
+        
+        const statusBadge = isOnline 
             ? `<span class="badge badge-success" style="box-shadow: 0 0 8px rgba(16,185,129,0.3); font-weight:600;"><span class="pulse-dot" style="display:inline-block; width: 6px; height: 6px; background:#fff; border-radius:50%; margin-right:5px; vertical-align:middle; animation: adminPulse 1.5s infinite alternate;"></span>Online</span>` 
-            : `<span class="badge badge-muted" style="color: var(--text-muted); background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05);">Offline</span>`;
+            : `<span class="badge badge-muted" style="color: var(--text-muted); background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); padding: 4px 8px; border-radius: 4px; font-size: 0.72rem; text-transform: uppercase;">Offline</span>`;
             
         const tr = document.createElement('tr');
         tr.innerHTML = `
@@ -2651,6 +2664,14 @@ function renderAdminUsersTable() {
         tableBody.appendChild(tr);
     });
 }
+
+// Periodically refresh the user status table (every 30 seconds) to maintain accuracy
+setInterval(() => {
+    const panel = document.getElementById('panel-users');
+    if (panel && panel.style.display !== 'none') {
+        renderAdminUsersTable();
+    }
+}, 30000);
 
 // Window Unload Presence Updater
 window.addEventListener('beforeunload', () => {
