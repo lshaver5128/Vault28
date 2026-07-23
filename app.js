@@ -81,7 +81,9 @@ let reviewsListener = null;
 let settingsListener = null;
 let inquiriesListener = null;
 let usersListener = null;
+let recentPurchasesListener = null;
 let users = [];
+let recentPurchases = [];
 let isRegisteringUser = false; // Flag to prevent auto-login flash during sign-up
 
 // Default Mock Collections Data
@@ -184,6 +186,33 @@ const DEFAULT_COLLECTIONS = [
                 timestamp: new Date(Date.now() - 3600000 * 2).toISOString()
             }
         ]
+    }
+];
+
+const DEFAULT_RECENT_PURCHASES = [
+    {
+        id: "rp-1",
+        title: "1989 Bowman & Vintage Baseball Lot",
+        description: "Unopened 1989 Bowman Baseball boxes and multiple sorted storage cases of 70s-90s vintage baseball cards.",
+        location: "Summerville, SC",
+        image: "assets/inventory3.jpg",
+        createdAt: "2026-07-18T12:00:00.000Z"
+    },
+    {
+        id: "rp-2",
+        title: "Classic Baseball Binders Lot",
+        description: "Acquired two massive card albums filled with 1970s and 1980s Topps, featuring rookie team sets and Hall of Famers.",
+        location: "Charleston, SC",
+        image: "assets/inventory2.jpg",
+        createdAt: "2026-07-18T11:00:00.000Z"
+    },
+    {
+        id: "rp-3",
+        title: "90s Basketball & Memorabilia Lot",
+        description: "A local buy of 90s basketball sets, hobby boxes, vintage Future Stars magazines, and classic team banners.",
+        location: "Mt. Pleasant, SC",
+        image: "assets/inventory4.jpg",
+        createdAt: "2026-07-18T10:00:00.000Z"
     }
 ];
 
@@ -625,6 +654,7 @@ function initDatabase() {
             if (settingsListener) settingsListener();
             if (usersListener) usersListener();
             if (inquiriesListener) inquiriesListener();
+            if (recentPurchasesListener) recentPurchasesListener();
             
             if (user) {
                 if (isRegisteringUser) {
@@ -802,6 +832,17 @@ function initDatabase() {
                     renderSettingsDetails();
                 }
             });
+
+            // Sync recent purchases
+            recentPurchasesListener = db.collection("recent_purchases").onSnapshot(snapshot => {
+                recentPurchases = [];
+                snapshot.forEach(doc => {
+                    recentPurchases.push({ id: doc.id, ...doc.data() });
+                });
+                recentPurchases.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+                renderRecentlyPurchasedGallery();
+                renderAdminRecentPurchasesList();
+            });
     } else {
         // Local Sandbox Fallback
         const storedCol = localStorage.getItem('v28_collections');
@@ -839,6 +880,13 @@ function initDatabase() {
         if (storedSet) settings = JSON.parse(storedSet);
         else {
             saveLocalSettings();
+        }
+
+        const storedRec = localStorage.getItem('v28_recent_purchases');
+        if (storedRec) recentPurchases = JSON.parse(storedRec);
+        else {
+            recentPurchases = [...DEFAULT_RECENT_PURCHASES];
+            saveLocalRecentPurchases();
         }
 
         // Initialize sandbox users
@@ -880,6 +928,8 @@ function initDatabase() {
         renderSettingsDetails();
         updateInquiriesBadge();
         renderAdminInquiriesList();
+        renderRecentlyPurchasedGallery();
+        renderAdminRecentPurchasesList();
         handleInitialRouting();
     }
 }
@@ -889,6 +939,7 @@ function saveLocalCollections() { localStorage.setItem('v28_collections', JSON.s
 function saveLocalProducts() { localStorage.setItem('v28_products', JSON.stringify(products)); }
 function saveLocalReviews() { localStorage.setItem('v28_reviews', JSON.stringify(reviews)); }
 function saveLocalSettings() { localStorage.setItem('v28_settings', JSON.stringify(settings)); }
+function saveLocalRecentPurchases() { localStorage.setItem('v28_recent_purchases', JSON.stringify(recentPurchases)); }
 
 function triggerUIRefresh() {
     document.getElementById('admin-badge-submissions').textContent = collections.length;
@@ -2575,6 +2626,7 @@ function setAdminTab(tabName) {
         btnCon.classList.add('active');
         panelCon.classList.add('active');
         renderAdminReviewsList();
+        renderAdminRecentPurchasesList();
     } else if (tabName === 'users') {
         if (btnUsr) btnUsr.classList.add('active');
         if (panelUsr) panelUsr.classList.add('active');
@@ -3709,6 +3761,127 @@ function renderSettingsDetails() {
     document.getElementById('contact-info-area').textContent = settings.area;
 }
 
+// --- Recently Purchased Collections Management ---
+
+// Photo Upload binding
+document.getElementById('btn-admin-pur-photo-upload').addEventListener('click', () => {
+    document.getElementById('admin-pur-photo-file').click();
+});
+
+document.getElementById('admin-pur-photo-file').addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    const reader = new FileReader();
+    reader.onload = function(evt) {
+        document.getElementById('admin-pur-photo-base64').value = evt.target.result;
+        document.getElementById('admin-pur-photo-status').textContent = `📸 Loaded: ${file.name}`;
+        document.getElementById('admin-pur-photo-status').style.color = 'var(--accent-cyan)';
+    };
+    reader.readAsDataURL(file);
+});
+
+// Submit handler
+document.getElementById('admin-purchase-form').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const title = document.getElementById('admin-pur-title').value.trim();
+    const location = document.getElementById('admin-pur-location').value.trim();
+    const description = document.getElementById('admin-pur-desc').value.trim();
+    const image = document.getElementById('admin-pur-photo-base64').value || '';
+    
+    const purId = 'pur-' + Math.random().toString(36).substr(2, 9);
+    const newPur = {
+        id: purId,
+        title,
+        location,
+        description,
+        image,
+        createdAt: new Date().toISOString()
+    };
+    
+    if (isFirebaseActive) {
+        db.collection("recent_purchases").doc(purId).set(newPur)
+            .then(() => {
+                showToast("Recently purchased collection added!", "success");
+                resetAdminPurchaseForm();
+            })
+            .catch(err => {
+                showToast("Error adding purchase to Cloud DB", "error");
+                console.error(err);
+            });
+    } else {
+        recentPurchases.unshift(newPur);
+        saveLocalRecentPurchases();
+        showToast("Recently purchased collection added locally!", "success");
+        resetAdminPurchaseForm();
+        renderRecentlyPurchasedGallery();
+        renderAdminRecentPurchasesList();
+    }
+});
+
+function resetAdminPurchaseForm() {
+    document.getElementById('admin-purchase-form').reset();
+    document.getElementById('admin-pur-photo-base64').value = '';
+    document.getElementById('admin-pur-photo-status').textContent = 'No photo selected';
+    document.getElementById('admin-pur-photo-status').style.color = 'var(--text-secondary)';
+}
+
+function renderAdminRecentPurchasesList() {
+    const list = document.getElementById('admin-purchases-list');
+    if (!list) return;
+    list.innerHTML = '';
+    
+    const currentList = recentPurchases.length > 0 ? recentPurchases : DEFAULT_RECENT_PURCHASES;
+    
+    currentList.forEach(p => {
+        const item = document.createElement('div');
+        item.style.padding = '0.75rem';
+        item.style.border = '1px solid var(--border-color)';
+        item.style.borderRadius = '8px';
+        item.style.background = 'rgba(0,0,0,0.1)';
+        item.style.display = 'flex';
+        item.style.justifyContent = 'space-between';
+        item.style.alignItems = 'center';
+        item.style.gap = '1rem';
+        
+        item.innerHTML = `
+            <div style="font-size:0.85rem; display: flex; align-items: center; gap: 0.75rem;">
+                <img src="${p.image || 'assets/inventory1.jpg'}" style="width: 40px; height: 40px; object-fit: cover; border-radius: 4px; border: 1px solid var(--border-color);" onerror="this.src='assets/inventory1.jpg'">
+                <div style="text-align: left;">
+                    <strong>${escapeHTML(p.title)}</strong> <span style="color:var(--accent-gold); font-size:0.75rem;">(${escapeHTML(p.location)})</span>
+                    <p style="color:var(--text-secondary); margin:4px 0 0 0; font-size:0.78rem; display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden;">${escapeHTML(p.description)}</p>
+                </div>
+            </div>
+            <button class="btn btn-secondary btn-sm" style="color:var(--accent-red); padding:2px 6px; font-size:0.75rem;" onclick="deleteAdminPurchase('${p.id}')">Delete</button>
+        `;
+        list.appendChild(item);
+    });
+}
+
+window.deleteAdminPurchase = function(id) {
+    if (!confirm("Remove this purchased collection listing from your homepage?")) return;
+    
+    // Check if it's one of the defaults and we are offline/sandbox
+    const isDefault = DEFAULT_RECENT_PURCHASES.some(p => p.id === id);
+    
+    if (isFirebaseActive) {
+        db.collection("recent_purchases").doc(id).delete()
+            .then(() => showToast("Purchased collection listing removed.", "success"))
+            .catch(err => showToast("Error deleting document from Firestore", "error"));
+    } else {
+        if (isDefault && recentPurchases.length === 0) {
+            // Seed defaults first so we can filter this one out
+            recentPurchases = DEFAULT_RECENT_PURCHASES.filter(p => p.id !== id);
+        } else {
+            recentPurchases = recentPurchases.filter(p => p.id !== id);
+        }
+        saveLocalRecentPurchases();
+        showToast("Purchased collection listing removed locally.", "success");
+        renderRecentlyPurchasedGallery();
+        renderAdminRecentPurchasesList();
+    }
+};
+
 // Reset Database button trigger
 document.getElementById('btn-admin-reset-db').addEventListener('click', () => {
     if (!confirm("Are you sure you want to delete all customizations and reseed the platform with defaults? This will erase all custom cards and collections.")) return;
@@ -3723,6 +3896,7 @@ document.getElementById('btn-admin-reset-db').addEventListener('click', () => {
     products = [];
     reviews = [];
     users = [];
+    recentPurchases = [];
     settings = {
         email: "lshaver@vault28cards.com",
         area: "Summerville, Charleston, and surrounding SC areas (Or secure nationwide shipping)"
@@ -4032,37 +4206,19 @@ function renderRecentlyPurchasedGallery() {
     const container = document.getElementById('landing-recent-gallery');
     if (!container) return;
     
-    container.innerHTML = `
+    const list = recentPurchases.length > 0 ? recentPurchases : DEFAULT_RECENT_PURCHASES;
+    
+    container.innerHTML = list.map(item => `
         <div class="glass-card" style="display: flex; flex-direction: column; gap: 0.75rem; padding: 1rem;">
-            <img src="assets/inventory3.jpg" alt="1989 Bowman" style="width: 100%; height: 180px; object-fit: cover; border-radius: 8px; border: 1px solid var(--border-color);">
-            <h3 style="font-size: 1.05rem; margin-top: 0.5rem; font-family: var(--font-title); font-weight: 600;">1989 Bowman & Vintage Baseball Lot</h3>
-            <p style="color: var(--text-secondary); font-size: 0.82rem; line-height: 1.5; flex-grow: 1;">Unopened 1989 Bowman Baseball boxes and multiple sorted storage cases of 70s-90s vintage baseball cards.</p>
+            <img src="${item.image || 'assets/inventory1.jpg'}" alt="${escapeHTML(item.title)}" style="width: 100%; height: 180px; object-fit: cover; border-radius: 8px; border: 1px solid var(--border-color);" onerror="this.src='assets/inventory1.jpg'">
+            <h3 style="font-size: 1.05rem; margin-top: 0.5rem; font-family: var(--font-title); font-weight: 600;">${escapeHTML(item.title)}</h3>
+            <p style="color: var(--text-secondary); font-size: 0.82rem; line-height: 1.5; flex-grow: 1;">${escapeHTML(item.description)}</p>
             <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border-color); padding-top: 0.5rem; font-size: 0.78rem; color: var(--text-muted);">
-                <span>📍 Summerville, SC</span>
+                <span>📍 ${escapeHTML(item.location)}</span>
                 <span class="badge badge-bought">Purchased</span>
             </div>
         </div>
-        
-        <div class="glass-card" style="display: flex; flex-direction: column; gap: 0.75rem; padding: 1rem;">
-            <img src="assets/inventory2.jpg" alt="Vintage Binders" style="width: 100%; height: 180px; object-fit: cover; border-radius: 8px; border: 1px solid var(--border-color);">
-            <h3 style="font-size: 1.05rem; margin-top: 0.5rem; font-family: var(--font-title); font-weight: 600;">Classic Baseball Binders Lot</h3>
-            <p style="color: var(--text-secondary); font-size: 0.82rem; line-height: 1.5; flex-grow: 1;">Acquired two massive card albums filled with 1970s and 1980s Topps, featuring rookie team sets and Hall of Famers.</p>
-            <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border-color); padding-top: 0.5rem; font-size: 0.78rem; color: var(--text-muted);">
-                <span>📍 Charleston, SC</span>
-                <span class="badge badge-bought">Purchased</span>
-            </div>
-        </div>
-
-        <div class="glass-card" style="display: flex; flex-direction: column; gap: 0.75rem; padding: 1rem;">
-            <img src="assets/inventory4.jpg" alt="90s Sports Banners" style="width: 100%; height: 180px; object-fit: cover; border-radius: 8px; border: 1px solid var(--border-color);">
-            <h3 style="font-size: 1.05rem; margin-top: 0.5rem; font-family: var(--font-title); font-weight: 600;">90s Basketball & Memorabilia Lot</h3>
-            <p style="color: var(--text-secondary); font-size: 0.82rem; line-height: 1.5; flex-grow: 1;">A local buy of 90s basketball sets, hobby boxes, vintage Future Stars magazines, and classic team banners.</p>
-            <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border-color); padding-top: 0.5rem; font-size: 0.78rem; color: var(--text-muted);">
-                <span>📍 Mt. Pleasant, SC</span>
-                <span class="badge badge-bought">Purchased</span>
-            </div>
-        </div>
-    `;
+    `).join('');
 }
 
 // Contact Inquiry Submission Handler

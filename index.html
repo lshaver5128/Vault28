@@ -1006,6 +1006,42 @@
                             </div>
                         </div>
 
+                        <!-- Manage Recently Purchased Collections -->
+                        <div class="glass-card" style="padding: 1.5rem; margin-top: 2rem;">
+                            <h3 style="font-size: 1.2rem; margin-bottom: 1.25rem;">Add Recently Purchased Collection</h3>
+                            <form id="admin-purchase-form" style="display: flex; flex-direction: column; gap: 1rem;">
+                                <div class="form-group">
+                                    <label for="admin-pur-title">Collection Title</label>
+                                    <input type="text" id="admin-pur-title" placeholder="e.g. 1986 Fleer NBA Rookie Hunt" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="admin-pur-location">Location</label>
+                                    <input type="text" id="admin-pur-location" placeholder="e.g. Mt. Pleasant, SC" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="admin-pur-desc">Description</label>
+                                    <textarea id="admin-pur-desc" rows="3" placeholder="A local buy of 90s basketball sets..." required></textarea>
+                                </div>
+                                <div class="form-group">
+                                    <label for="admin-pur-photo">Upload Cover Photo</label>
+                                    <div style="display: flex; gap: 1rem; align-items: center;">
+                                        <button type="button" class="btn btn-secondary btn-sm" id="btn-admin-pur-photo-upload" style="margin-top: 0.25rem;">
+                                            📸 Choose Photo
+                                        </button>
+                                        <span id="admin-pur-photo-status" style="font-size: 0.78rem; color: var(--text-secondary);">No photo selected</span>
+                                    </div>
+                                    <input type="file" id="admin-pur-photo-file" accept="image/*" style="display: none;">
+                                    <input type="hidden" id="admin-pur-photo-base64">
+                                </div>
+                                <button type="submit" class="btn btn-primary btn-sm">Add Collection to Homepage</button>
+                            </form>
+
+                            <h4 style="font-size: 1rem; margin-top: 2rem; margin-bottom: 0.75rem; border-top: 1px solid var(--border-color); padding-top: 1.5rem;">Active Purchased List</h4>
+                            <div id="admin-purchases-list" style="display: flex; flex-direction: column; gap: 0.75rem; text-align: left;">
+                                <!-- Managed dynamically -->
+                            </div>
+                        </div>
+
                         <!-- Manage Contact Settings -->
                         <div class="glass-card" style="padding: 1.5rem; display: flex; flex-direction: column; gap: 1.5rem;">
                             <div>
@@ -1558,6 +1594,6 @@ const firebaseConfig = {
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 
-    <script src="/app.js?v=11"></script>
+    <script src="/app.js?v=12"></script>
 </body>
 </html>
