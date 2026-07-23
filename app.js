@@ -82,6 +82,7 @@ let settingsListener = null;
 let inquiriesListener = null;
 let usersListener = null;
 let users = [];
+let isRegisteringUser = false; // Flag to prevent auto-login flash during sign-up
 
 // Default Mock Collections Data
 const DEFAULT_COLLECTIONS = [
@@ -626,116 +627,151 @@ function initDatabase() {
             if (inquiriesListener) inquiriesListener();
             
             if (user) {
-                document.getElementById('auth-widget').style.display = 'none';
-                document.getElementById('user-profile-widget').style.display = 'flex';
-                document.getElementById('user-display-name').textContent = user.displayName || user.email.split('@')[0];
-                
-                // Record user activity
-                recordUserActivity(user.uid, user.email, user.displayName, false);
-                updateContactFormPreFill(user);
-                
-                const roleLabel = document.getElementById('user-display-role');
-                const roleSwitcher = document.getElementById('role-switcher-wrapper');
-                
-                if (OWNER_EMAILS.includes(user.email)) {
-                    roleLabel.textContent = "Vault 28 Owner";
-                    roleLabel.style.color = "var(--accent-cyan)";
-                    roleSwitcher.style.display = 'flex';
-                    document.body.classList.add('has-admin-bar');
-                    const toolbar = document.getElementById('admin-toolbar');
-                    if (toolbar) toolbar.style.display = 'block';
-                    
-                    // Listen to users collection
-                    usersListener = db.collection("users").onSnapshot((snapshot) => {
-                        users = [];
-                        snapshot.forEach(doc => {
-                            users.push({ id: doc.id, ...doc.data() });
-                        });
-                        users.sort((a, b) => new Date(b.registeredAt || 0) - new Date(a.registeredAt || 0));
-                        renderAdminUsersTable();
-                    });
-
-                    // Listen to inquiries collection
-                    inquiriesListener = db.collection("inquiries").onSnapshot((snapshot) => {
-                        inquiries = [];
-                        snapshot.forEach(doc => {
-                            inquiries.push({ id: doc.id, ...doc.data() });
-                        });
-                        inquiries.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
-                        updateInquiriesBadge();
-                        renderAdminInquiriesList();
-                        renderCustomerDashboardInquiries();
-                    });
-
-                    // Only automatically redirect if they clicked a direct deep-link (like from an email)
-                    if (initialAdminTab) {
-                        const tabTarget = initialAdminTab;
-                        initialAdminTab = null;
-                        setTimeout(() => {
-                            setRole('buyer');
-                            setAdminTab(tabTarget);
-                        }, 200);
-                    } else {
-                        // Otherwise, load in seller view so they can browse the public site
-                        setTimeout(() => {
-                            setRole('seller');
-                        }, 200);
-                    }
-                } else {
-                    roleLabel.textContent = "Seller Account";
-                    roleLabel.style.color = "var(--text-secondary)";
-                    roleSwitcher.style.display = 'none';
-                    document.body.classList.remove('has-admin-bar');
-                    const toolbar = document.getElementById('admin-toolbar');
-                    if (toolbar) toolbar.style.display = 'none';
-                    setRole('seller');
+                if (isRegisteringUser) {
+                    // Skip setting up user UI, since they are about to be logged out by registration flow!
+                    return;
                 }
+                
+                const isOwner = OWNER_EMAILS.includes(user.email.toLowerCase());
+                
+                // Fetch the user document from Firestore to verify their email status
+                db.collection("users").doc(user.uid).get()
+                    .then(doc => {
+                        const data = doc.exists ? doc.data() : null;
+                        
+                        // If they are not verified and not the owner, force logout immediately
+                        if (!isOwner && data && data.isVerified === false) {
+                            showToast("Please verify your email address. We sent a link to your inbox.", "warning");
+                            firebase.auth().signOut().then(() => {
+                                clearSessionUI();
+                            });
+                            return;
+                        }
+                        
+                        setupUserSessionUI(user);
+                    })
+                    .catch(err => {
+                        console.warn("Error checking verification state:", err);
+                        // Fallback: If document fetch fails, let them see UI as backup
+                        setupUserSessionUI(user);
+                    });
+            } else {
+                clearSessionUI();
+            }
+        });
 
-                // Query collections based on user
-                let query = db.collection("collections");
-                if (!OWNER_EMAILS.includes(user.email)) {
-                    query = query.where("sellerUid", "==", user.uid);
-                }
-
-                collectionsListener = query.onSnapshot((snapshot) => {
-                    collections = [];
+        function setupUserSessionUI(user) {
+            document.getElementById('auth-widget').style.display = 'none';
+            document.getElementById('user-profile-widget').style.display = 'flex';
+            document.getElementById('user-display-name').textContent = user.displayName || user.email.split('@')[0];
+            
+            // Record user activity
+            recordUserActivity(user.uid, user.email, user.displayName, false);
+            updateContactFormPreFill(user);
+            
+            const roleLabel = document.getElementById('user-display-role');
+            const roleSwitcher = document.getElementById('role-switcher-wrapper');
+            
+            if (OWNER_EMAILS.includes(user.email)) {
+                roleLabel.textContent = "Vault 28 Owner";
+                roleLabel.style.color = "var(--accent-cyan)";
+                roleSwitcher.style.display = 'flex';
+                document.body.classList.add('has-admin-bar');
+                const toolbar = document.getElementById('admin-toolbar');
+                if (toolbar) toolbar.style.display = 'block';
+                
+                // Listen to users collection
+                usersListener = db.collection("users").onSnapshot((snapshot) => {
+                    users = [];
                     snapshot.forEach(doc => {
-                        collections.push({ id: doc.id, ...doc.data() });
+                        users.push({ id: doc.id, ...doc.data() });
                     });
-                    collections.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-                    
-                    triggerUIRefresh();
+                    users.sort((a, b) => new Date(b.registeredAt || 0) - new Date(a.registeredAt || 0));
+                    renderAdminUsersTable();
                 });
 
-                // Listen to inquiries matching user's email if they are a regular customer
-                if (!OWNER_EMAILS.includes(user.email)) {
-                    inquiriesListener = db.collection("inquiries").where("email", "==", user.email).onSnapshot((snapshot) => {
-                        inquiries = [];
-                        snapshot.forEach(doc => {
-                            inquiries.push({ id: doc.id, ...doc.data() });
-                        });
-                        inquiries.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
-                        renderCustomerDashboardInquiries();
-                    }, (error) => {
-                        console.warn("Failed to listen to inquiries:", error);
+                // Listen to inquiries collection
+                inquiriesListener = db.collection("inquiries").onSnapshot((snapshot) => {
+                    inquiries = [];
+                    snapshot.forEach(doc => {
+                        inquiries.push({ id: doc.id, ...doc.data() });
                     });
-                }
+                    inquiries.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+                    updateInquiriesBadge();
+                    renderAdminInquiriesList();
+                    renderCustomerDashboardInquiries();
+                });
 
+                // Only automatically redirect if they clicked a direct deep-link (like from an email)
+                if (initialAdminTab) {
+                    const tabTarget = initialAdminTab;
+                    initialAdminTab = null;
+                    setTimeout(() => {
+                        setRole('buyer');
+                        setAdminTab(tabTarget);
+                    }, 200);
+                } else {
+                    // Otherwise, load in seller view so they can browse the public site
+                    setTimeout(() => {
+                        setRole('seller');
+                    }, 200);
+                }
             } else {
-                document.getElementById('auth-widget').style.display = 'flex';
-                document.getElementById('user-profile-widget').style.display = 'none';
-                document.getElementById('role-switcher-wrapper').style.display = 'none';
+                roleLabel.textContent = "Seller Account";
+                roleLabel.style.color = "var(--text-secondary)";
+                roleSwitcher.style.display = 'none';
                 document.body.classList.remove('has-admin-bar');
                 const toolbar = document.getElementById('admin-toolbar');
                 if (toolbar) toolbar.style.display = 'none';
-                
-                updateContactFormPreFill(null);
-                collections = [];
-                users = [];
                 setRole('seller');
-                handleInitialRouting();
-                triggerUIRefresh();
             }
+
+            // Query collections based on user
+            let query = db.collection("collections");
+            if (!OWNER_EMAILS.includes(user.email)) {
+                query = query.where("sellerUid", "==", user.uid);
+            }
+
+            collectionsListener = query.onSnapshot((snapshot) => {
+                collections = [];
+                snapshot.forEach(doc => {
+                    collections.push({ id: doc.id, ...doc.data() });
+                });
+                collections.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+                
+                triggerUIRefresh();
+            });
+
+            // Listen to inquiries matching user's email if they are a regular customer
+            if (!OWNER_EMAILS.includes(user.email)) {
+                inquiriesListener = db.collection("inquiries").where("email", "==", user.email).onSnapshot((snapshot) => {
+                    inquiries = [];
+                    snapshot.forEach(doc => {
+                        inquiries.push({ id: doc.id, ...doc.data() });
+                    });
+                    inquiries.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+                    renderCustomerDashboardInquiries();
+                }, (error) => {
+                    console.warn("Failed to listen to inquiries:", error);
+                });
+            }
+        }
+
+        function clearSessionUI() {
+            document.getElementById('auth-widget').style.display = 'flex';
+            document.getElementById('user-profile-widget').style.display = 'none';
+            document.getElementById('role-switcher-wrapper').style.display = 'none';
+            document.body.classList.remove('has-admin-bar');
+            const toolbar = document.getElementById('admin-toolbar');
+            if (toolbar) toolbar.style.display = 'none';
+            
+            updateContactFormPreFill(null);
+            collections = [];
+            users = [];
+            setRole('seller');
+            handleInitialRouting();
+            triggerUIRefresh();
+        }
 
             // Sync public products
             productsListener = db.collection("products").onSnapshot(snapshot => {
@@ -766,7 +802,6 @@ function initDatabase() {
                     renderSettingsDetails();
                 }
             });
-        });
     } else {
         // Local Sandbox Fallback
         const storedCol = localStorage.getItem('v28_collections');
@@ -1166,6 +1201,7 @@ document.getElementById('auth-form').addEventListener('submit', (e) => {
                         });
                 });
         } else {
+            isRegisteringUser = true;
             firebase.auth().createUserWithEmailAndPassword(email, password)
                 .then(cred => {
                     cred.user.updateProfile({ displayName: name }).then(() => {
@@ -1200,11 +1236,15 @@ document.getElementById('auth-form').addEventListener('submit', (e) => {
                                 return firebase.auth().signOut();
                             })
                             .then(() => {
+                                isRegisteringUser = false;
                                 closeAuthModal();
                             });
                     });
                 })
-                .catch(err => showToast(err.message, "error"))
+                .catch(err => {
+                    isRegisteringUser = false;
+                    showToast(err.message, "error");
+                })
                 .finally(() => {
                     btnSubmit.disabled = false;
                     btnSubmit.textContent = 'Create Account';
