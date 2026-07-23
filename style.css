@@ -1868,3 +1868,36 @@ input:-webkit-autofill:active {
     border: 1px solid var(--border-color);
     background: rgba(0, 0, 0, 0.15);
 }
+
+/* Fix header stacking and overlap when WIP banner is active */
+.fixed-top-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+}
+
+.fixed-top-container header {
+    position: static !important;
+    background: rgba(6, 9, 19, 0.95) !important; /* Make it slightly more opaque since it stacks */
+}
+
+.fixed-top-container .admin-toolbar {
+    position: static !important;
+}
+
+.fixed-top-container .sandbox-banner {
+    position: static !important;
+}
+
+/* Dynamic offsets for body main content */
+main.container {
+    padding-top: 140px !important; /* Account for WIP banner + header */
+}
+
+body.has-admin-bar main.container {
+    padding-top: 180px !important; /* Account for WIP banner + admin bar + header */
+}

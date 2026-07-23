@@ -12,70 +12,73 @@
 </head>
 <body>
 
-    <!-- Work In Progress Alert Banner -->
-    <div id="wip-banner" style="background: linear-gradient(90deg, #b8860b 0%, #dfb750 50%, #b8860b 100%); color: #0a0b0e; text-align: center; padding: 10px 16px; font-size: 0.82rem; font-weight: 600; letter-spacing: 0.03em; box-shadow: 0 2px 10px rgba(0,0,0,0.3); display: flex; justify-content: center; align-items: center; gap: 8px; flex-wrap: wrap; z-index: 1002; position: relative; font-family: var(--font-main);">
-        <span>🚧 <strong>Work In Progress:</strong> We are currently polishing the platform. If you encounter any issues, please text us at <a href="tel:774-424-3561" style="text-decoration: underline; font-weight: 700; color: inherit;">774-424-3561</a> or email <a href="mailto:lshaver@vault28cards.com" style="text-decoration: underline; font-weight: 700; color: inherit;">lshaver@vault28cards.com</a>.</span>
-    </div>
-
-    <!-- Local DB Setup Sandbox Banner (only visible if Firebase config isn't pasted) -->
-    <div class="sandbox-banner" id="sandbox-banner" style="display: none;">
-        <span>⚡ Running in <strong>Local Sandbox Mode</strong> (Data is saved locally in your browser).</span>
-        <button class="btn btn-sm" id="btn-setup-db" style="background: #fbbf24; color: #000; font-weight:600;">Connect Firebase</button>
-    </div>
-
-    <!-- Admin/Owner Top Toolbar (visible only if logged in as owner) -->
-    <div id="admin-toolbar" class="admin-toolbar" style="display: none;">
-        <div class="container admin-toolbar-inner">
-            <div class="admin-status">
-                <span class="pulse-dot"></span>
-                <span>Owner Console Active</span>
-            </div>
-            <div style="display: flex; align-items: center; gap: 1rem;">
-                <!-- Admin switcher widget -->
-                <div class="role-switcher-container" id="role-switcher-wrapper" style="display: none;" title="Switch between Seller and Vault 28 Buyer view to test the application">
-                    <button class="role-btn active" id="btn-role-seller" data-role="seller">Seller View</button>
-                    <button class="role-btn" id="btn-role-buyer" data-role="buyer">
-                        Buyer (Owner) View
-                        <span class="update-dot" id="buyer-update-dot"></span>
-                    </button>
-                </div>
-            </div>
+    <!-- Unified Sticky/Fixed Top Container -->
+    <div class="fixed-top-container">
+        <!-- Work In Progress Alert Banner -->
+        <div id="wip-banner" style="background: linear-gradient(90deg, #b8860b 0%, #dfb750 50%, #b8860b 100%); color: #0a0b0e; text-align: center; padding: 10px 16px; font-size: 0.82rem; font-weight: 600; letter-spacing: 0.03em; box-shadow: 0 2px 10px rgba(0,0,0,0.3); display: flex; justify-content: center; align-items: center; gap: 8px; flex-wrap: wrap; position: relative; font-family: var(--font-main);">
+            <span>🚧 <strong>Work In Progress:</strong> We are currently polishing the platform. If you encounter any issues, please text us at <a href="tel:774-424-3561" style="text-decoration: underline; font-weight: 700; color: inherit;">774-424-3561</a> or email <a href="mailto:lshaver@vault28cards.com" style="text-decoration: underline; font-weight: 700; color: inherit;">lshaver@vault28cards.com</a>.</span>
         </div>
-    </div>
 
-    <!-- Header & Navigation -->
-    <header>
-        <div class="container navbar">
-            <a href="/" class="logo" id="brand-logo" style="display: flex; align-items: center; gap: 0.75rem;">
-                <img src="/assets/logo_transparent.png" alt="Vault 28 Logo" style="height: 50px; width: 50px; border-radius: 50%; object-fit: cover;" id="logo-img" onerror="this.style.display='none';">
-                <span id="logo-text" style="font-family: var(--font-title); font-weight: 800; font-size: 1.4rem;">VAULT <span style="color: var(--accent-gold); font-style: normal; background: none; -webkit-text-fill-color: initial;">28</span> <span style="font-size: 0.85rem; font-weight: 600; letter-spacing: 0.08em; color: var(--text-secondary); margin-left: 0.25rem;">TRADING CO.</span></span>
-            </a>
-            
-            <!-- Dynamic Navigation Links -->
-            <nav class="nav-links" id="nav-links">
-                <!-- Links will be dynamically adjusted by active role -->
-            </nav>
+        <!-- Local DB Setup Sandbox Banner (only visible if Firebase config isn't pasted) -->
+        <div class="sandbox-banner" id="sandbox-banner" style="display: none;">
+            <span>⚡ Running in <strong>Local Sandbox Mode</strong> (Data is saved locally in your browser).</span>
+            <button class="btn btn-sm" id="btn-setup-db" style="background: #fbbf24; color: #000; font-weight:600;">Connect Firebase</button>
+        </div>
 
-            <div style="display: flex; align-items: center; gap: 1rem;">
-                <!-- Header CTA Button -->
-                <button class="btn btn-primary btn-sm" id="btn-nav-free-offer" style="box-shadow: 0 0 15px rgba(223, 183, 80, 0.25);">Get a Free Offer</button>
-
-                <!-- Auth Widget (Sign In / Register) -->
-                <div id="auth-widget" style="display: flex; gap: 0.5rem;">
-                    <button class="btn btn-secondary btn-sm" id="btn-header-signin">Sign In</button>
-                    <button class="btn btn-outline-cyan btn-sm" id="btn-header-signup">Register</button>
+        <!-- Admin/Owner Top Toolbar (visible only if logged in as owner) -->
+        <div id="admin-toolbar" class="admin-toolbar" style="display: none;">
+            <div class="container admin-toolbar-inner">
+                <div class="admin-status">
+                    <span class="pulse-dot"></span>
+                    <span>Owner Console Active</span>
                 </div>
-                
-                <div id="user-profile-widget" style="display: none; align-items: center; gap: 0.75rem;">
-                    <div style="text-align: right; line-height: 1.2;">
-                        <div id="user-display-name" style="font-size: 0.85rem; font-weight: 600; color: var(--text-primary);">User Name</div>
-                        <div id="user-display-role" style="font-size: 0.72rem; color: var(--accent-cyan); font-weight: 500;">Seller Account</div>
+                <div style="display: flex; align-items: center; gap: 1rem;">
+                    <!-- Admin switcher widget -->
+                    <div class="role-switcher-container" id="role-switcher-wrapper" style="display: none;" title="Switch between Seller and Vault 28 Buyer view to test the application">
+                        <button class="role-btn active" id="btn-role-seller" data-role="seller">Seller View</button>
+                        <button class="role-btn" id="btn-role-buyer" data-role="buyer">
+                            Buyer (Owner) View
+                            <span class="update-dot" id="buyer-update-dot"></span>
+                        </button>
                     </div>
-                    <button class="btn btn-secondary btn-sm" id="btn-header-signout" style="padding: 4px 8px; font-size: 0.75rem;">Sign Out</button>
                 </div>
             </div>
         </div>
-    </header>
+
+        <!-- Header & Navigation -->
+        <header>
+            <div class="container navbar">
+                <a href="/" class="logo" id="brand-logo" style="display: flex; align-items: center; gap: 0.75rem;">
+                    <img src="/assets/logo_transparent.png" alt="Vault 28 Logo" style="height: 50px; width: 50px; border-radius: 50%; object-fit: cover;" id="logo-img" onerror="this.style.display='none';">
+                    <span id="logo-text" style="font-family: var(--font-title); font-weight: 800; font-size: 1.4rem;">VAULT <span style="color: var(--accent-gold); font-style: normal; background: none; -webkit-text-fill-color: initial;">28</span> <span style="font-size: 0.85rem; font-weight: 600; letter-spacing: 0.08em; color: var(--text-secondary); margin-left: 0.25rem;">TRADING CO.</span></span>
+                </a>
+                
+                <!-- Dynamic Navigation Links -->
+                <nav class="nav-links" id="nav-links">
+                    <!-- Links will be dynamically adjusted by active role -->
+                </nav>
+
+                <div style="display: flex; align-items: center; gap: 1rem;">
+                    <!-- Header CTA Button -->
+                    <button class="btn btn-primary btn-sm" id="btn-nav-free-offer" style="box-shadow: 0 0 15px rgba(223, 183, 80, 0.25);">Get a Free Offer</button>
+
+                    <!-- Auth Widget (Sign In / Register) -->
+                    <div id="auth-widget" style="display: flex; gap: 0.5rem;">
+                        <button class="btn btn-secondary btn-sm" id="btn-header-signin">Sign In</button>
+                        <button class="btn btn-outline-cyan btn-sm" id="btn-header-signup">Register</button>
+                    </div>
+                    
+                    <div id="user-profile-widget" style="display: none; align-items: center; gap: 0.75rem;">
+                        <div style="text-align: right; line-height: 1.2;">
+                            <div id="user-display-name" style="font-size: 0.85rem; font-weight: 600; color: var(--text-primary);">User Name</div>
+                            <div id="user-display-role" style="font-size: 0.72rem; color: var(--accent-cyan); font-weight: 500;">Seller Account</div>
+                        </div>
+                        <button class="btn btn-secondary btn-sm" id="btn-header-signout" style="padding: 4px 8px; font-size: 0.75rem;">Sign Out</button>
+                    </div>
+                </div>
+            </div>
+        </header>
+    </div>
 
     <!-- Main Content Area -->
     <main class="container" style="padding-bottom: 2rem;">
