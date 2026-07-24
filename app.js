@@ -744,9 +744,9 @@ function initDatabase() {
                     // If refreshing on the admin page, keep them on the buyer dashboard
                     const path = window.location.pathname;
                     if (path === '/admin' || path === '/admin/review') {
-                        setRole('buyer');
+                        setRole('buyer', false);
                     } else {
-                        setRole('seller');
+                        setRole('seller', false);
                     }
                 }
             } else {
@@ -756,7 +756,7 @@ function initDatabase() {
                 document.body.classList.remove('has-admin-bar');
                 const toolbar = document.getElementById('admin-toolbar');
                 if (toolbar) toolbar.style.display = 'none';
-                setRole('seller');
+                setRole('seller', false);
             }
 
             // Query collections based on user
@@ -804,7 +804,7 @@ function initDatabase() {
             updateContactFormPreFill(null);
             collections = [];
             users = [];
-            setRole('seller');
+            setRole('seller', false);
             handleInitialRouting();
             triggerUIRefresh();
         }
@@ -989,28 +989,33 @@ function triggerUIRefresh() {
 }
 
 // Role Switcher
-function setRole(role) {
+function setRole(role, shouldSwitchView = true) {
     currentActiveRole = role;
     const btnSeller = document.getElementById('btn-role-seller');
     const btnBuyer = document.getElementById('btn-role-buyer');
     
     if (role === 'seller') {
-        btnSeller.classList.add('active');
-        btnBuyer.classList.remove('active');
-        document.getElementById('buyer-update-dot').style.display = 'none';
-        switchView('seller-landing');
+        if (btnSeller) btnSeller.classList.add('active');
+        if (btnBuyer) btnBuyer.classList.remove('active');
+        const updateDot = document.getElementById('buyer-update-dot');
+        if (updateDot) updateDot.style.display = 'none';
+        if (shouldSwitchView) {
+            switchView('seller-landing');
+        }
     } else {
         if (isFirebaseActive) {
             const user = firebase.auth().currentUser;
             if (!user || !OWNER_EMAILS.includes(user.email)) {
                 showToast("Owner authorization required.", "error");
-                setRole('seller');
+                setRole('seller', shouldSwitchView);
                 return;
             }
         }
-        btnBuyer.classList.add('active');
-        btnSeller.classList.remove('active');
-        switchView('buyer-dashboard');
+        if (btnBuyer) btnBuyer.classList.add('active');
+        if (btnSeller) btnSeller.classList.remove('active');
+        if (shouldSwitchView) {
+            switchView('buyer-dashboard');
+        }
     }
 }
 
@@ -5376,7 +5381,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     initDatabase();
     checkEmailVerificationParam();
-    setRole('seller');
+    setRole('seller', false);
     initScrollReveal();
     initHeroSlider();
     initAboutSlideshow();
