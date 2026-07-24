@@ -840,8 +840,25 @@ function initDatabase() {
                     recentPurchases.push({ id: doc.id, ...doc.data() });
                 });
                 recentPurchases.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
-                renderRecentlyPurchasedGallery();
-                renderAdminRecentPurchasesList();
+                
+                // Auto-seed defaults if Firestore collection is empty and we haven't seeded yet
+                if (recentPurchases.length === 0 && !localStorage.getItem('v28_recent_purchases_seeded')) {
+                    localStorage.setItem('v28_recent_purchases_seeded', 'true');
+                    const batch = db.batch();
+                    DEFAULT_RECENT_PURCHASES.forEach(p => {
+                        const docRef = db.collection("recent_purchases").doc(p.id);
+                        batch.set(docRef, p);
+                    });
+                    batch.commit().then(() => {
+                        console.log("Default recent purchases seeded to Firestore.");
+                    }).catch(err => {
+                        console.error("Failed to seed default purchases:", err);
+                        localStorage.removeItem('v28_recent_purchases_seeded');
+                    });
+                } else {
+                    renderRecentlyPurchasedGallery();
+                    renderAdminRecentPurchasesList();
+                }
             });
     } else {
         // Local Sandbox Fallback
@@ -3886,9 +3903,12 @@ function renderAdminRecentPurchasesList() {
     if (!list) return;
     list.innerHTML = '';
     
-    const currentList = recentPurchases.length > 0 ? recentPurchases : DEFAULT_RECENT_PURCHASES;
+    if (recentPurchases.length === 0) {
+        list.innerHTML = `<div style="color:var(--text-muted); font-size:0.88rem;">No purchased collections listed.</div>`;
+        return;
+    }
     
-    currentList.forEach(p => {
+    recentPurchases.forEach(p => {
         const item = document.createElement('div');
         item.style.padding = '0.75rem';
         item.style.border = '1px solid var(--border-color)';
@@ -4259,11 +4279,18 @@ function renderPublicReviews() {
 // Render Recently Purchased Gallery on Landing page (displays our real JPGs)
 function renderRecentlyPurchasedGallery() {
     const container = document.getElementById('landing-recent-gallery');
+    const section = document.getElementById('section-recent-purchases');
     if (!container) return;
     
-    const list = recentPurchases.length > 0 ? recentPurchases : DEFAULT_RECENT_PURCHASES;
+    if (recentPurchases.length === 0) {
+        if (section) section.style.display = 'none';
+        container.innerHTML = '';
+        return;
+    }
     
-    container.innerHTML = list.map(item => `
+    if (section) section.style.display = 'block';
+    
+    container.innerHTML = recentPurchases.map(item => `
         <div class="glass-card" style="display: flex; flex-direction: column; gap: 0.75rem; padding: 1rem;">
             <img src="${item.image || 'assets/inventory1.jpg'}" alt="${escapeHTML(item.title)}" style="width: 100%; height: 180px; object-fit: cover; border-radius: 8px; border: 1px solid var(--border-color);" onerror="this.src='assets/inventory1.jpg'">
             <h3 style="font-size: 1.05rem; margin-top: 0.5rem; font-family: var(--font-title); font-weight: 600;">${escapeHTML(item.title)}</h3>
