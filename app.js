@@ -785,6 +785,9 @@ function initDatabase() {
                     console.warn("Failed to listen to inquiries:", error);
                 });
             }
+            
+            // Route cleanly on session setup
+            handleInitialRouting();
         }
 
         function clearSessionUI() {
