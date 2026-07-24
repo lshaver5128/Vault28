@@ -5298,6 +5298,50 @@ function initHeroSlider() {
     }, 4500);
 }
 
+// About Us page image slideshow logic
+function initAboutSlideshow() {
+    const slides = document.querySelectorAll('.about-slide');
+    if (slides.length < 2) return;
+    
+    const images = [
+        "/assets/inventory3.jpg",
+        "/assets/inventory2.jpg",
+        "/assets/inventory1.jpg",
+        "/assets/inventory4.jpg",
+        "/assets/inventory5.jpg",
+        "/assets/hero_cards_2.jpg",
+        "/assets/hero_cards_3.jpg"
+    ];
+    
+    let currentImgIndex = 0;
+    let activeSlideIndex = 0; // 0 or 1
+    
+    setInterval(() => {
+        // Find next image in rotation
+        currentImgIndex = (currentImgIndex + 1) % images.length;
+        
+        // Find slide elements
+        const activeSlide = slides[activeSlideIndex];
+        const nextSlideIndex = (activeSlideIndex + 1) % 2;
+        const nextSlide = slides[nextSlideIndex];
+        
+        // Load next image on the hidden slide
+        nextSlide.src = images[currentImgIndex];
+        
+        // Wait for image pre-loading to complete to avoid flickering, then cross-fade
+        nextSlide.onload = function() {
+            nextSlide.style.opacity = '1';
+            nextSlide.style.zIndex = '1';
+            
+            activeSlide.style.opacity = '0';
+            activeSlide.style.zIndex = '0';
+            
+            // Swap active pointer
+            activeSlideIndex = nextSlideIndex;
+        };
+    }, 4000);
+}
+
 // DOM Init
 document.addEventListener('DOMContentLoaded', () => {
     const banner = document.getElementById('sandbox-banner');
@@ -5329,5 +5373,6 @@ document.addEventListener('DOMContentLoaded', () => {
     setRole('seller');
     initScrollReveal();
     initHeroSlider();
+    initAboutSlideshow();
     updateWizardUI();
 });
