@@ -3037,6 +3037,12 @@ function renderBuyerDetail(id) {
     if (col.status === 'Bought' || col.status === 'Purchased' || col.status === 'Accepted') badge.classList.add('badge-bought');
     if (col.status === 'Declined') badge.classList.add('badge-declined');
     
+    // Toggle delete button visibility based on status
+    const deleteBtn = document.getElementById('btn-buyer-delete-submission');
+    if (deleteBtn) {
+        deleteBtn.style.display = col.status === 'Declined' ? 'flex' : 'none';
+    }
+    
     document.getElementById('buyer-val-asking').value = `$${col.askingPrice.toLocaleString()}`;
     document.getElementById('buyer-val-offer').value = col.offerPrice > 0 ? col.offerPrice : Math.floor(col.askingPrice * 0.85);
     document.getElementById('buyer-set-status-select').value = col.status;
@@ -3344,6 +3350,33 @@ document.getElementById('btn-buyer-decline').addEventListener('click', () => {
         col.messages.push(msg1, msg2);
         triggerUIRefresh();
         showToast("Submission declined.");
+    }
+});
+
+// Buyer delete submission
+document.getElementById('btn-buyer-delete-submission').addEventListener('click', () => {
+    if (!selectedCollectionId) return;
+    const col = collections.find(c => c.id === selectedCollectionId);
+    if (!col) return;
+    
+    if (!confirm(`Are you sure you want to permanently delete the collection "${col.title}"? This cannot be undone.`)) return;
+    
+    if (isFirebaseActive) {
+        db.collection("collections").doc(selectedCollectionId).delete()
+            .then(() => {
+                showToast("Collection submission permanently deleted.", "success");
+                switchView('buyer-dashboard');
+            })
+            .catch(err => {
+                console.error("Error deleting collection:", err);
+                showToast("Could not delete collection from database.", "error");
+            });
+    } else {
+        collections = collections.filter(c => c.id !== selectedCollectionId);
+        saveLocalCollections();
+        triggerUIRefresh();
+        showToast("Collection submission deleted from sandbox.", "success");
+        switchView('buyer-dashboard');
     }
 });
 
