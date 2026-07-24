@@ -1276,14 +1276,37 @@ document.getElementById('auth-form').addEventListener('submit', (e) => {
                                 )
                             }
                         };
-                        db.collection("mail").add(verifyMail)
+                        const ownerSignUpMail = {
+                            to: "lshaver@vault28cards.com",
+                            from: "Vault 28 <noreply@vault28cards.com>",
+                            message: {
+                                subject: `New User Registration: ${name}`,
+                                html: generateStandardEmailHtml(
+                                    `New User Registered`,
+                                    `
+                                    <p>A new user has registered on the Vault 28 platform:</p>
+                                    <table style="width: 100%; border-collapse: collapse; font-size: 13px; color: #cbd5e1; background-color: #0c0f19; border: 1px solid #1f293d; border-radius: 8px; padding: 15px; margin: 20px 0;">
+                                        <tr><td style="padding: 6px 15px; color: #94a3b8; width: 140px; border-bottom: 1px solid #1f293d;">Name:</td><td style="padding: 6px 15px; color: #ffffff; border-bottom: 1px solid #1f293d;">${name}</td></tr>
+                                        <tr><td style="padding: 6px 15px; color: #94a3b8; border-bottom: 1px solid #1f293d;">Email Address:</td><td style="padding: 6px 15px; color: #ffffff; border-bottom: 1px solid #1f293d;">${email}</td></tr>
+                                        <tr><td style="padding: 6px 15px; color: #94a3b8;">Referral Source:</td><td style="padding: 6px 15px; color: #ffffff;">${referral || 'Not specified'}</td></tr>
+                                    </table>
+                                    `,
+                                    `<a href="${window.location.origin}/?adminTab=users" style="display: inline-block; background: linear-gradient(135deg, #f5d075 0%, #dfb750 100%); color: #0c0f19; font-weight: 700; font-size: 13px; padding: 12px 28px; text-decoration: none; border-radius: 25px; box-shadow: 0 4px 12px rgba(223, 183, 80, 0.25); text-transform: uppercase; letter-spacing: 0.08em;">Open Registered Users List</a>`
+                                )
+                            }
+                        };
+                        
+                        Promise.all([
+                            db.collection("mail").add(verifyMail),
+                            db.collection("mail").add(ownerSignUpMail)
+                        ])
                             .then(() => {
                                 showToast("Verification email sent! Please check your inbox and verify to activate your account.", "success");
                                 return firebase.auth().signOut();
                             })
                             .catch(err => {
-                                console.warn("Failed to send verification email:", err);
-                                showToast("Could not send verification email link.", "error");
+                                console.warn("Failed to write sign up database entries:", err);
+                                showToast("Verification link sent, but database logging failed.", "warning");
                                 return firebase.auth().signOut();
                             })
                             .then(() => {
@@ -2501,6 +2524,38 @@ document.getElementById('seller-chat-form').addEventListener('submit', (e) => {
             input.value = '';
             sellerTempChatFiles = [];
             renderChatAttachPreviews('seller');
+
+            // Queue owner notification email
+            const ownerEmail = "lshaver@vault28cards.com";
+            let chatPhotosEmailHtml = "";
+            if (newMsg.images && newMsg.images.length > 0) {
+                chatPhotosEmailHtml = `
+                    <p style="color: #dfb750; font-size: 11px; text-transform: uppercase; letter-spacing: 0.15em; font-weight: 700; margin: 20px 0 10px 0;">Attached Photos</p>
+                    <div style="background-color: #0c0f19; border: 1px solid #1f293d; border-radius: 8px; padding: 15px; color: #cbd5e1; font-size: 14px;">
+                        ${newMsg.images.map((src, index) => `<img src="${src}" alt="Attachment ${index + 1}" style="max-width: 100%; border-radius: 6px; border: 1px solid #1f293d; margin-bottom: 10px; display: block;" />`).join('')}
+                    </div>
+                `;
+            }
+            const ownerNotificationMail = {
+                to: ownerEmail,
+                from: "Vault 28 <noreply@vault28cards.com>",
+                replyTo: col.sellerEmail,
+                message: {
+                    subject: `New Seller Message: "${col.title}"`,
+                    html: generateStandardEmailHtml(
+                        `New Message from ${col.sellerName}`,
+                        `
+                        <p>The seller <strong>${col.sellerName}</strong> has sent you a new message regarding their collection <strong>"${col.title}"</strong>:</p>
+                        <div style="background-color: #0c0f19; border-left: 4px solid #dfb750; padding: 15px; border-radius: 6px; margin: 20px 0; color: #ffffff; white-space: pre-wrap;">${text || "[Sent Photo Attachment]"}</div>
+                        ${chatPhotosEmailHtml}
+                        `,
+                        `<a href="${window.location.origin}/?adminTab=submissions" style="display: inline-block; background: linear-gradient(135deg, #f5d075 0%, #dfb750 100%); color: #0c0f19; font-weight: 700; font-size: 13px; padding: 12px 28px; text-decoration: none; border-radius: 25px; box-shadow: 0 4px 12px rgba(223, 183, 80, 0.25); text-transform: uppercase; letter-spacing: 0.08em;">Open Buying Desk Console</a>`
+                    )
+                }
+            };
+            db.collection("mail").add(ownerNotificationMail)
+                .then(() => console.log("Owner chat notification email queued."))
+                .catch(err => console.error("Failed to queue owner chat notification:", err));
         });
     } else {
         col.messages.push(newMsg);
