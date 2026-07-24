@@ -741,10 +741,13 @@ function initDatabase() {
                         setAdminTab(tabTarget);
                     }, 200);
                 } else {
-                    // Otherwise, load in seller view so they can browse the public site
-                    setTimeout(() => {
+                    // If refreshing on the admin page, keep them on the buyer dashboard
+                    const path = window.location.pathname;
+                    if (path === '/admin' || path === '/admin/review') {
+                        setRole('buyer');
+                    } else {
                         setRole('seller');
-                    }, 200);
+                    }
                 }
             } else {
                 roleLabel.textContent = "Seller Account";
