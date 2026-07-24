@@ -1019,7 +1019,6 @@ function setRole(role, shouldSwitchView = true) {
     }
 }
 
-// Toast Manager
 function showToast(message, type = 'info') {
     const container = document.body;
     let toastContainer = document.getElementById('toast-container');
@@ -1031,8 +1030,15 @@ function showToast(message, type = 'info') {
     }
     
     const toast = document.createElement('div');
-    toast.className = `toast ${type === 'success' ? 'success' : ''}`;
-    toast.innerHTML = `<span>${type === 'success' ? '✅' : '🔔'}</span> ${message}`;
+    toast.className = `toast ${type}`;
+    
+    let icon = '🔔';
+    if (type === 'success') icon = '✅';
+    else if (type === 'error') icon = '❌';
+    else if (type === 'warning') icon = '⚠️';
+    else if (type === 'info') icon = 'ℹ️';
+    
+    toast.innerHTML = `<span style="font-size: 1.15rem; display: flex; align-items: center;">${icon}</span> <span style="font-weight: 500; font-family: var(--font-main);">${message}</span>`;
     toastContainer.appendChild(toast);
     
     setTimeout(() => {

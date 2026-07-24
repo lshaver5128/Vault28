@@ -1429,7 +1429,22 @@ input:focus, select:focus, textarea:focus {
 
 .toast.success {
     border-color: var(--accent-emerald);
-    box-shadow: 0 10px 25px rgba(0,0,0,0.5), var(--shadow-neon-emerald);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.5), 0 0 10px rgba(16, 185, 129, 0.3);
+}
+
+.toast.error {
+    border-color: #ef4444;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.5), 0 0 10px rgba(239, 68, 68, 0.3);
+}
+
+.toast.warning {
+    border-color: var(--accent-gold);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.5), 0 0 10px rgba(223, 183, 80, 0.3);
+}
+
+.toast.info {
+    border-color: var(--accent-cyan);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.5), 0 0 10px rgba(34, 211, 238, 0.3);
 }
 
 @keyframes slideIn {
