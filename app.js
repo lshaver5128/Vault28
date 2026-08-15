@@ -3775,7 +3775,65 @@ window.deleteAdminProduct = function(id) {
 
 // ==================== ADMIN CONTENT MANAGEMENT ====================
 
-// Add Review Submit
+let editingReviewId = null;
+
+// Clear review form and restore Add mode
+function clearReviewForm() {
+    editingReviewId = null;
+    document.getElementById('admin-review-form').reset();
+    
+    const submitBtn = document.querySelector('#admin-review-form button[type="submit"]');
+    if (submitBtn) {
+        submitBtn.textContent = 'Add Testimonial to Homepage';
+    }
+    
+    const cancelBtn = document.getElementById('btn-admin-rev-cancel');
+    if (cancelBtn) {
+        cancelBtn.style.display = 'none';
+    }
+}
+
+// Edit existing review
+window.editAdminReview = function(id) {
+    const r = reviews.find(review => review.id === id);
+    if (!r) return;
+    
+    editingReviewId = id;
+    
+    // Populate form fields
+    document.getElementById('admin-rev-name').value = r.name;
+    document.getElementById('admin-rev-location').value = r.location;
+    document.getElementById('admin-rev-stars').value = r.stars.toString();
+    document.getElementById('admin-rev-text').value = r.text;
+    
+    // Change submit button text
+    const submitBtn = document.querySelector('#admin-review-form button[type="submit"]');
+    if (submitBtn) {
+        submitBtn.textContent = 'Update Testimonial';
+    }
+    
+    // Show Cancel button
+    let cancelBtn = document.getElementById('btn-admin-rev-cancel');
+    if (!cancelBtn) {
+        cancelBtn = document.createElement('button');
+        cancelBtn.type = 'button';
+        cancelBtn.id = 'btn-admin-rev-cancel';
+        cancelBtn.className = 'btn btn-secondary btn-sm';
+        cancelBtn.style.marginTop = '0.5rem';
+        cancelBtn.style.width = '100%';
+        cancelBtn.style.justifyContent = 'center';
+        cancelBtn.textContent = 'Cancel Edit';
+        cancelBtn.addEventListener('click', clearReviewForm);
+        document.getElementById('admin-review-form').appendChild(cancelBtn);
+    } else {
+        cancelBtn.style.display = 'flex';
+    }
+    
+    // Scroll form into view
+    document.getElementById('admin-review-form').scrollIntoView({ behavior: 'smooth' });
+};
+
+// Add/Edit Review Submit
 document.getElementById('admin-review-form').addEventListener('submit', (e) => {
     e.preventDefault();
     const name = document.getElementById('admin-rev-name').value.trim();
@@ -3783,20 +3841,30 @@ document.getElementById('admin-review-form').addEventListener('submit', (e) => {
     const stars = parseInt(document.getElementById('admin-rev-stars').value);
     const text = document.getElementById('admin-rev-text').value.trim();
     
-    const revId = 'rev-' + Math.random().toString(36).substr(2, 9);
+    const isEdit = editingReviewId !== null;
+    const revId = isEdit ? editingReviewId : ('rev-' + Math.random().toString(36).substr(2, 9));
     const newRev = { id: revId, name, location, stars, text };
     
     if (isFirebaseActive) {
         db.collection("reviews").doc(revId).set(newRev)
             .then(() => {
-                showToast("Testimonial added to homepage!", "success");
-                document.getElementById('admin-review-form').reset();
+                showToast(isEdit ? "Testimonial updated!" : "Testimonial added to homepage!", "success");
+                clearReviewForm();
+            })
+            .catch(err => {
+                console.error("Error saving review:", err);
+                showToast("Could not save review to database.", "error");
             });
     } else {
-        reviews.push(newRev);
+        if (isEdit) {
+            reviews = reviews.map(r => r.id === revId ? newRev : r);
+            showToast("Testimonial updated locally!", "success");
+        } else {
+            reviews.push(newRev);
+            showToast("Testimonial added locally!", "success");
+        }
         saveLocalReviews();
-        showToast("Testimonial added locally!", "success");
-        document.getElementById('admin-review-form').reset();
+        clearReviewForm();
         renderPublicReviews();
         renderAdminReviewsList();
     }
@@ -3824,11 +3892,14 @@ function renderAdminReviewsList() {
         let starsStr = '⭐'.repeat(r.stars);
         
         item.innerHTML = `
-            <div style="font-size:0.85rem;">
+            <div style="font-size:0.85rem; text-align: left; flex-grow: 1; padding-right: 1rem;">
                 <strong>${r.name} (${r.location})</strong> - ${starsStr}
-                <p style="color:var(--text-secondary); margin:4px 0 0 0; font-size:0.8rem; font-style:italic;">"${r.text.substring(0, 70)}..."</p>
+                <p style="color:var(--text-secondary); margin:4px 0 0 0; font-size:0.8rem; font-style:italic;">"${r.text.substring(0, 70)}${r.text.length > 70 ? '...' : ''}"</p>
             </div>
-            <button class="btn btn-secondary btn-sm" style="color:var(--accent-red); padding:2px 6px; font-size:0.75rem;" onclick="deleteAdminReview('${r.id}')">Delete</button>
+            <div style="display: flex; gap: 0.5rem; flex-shrink: 0;">
+                <button class="btn btn-secondary btn-sm" style="color:var(--accent-cyan); padding:2px 6px; font-size:0.75rem;" onclick="editAdminReview('${r.id}')">Edit</button>
+                <button class="btn btn-secondary btn-sm" style="color:var(--accent-red); padding:2px 6px; font-size:0.75rem;" onclick="deleteAdminReview('${r.id}')">Delete</button>
+            </div>
         `;
         list.appendChild(item);
     });
@@ -3836,6 +3907,11 @@ function renderAdminReviewsList() {
 
 window.deleteAdminReview = function(id) {
     if (!confirm("Remove this review from your website?")) return;
+    
+    // If we are currently editing this review, cancel the edit session first
+    if (editingReviewId === id) {
+        clearReviewForm();
+    }
     
     if (isFirebaseActive) {
         db.collection("reviews").doc(id).delete()
