@@ -5563,40 +5563,66 @@ function renderAdminSlideshowLists() {
         
         activeHeroSlides.forEach((img, idx) => {
             const item = document.createElement('div');
-            item.style.display = 'flex';
-            item.style.flexDirection = 'column';
+            item.style.position = 'relative';
             item.style.width = '80px';
-            item.style.alignItems = 'center';
-            item.style.border = '1px solid var(--border-color)';
+            item.style.height = '80px';
             item.style.borderRadius = '6px';
+            item.style.border = '1px solid var(--border-color)';
             item.style.overflow = 'hidden';
             item.style.background = 'rgba(0,0,0,0.1)';
+            item.style.transition = 'all 0.2s ease';
             
-            let deleteBtnHtml = `<button style="position: absolute; top: 4px; right: 4px; background: rgba(239, 68, 68, 0.85); border: none; color: white; border-radius: 50%; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; font-size: 10px; cursor: pointer; font-weight: bold; line-height: 1;" onclick="deleteSlideshowImage('${img.id}')">✕</button>`;
+            let deleteBtnHtml = `<button type="button" style="position: absolute; top: 4px; right: 4px; background: rgba(239, 68, 68, 0.85); border: none; color: white; border-radius: 50%; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; font-size: 10px; cursor: pointer; font-weight: bold; line-height: 1; z-index: 10;" onclick="deleteSlideshowImage('${img.id}')">✕</button>`;
             let badgeHtml = '';
-            let orderControlHtml = '';
             
             if (img.isDefault) {
                 deleteBtnHtml = '';
                 badgeHtml = `<div style="position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.7); color: var(--accent-gold); font-size: 0.65rem; text-align: center; padding: 2px 0; font-weight: 700;">DEFAULT</div>`;
             } else {
-                const isFirst = idx === 0;
-                const isLast = idx === activeHeroSlides.length - 1;
-                orderControlHtml = `
-                    <div style="display: flex; width: 100%; border-top: 1px solid var(--border-color); background: rgba(255,255,255,0.02);">
-                        <button type="button" style="flex: 1; border: none; background: none; color: var(--text-secondary); cursor: pointer; padding: 4px 0; font-size: 0.65rem; font-weight: bold; border-right: 1px solid var(--border-color); outline: none;" onclick="moveSlideshowImage('${img.id}', -1)" title="Move Left" ${isFirst ? 'disabled style="opacity:0.3; cursor:default;"' : ''}>◀</button>
-                        <button type="button" style="flex: 1; border: none; background: none; color: var(--text-secondary); cursor: pointer; padding: 4px 0; font-size: 0.65rem; font-weight: bold; outline: none;" onclick="moveSlideshowImage('${img.id}', 1)" title="Move Right" ${isLast ? 'disabled style="opacity:0.3; cursor:default;"' : ''}>▶</button>
-                    </div>
-                `;
+                item.setAttribute('draggable', 'true');
+                item.style.cursor = 'grab';
+                
+                item.addEventListener('dragstart', (e) => {
+                    e.dataTransfer.setData('text/plain', idx);
+                    e.dataTransfer.effectAllowed = 'move';
+                    item.style.opacity = '0.4';
+                });
+                
+                item.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                    e.dataTransfer.dropEffect = 'move';
+                });
+                
+                item.addEventListener('dragenter', () => {
+                    item.style.borderColor = 'var(--accent-cyan)';
+                    item.style.background = 'rgba(6,182,212,0.15)';
+                });
+                
+                item.addEventListener('dragleave', () => {
+                    item.style.borderColor = 'var(--border-color)';
+                    item.style.background = 'rgba(0,0,0,0.1)';
+                });
+                
+                item.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    const sourceIdx = parseInt(e.dataTransfer.getData('text/plain'), 10);
+                    const targetIdx = idx;
+                    if (sourceIdx === targetIdx) return;
+                    
+                    reorderSlideshowImages('hero', sourceIdx, targetIdx);
+                });
+                
+                item.addEventListener('dragend', () => {
+                    item.style.opacity = '1';
+                    item.style.borderColor = 'var(--border-color)';
+                    item.style.background = 'rgba(0,0,0,0.1)';
+                });
             }
             
             item.innerHTML = `
-                <div style="position: relative; width: 80px; height: 80px; flex-shrink: 0;">
-                    <img src="${img.image}" style="width: 100%; height: 100%; object-fit: cover;">
-                    ${deleteBtnHtml}
-                    ${badgeHtml}
-                </div>
-                ${orderControlHtml}
+                <img src="${img.image}" style="width: 100%; height: 100%; object-fit: cover; pointer-events: none;">
+                ${deleteBtnHtml}
+                ${badgeHtml}
             `;
             heroList.appendChild(item);
         });
@@ -5610,40 +5636,66 @@ function renderAdminSlideshowLists() {
         
         activeAboutSlides.forEach((img, idx) => {
             const item = document.createElement('div');
-            item.style.display = 'flex';
-            item.style.flexDirection = 'column';
+            item.style.position = 'relative';
             item.style.width = '80px';
-            item.style.alignItems = 'center';
-            item.style.border = '1px solid var(--border-color)';
+            item.style.height = '80px';
             item.style.borderRadius = '6px';
+            item.style.border = '1px solid var(--border-color)';
             item.style.overflow = 'hidden';
             item.style.background = 'rgba(0,0,0,0.1)';
+            item.style.transition = 'all 0.2s ease';
             
-            let deleteBtnHtml = `<button style="position: absolute; top: 4px; right: 4px; background: rgba(239, 68, 68, 0.85); border: none; color: white; border-radius: 50%; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; font-size: 10px; cursor: pointer; font-weight: bold; line-height: 1;" onclick="deleteSlideshowImage('${img.id}')">✕</button>`;
+            let deleteBtnHtml = `<button type="button" style="position: absolute; top: 4px; right: 4px; background: rgba(239, 68, 68, 0.85); border: none; color: white; border-radius: 50%; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; font-size: 10px; cursor: pointer; font-weight: bold; line-height: 1; z-index: 10;" onclick="deleteSlideshowImage('${img.id}')">✕</button>`;
             let badgeHtml = '';
-            let orderControlHtml = '';
             
             if (img.isDefault) {
                 deleteBtnHtml = '';
                 badgeHtml = `<div style="position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.7); color: var(--accent-gold); font-size: 0.65rem; text-align: center; padding: 2px 0; font-weight: 700;">DEFAULT</div>`;
             } else {
-                const isFirst = idx === 0;
-                const isLast = idx === activeAboutSlides.length - 1;
-                orderControlHtml = `
-                    <div style="display: flex; width: 100%; border-top: 1px solid var(--border-color); background: rgba(255,255,255,0.02);">
-                        <button type="button" style="flex: 1; border: none; background: none; color: var(--text-secondary); cursor: pointer; padding: 4px 0; font-size: 0.65rem; font-weight: bold; border-right: 1px solid var(--border-color); outline: none;" onclick="moveSlideshowImage('${img.id}', -1)" title="Move Left" ${isFirst ? 'disabled style="opacity:0.3; cursor:default;"' : ''}>◀</button>
-                        <button type="button" style="flex: 1; border: none; background: none; color: var(--text-secondary); cursor: pointer; padding: 4px 0; font-size: 0.65rem; font-weight: bold; outline: none;" onclick="moveSlideshowImage('${img.id}', 1)" title="Move Right" ${isLast ? 'disabled style="opacity:0.3; cursor:default;"' : ''}>▶</button>
-                    </div>
-                `;
+                item.setAttribute('draggable', 'true');
+                item.style.cursor = 'grab';
+                
+                item.addEventListener('dragstart', (e) => {
+                    e.dataTransfer.setData('text/plain', idx);
+                    e.dataTransfer.effectAllowed = 'move';
+                    item.style.opacity = '0.4';
+                });
+                
+                item.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                    e.dataTransfer.dropEffect = 'move';
+                });
+                
+                item.addEventListener('dragenter', () => {
+                    item.style.borderColor = 'var(--accent-cyan)';
+                    item.style.background = 'rgba(6,182,212,0.15)';
+                });
+                
+                item.addEventListener('dragleave', () => {
+                    item.style.borderColor = 'var(--border-color)';
+                    item.style.background = 'rgba(0,0,0,0.1)';
+                });
+                
+                item.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    const sourceIdx = parseInt(e.dataTransfer.getData('text/plain'), 10);
+                    const targetIdx = idx;
+                    if (sourceIdx === targetIdx) return;
+                    
+                    reorderSlideshowImages('about', sourceIdx, targetIdx);
+                });
+                
+                item.addEventListener('dragend', () => {
+                    item.style.opacity = '1';
+                    item.style.borderColor = 'var(--border-color)';
+                    item.style.background = 'rgba(0,0,0,0.1)';
+                });
             }
             
             item.innerHTML = `
-                <div style="position: relative; width: 80px; height: 80px; flex-shrink: 0;">
-                    <img src="${img.image}" style="width: 100%; height: 100%; object-fit: cover;">
-                    ${deleteBtnHtml}
-                    ${badgeHtml}
-                </div>
-                ${orderControlHtml}
+                <img src="${img.image}" style="width: 100%; height: 100%; object-fit: cover; pointer-events: none;">
+                ${deleteBtnHtml}
+                ${badgeHtml}
             `;
             aboutList.appendChild(item);
         });
@@ -5719,45 +5771,38 @@ window.deleteSlideshowImage = function(id) {
     }
 };
 
-window.moveSlideshowImage = function(id, direction) {
-    const index = slideshowImages.findIndex(img => img.id === id);
-    if (index === -1) return;
-    
-    const currentSlide = slideshowImages[index];
-    const type = currentSlide.type;
-    
+window.reorderSlideshowImages = function(type, sourceIdx, targetIdx) {
     // Get all custom slides of this type, sorted
     const typeSlides = slideshowImages.filter(img => img.type === type);
     typeSlides.forEach((slide, idx) => {
         if (slide.order === undefined) slide.order = idx;
     });
     
-    const currentIdxInType = typeSlides.findIndex(img => img.id === id);
-    if (currentIdxInType === -1) return;
+    // Remove the item from its old position and insert it at the target position
+    const [movedSlide] = typeSlides.splice(sourceIdx, 1);
+    typeSlides.splice(targetIdx, 0, movedSlide);
     
-    let targetIdxInType = currentIdxInType + direction;
-    if (targetIdxInType < 0 || targetIdxInType >= typeSlides.length) return;
-    
-    const targetSlide = typeSlides[targetIdxInType];
-    
-    // Swap order fields
-    const tempOrder = currentSlide.order ?? currentIdxInType;
-    currentSlide.order = targetSlide.order ?? targetIdxInType;
-    targetSlide.order = tempOrder;
+    // Re-assign order indices based on their new positions in the array
+    const updates = [];
+    typeSlides.forEach((slide, idx) => {
+        slide.order = idx;
+        updates.push(slide);
+    });
     
     if (isFirebaseActive) {
         const batch = db.batch();
-        batch.update(db.collection("slideshow_images").doc(currentSlide.id), { order: currentSlide.order });
-        batch.update(db.collection("slideshow_images").doc(targetSlide.id), { order: targetSlide.order });
+        updates.forEach(slide => {
+            batch.update(db.collection("slideshow_images").doc(slide.id), { order: slide.order });
+        });
         batch.commit()
-            .then(() => showToast("Slide order updated!", "success"))
+            .then(() => showToast("Slideshow reordered!", "success"))
             .catch(err => {
-                console.error("Error updating slide order:", err);
-                showToast("Failed to save slide order.", "error");
+                console.error("Error saving new slideshow order:", err);
+                showToast("Failed to save slideshow order.", "error");
             });
     } else {
         localStorage.setItem('v28_slideshow_images', JSON.stringify(slideshowImages));
-        showToast("Slide order updated locally!", "success");
+        showToast("Slideshow reordered locally!", "success");
         renderPublicSlideshows();
         renderAdminSlideshowLists();
     }
