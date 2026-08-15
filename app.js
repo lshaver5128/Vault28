@@ -647,14 +647,10 @@ function initDatabase() {
     if (isFirebaseActive) {
         // Setup Firebase Authentication listener
         firebase.auth().onAuthStateChanged((user) => {
-            // Unsubscribe existing listeners
+            // Unsubscribe existing user-specific listeners
             if (collectionsListener) collectionsListener();
-            if (productsListener) productsListener();
-            if (reviewsListener) reviewsListener();
-            if (settingsListener) settingsListener();
             if (usersListener) usersListener();
             if (inquiriesListener) inquiriesListener();
-            if (recentPurchasesListener) recentPurchasesListener();
             
             if (user) {
                 if (isRegisteringUser) {
