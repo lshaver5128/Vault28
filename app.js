@@ -5528,52 +5528,80 @@ function renderAdminSlideshowLists() {
     const heroList = document.getElementById('admin-hero-slides-list');
     const aboutList = document.getElementById('admin-about-slides-list');
     
+    const defaultHeroImages = [
+        { id: 'def-hero-1', image: '/assets/hero_cards.jpg', isDefault: true },
+        { id: 'def-hero-2', image: '/assets/hero_cards_2.jpg', isDefault: true },
+        { id: 'def-hero-3', image: '/assets/hero_cards_3.jpg', isDefault: true }
+    ];
+    
+    const defaultAboutImages = [
+        { id: 'def-about-1', image: '/assets/inventory3.jpg', isDefault: true },
+        { id: 'def-about-2', image: '/assets/inventory2.jpg', isDefault: true },
+        { id: 'def-about-3', image: '/assets/inventory1.jpg', isDefault: true },
+        { id: 'def-about-4', image: '/assets/inventory4.jpg', isDefault: true },
+        { id: 'def-about-5', image: '/assets/inventory5.jpg', isDefault: true },
+        { id: 'def-about-6', image: '/assets/hero_cards_2.jpg', isDefault: true },
+        { id: 'def-about-7', image: '/assets/hero_cards_3.jpg', isDefault: true }
+    ];
+    
     if (heroList) {
         heroList.innerHTML = '';
         const heroSlides = slideshowImages.filter(img => img.type === 'hero');
-        if (heroSlides.length === 0) {
-            heroList.innerHTML = `<div style="color:var(--text-muted); font-size:0.78rem; grid-column: 1/-1;">Running default background assets.</div>`;
-        } else {
-            heroSlides.forEach(img => {
-                const item = document.createElement('div');
-                item.style.position = 'relative';
-                item.style.width = '80px';
-                item.style.height = '80px';
-                item.style.borderRadius = '6px';
-                item.style.border = '1px solid var(--border-color)';
-                item.style.overflow = 'hidden';
-                
-                item.innerHTML = `
-                    <img src="${img.image}" style="width: 100%; height: 100%; object-fit: cover;">
-                    <button style="position: absolute; top: 4px; right: 4px; background: rgba(239, 68, 68, 0.85); border: none; color: white; border-radius: 50%; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; font-size: 10px; cursor: pointer; font-weight: bold; line-height: 1;" onclick="deleteSlideshowImage('${img.id}')">✕</button>
-                `;
-                heroList.appendChild(item);
-            });
-        }
+        const activeHeroSlides = heroSlides.length > 0 ? heroSlides : defaultHeroImages;
+        
+        activeHeroSlides.forEach(img => {
+            const item = document.createElement('div');
+            item.style.position = 'relative';
+            item.style.width = '80px';
+            item.style.height = '80px';
+            item.style.borderRadius = '6px';
+            item.style.border = '1px solid var(--border-color)';
+            item.style.overflow = 'hidden';
+            
+            let deleteBtnHtml = `<button style="position: absolute; top: 4px; right: 4px; background: rgba(239, 68, 68, 0.85); border: none; color: white; border-radius: 50%; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; font-size: 10px; cursor: pointer; font-weight: bold; line-height: 1;" onclick="deleteSlideshowImage('${img.id}')">✕</button>`;
+            let badgeHtml = '';
+            if (img.isDefault) {
+                deleteBtnHtml = '';
+                badgeHtml = `<div style="position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.7); color: var(--accent-gold); font-size: 0.65rem; text-align: center; padding: 2px 0; font-weight: 700;">DEFAULT</div>`;
+            }
+            
+            item.innerHTML = `
+                <img src="${img.image}" style="width: 100%; height: 100%; object-fit: cover;">
+                ${deleteBtnHtml}
+                ${badgeHtml}
+            `;
+            heroList.appendChild(item);
+        });
     }
     
     if (aboutList) {
         aboutList.innerHTML = '';
         const aboutSlides = slideshowImages.filter(img => img.type === 'about');
-        if (aboutSlides.length === 0) {
-            aboutList.innerHTML = `<div style="color:var(--text-muted); font-size:0.78rem; grid-column: 1/-1;">Running default About Us images.</div>`;
-        } else {
-            aboutSlides.forEach(img => {
-                const item = document.createElement('div');
-                item.style.position = 'relative';
-                item.style.width = '80px';
-                item.style.height = '80px';
-                item.style.borderRadius = '6px';
-                item.style.border = '1px solid var(--border-color)';
-                item.style.overflow = 'hidden';
-                
-                item.innerHTML = `
-                    <img src="${img.image}" style="width: 100%; height: 100%; object-fit: cover;">
-                    <button style="position: absolute; top: 4px; right: 4px; background: rgba(239, 68, 68, 0.85); border: none; color: white; border-radius: 50%; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; font-size: 10px; cursor: pointer; font-weight: bold; line-height: 1;" onclick="deleteSlideshowImage('${img.id}')">✕</button>
-                `;
-                aboutList.appendChild(item);
-            });
-        }
+        const activeAboutSlides = aboutSlides.length > 0 ? aboutSlides : defaultAboutImages;
+        
+        activeAboutSlides.forEach(img => {
+            const item = document.createElement('div');
+            item.style.position = 'relative';
+            item.style.width = '80px';
+            item.style.height = '80px';
+            item.style.borderRadius = '6px';
+            item.style.border = '1px solid var(--border-color)';
+            item.style.overflow = 'hidden';
+            
+            let deleteBtnHtml = `<button style="position: absolute; top: 4px; right: 4px; background: rgba(239, 68, 68, 0.85); border: none; color: white; border-radius: 50%; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; font-size: 10px; cursor: pointer; font-weight: bold; line-height: 1;" onclick="deleteSlideshowImage('${img.id}')">✕</button>`;
+            let badgeHtml = '';
+            if (img.isDefault) {
+                deleteBtnHtml = '';
+                badgeHtml = `<div style="position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.7); color: var(--accent-gold); font-size: 0.65rem; text-align: center; padding: 2px 0; font-weight: 700;">DEFAULT</div>`;
+            }
+            
+            item.innerHTML = `
+                <img src="${img.image}" style="width: 100%; height: 100%; object-fit: cover;">
+                ${deleteBtnHtml}
+                ${badgeHtml}
+            `;
+            aboutList.appendChild(item);
+        });
     }
 }
 
