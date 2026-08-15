@@ -3988,13 +3988,18 @@ document.getElementById('admin-pur-photo-file').addEventListener('change', (e) =
     const file = e.target.files[0];
     if (!file) return;
     
-    const reader = new FileReader();
-    reader.onload = function(evt) {
-        document.getElementById('admin-pur-photo-base64').value = evt.target.result;
-        document.getElementById('admin-pur-photo-status').textContent = `📸 Loaded: ${file.name}`;
-        document.getElementById('admin-pur-photo-status').style.color = 'var(--accent-cyan)';
-    };
-    reader.readAsDataURL(file);
+    showToast("Processing image...", "info");
+    
+    compressImage(file, 800, 800, 0.7)
+        .then(compressedBase64 => {
+            document.getElementById('admin-pur-photo-base64').value = compressedBase64;
+            document.getElementById('admin-pur-photo-status').textContent = `📸 Loaded & Optimized: ${file.name}`;
+            document.getElementById('admin-pur-photo-status').style.color = 'var(--accent-cyan)';
+        })
+        .catch(err => {
+            console.error("Compression failed:", err);
+            showToast("Failed to process cover photo.", "error");
+        });
 });
 
 // Submit handler
@@ -5609,32 +5614,36 @@ window.uploadSlideshowImage = function(input, type) {
     const file = input.files[0];
     if (!file) return;
     
-    const reader = new FileReader();
-    reader.onload = function(evt) {
-        const base64Data = evt.target.result;
-        const id = 'slide-' + Math.random().toString(36).substr(2, 9);
-        const newSlide = { id, type, image: base64Data, createdAt: new Date().toISOString() };
-        
-        if (isFirebaseActive) {
-            db.collection("slideshow_images").doc(id).set(newSlide)
-                .then(() => {
-                    showToast("Slideshow image added successfully!", "success");
-                    input.value = '';
-                })
-                .catch(err => {
-                    console.error("Error saving slideshow image:", err);
-                    showToast("Could not upload slideshow image.", "error");
-                });
-        } else {
-            slideshowImages.push(newSlide);
-            localStorage.setItem('v28_slideshow_images', JSON.stringify(slideshowImages));
-            showToast("Slideshow image added locally!", "success");
-            input.value = '';
-            renderPublicSlideshows();
-            renderAdminSlideshowLists();
-        }
-    };
-    reader.readAsDataURL(file);
+    showToast("Processing image...", "info");
+    
+    compressImage(file, 1024, 1024, 0.7)
+        .then(base64Data => {
+            const id = 'slide-' + Math.random().toString(36).substr(2, 9);
+            const newSlide = { id, type, image: base64Data, createdAt: new Date().toISOString() };
+            
+            if (isFirebaseActive) {
+                db.collection("slideshow_images").doc(id).set(newSlide)
+                    .then(() => {
+                        showToast("Slideshow image added successfully!", "success");
+                        input.value = '';
+                    })
+                    .catch(err => {
+                        console.error("Error saving slideshow image:", err);
+                        showToast("Upload failed. Make sure your Firestore rules permit writing to 'slideshow_images'.", "error");
+                    });
+            } else {
+                slideshowImages.push(newSlide);
+                localStorage.setItem('v28_slideshow_images', JSON.stringify(slideshowImages));
+                showToast("Slideshow image added locally!", "success");
+                input.value = '';
+                renderPublicSlideshows();
+                renderAdminSlideshowLists();
+            }
+        })
+        .catch(err => {
+            console.error("Compression failed:", err);
+            showToast("Failed to process photo.", "error");
+        });
 };
 
 window.deleteSlideshowImage = function(id) {
