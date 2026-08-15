@@ -109,7 +109,7 @@
                     <!-- Ambient gold/cyan glowing ring behind the card mockup -->
                     <div class="graphic-glow-ring" style="position: absolute; width: 340px; height: 340px; background: radial-gradient(circle, rgba(223, 183, 80, 0.12) 0%, rgba(6, 182, 212, 0.08) 50%, transparent 100%); filter: blur(30px); border-radius: 50%; pointer-events: none;"></div>
                     
-                    <div class="floating-hero-image-wrapper" style="position: relative; border-radius: 16px; border: 1px solid rgba(255,255,255,0.08); background: rgba(24, 26, 31, 0.6); backdrop-filter: blur(12px); padding: 0.5rem; box-shadow: 0 20px 40px rgba(0,0,0,0.4), inset 0 1px 1px rgba(255,255,255,0.1); width: 100%; max-width: 360px; overflow: hidden; aspect-ratio: 1 / 1;" id="hero-image-slider">
+                    <div class="floating-hero-image-wrapper" style="position: relative; border-radius: 16px; border: 1px solid rgba(255,255,255,0.08); background: rgba(24, 26, 31, 0.6); backdrop-filter: blur(12px); padding: 0.5rem; box-shadow: 0 20px 40px rgba(0,0,0,0.4), inset 0 1px 1px rgba(255,255,255,0.1); width: 100%; max-width: 360px; overflow: hidden; aspect-ratio: 1 / 1;" id="hero-slides-container">
                         <img src="/assets/hero_cards.jpg" class="hero-slide active" alt="Vault 28 Sports Cards Graded" style="position: absolute; top: 0.5rem; left: 0.5rem; width: calc(100% - 1rem); height: calc(100% - 1rem); object-fit: cover; border-radius: 12px; transition: opacity 1.5s ease-in-out; opacity: 0; z-index: 1;" />
                         <img src="/assets/hero_cards_2.jpg" class="hero-slide" alt="Vault 28 Sports Cards Wax Packs" style="position: absolute; top: 0.5rem; left: 0.5rem; width: calc(100% - 1rem); height: calc(100% - 1rem); object-fit: cover; border-radius: 12px; transition: opacity 1.5s ease-in-out; opacity: 0; z-index: 1;" />
                         <img src="/assets/hero_cards_3.jpg" class="hero-slide" alt="Vault 28 Sports Cards Showcase" style="position: absolute; top: 0.5rem; left: 0.5rem; width: calc(100% - 1rem); height: calc(100% - 1rem); object-fit: cover; border-radius: 12px; transition: opacity 1.5s ease-in-out; opacity: 0; z-index: 1;" />
@@ -1091,6 +1091,42 @@
                                 </button>
                             </div>
                         </div>
+
+                        <!-- Manage Slideshow Images -->
+                        <div class="glass-card" style="padding: 1.5rem; margin-top: 2rem; grid-column: 1 / -1;">
+                            <h3 style="font-size: 1.2rem; margin-bottom: 0.5rem;">Manage Slideshow Images</h3>
+                            <p style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 1.5rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.75rem;">
+                                Upload custom images to run through your website. Custom uploads will replace the default showcase files.
+                            </p>
+                            
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; align-items: start;">
+                                <!-- Hero Slideshow Section -->
+                                <div class="glass-card" style="padding: 1.25rem; border-color: rgba(255,255,255,0.04); background: rgba(0,0,0,0.08);">
+                                    <h4 style="font-size: 1rem; margin-bottom: 0.5rem; color: var(--accent-cyan); text-transform: uppercase; font-family: var(--font-title); letter-spacing: 0.05em;">Homepage Hero Slides</h4>
+                                    <p style="color: var(--text-muted); font-size: 0.78rem; margin-bottom: 1rem;">These cycle behind the graded card graphic on your landing page.</p>
+                                    <div style="display: flex; gap: 1rem; align-items: center; margin-bottom: 1rem;">
+                                        <button type="button" class="btn btn-primary btn-sm" onclick="document.getElementById('upload-hero-slide-file').click()">📸 Add Hero Slide</button>
+                                        <input type="file" id="upload-hero-slide-file" accept="image/*" style="display: none;" onchange="uploadSlideshowImage(this, 'hero')">
+                                    </div>
+                                    <div id="admin-hero-slides-list" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 0.75rem;">
+                                        <!-- Rendered dynamically -->
+                                    </div>
+                                </div>
+                                
+                                <!-- About Us Slideshow Section -->
+                                <div class="glass-card" style="padding: 1.25rem; border-color: rgba(255,255,255,0.04); background: rgba(0,0,0,0.08);">
+                                    <h4 style="font-size: 1rem; margin-bottom: 0.5rem; color: var(--accent-cyan); text-transform: uppercase; font-family: var(--font-title); letter-spacing: 0.05em;">About Us Slides</h4>
+                                    <p style="color: var(--text-muted); font-size: 0.78rem; margin-bottom: 1rem;">These rotate and cross-fade on your public About Us team profile section.</p>
+                                    <div style="display: flex; gap: 1rem; align-items: center; margin-bottom: 1rem;">
+                                        <button type="button" class="btn btn-primary btn-sm" onclick="document.getElementById('upload-about-slide-file').click()">📸 Add About Slide</button>
+                                        <input type="file" id="upload-about-slide-file" accept="image/*" style="display: none;" onchange="uploadSlideshowImage(this, 'about')">
+                                    </div>
+                                    <div id="admin-about-slides-list" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 0.75rem;">
+                                        <!-- Rendered dynamically -->
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -1617,6 +1653,6 @@ const firebaseConfig = {
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 
-    <script src="/app.js?v=23"></script>
+    <script src="/app.js?v=24"></script>
 </body>
 </html>

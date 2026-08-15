@@ -82,8 +82,10 @@ let settingsListener = null;
 let inquiriesListener = null;
 let usersListener = null;
 let recentPurchasesListener = null;
+let slideshowImagesListener = null;
 let users = [];
 let recentPurchases = [];
+let slideshowImages = [];
 let isRegisteringUser = false; // Flag to prevent auto-login flash during sign-up
 
 // Default Mock Collections Data
@@ -862,6 +864,16 @@ function initDatabase() {
                     renderAdminRecentPurchasesList();
                 }
             });
+
+            // Sync public slideshow images
+            slideshowImagesListener = db.collection("slideshow_images").onSnapshot(snapshot => {
+                slideshowImages = [];
+                snapshot.forEach(doc => {
+                    slideshowImages.push({ id: doc.id, ...doc.data() });
+                });
+                renderPublicSlideshows();
+                renderAdminSlideshowLists();
+            });
     } else {
         // Local Sandbox Fallback
         const storedCol = localStorage.getItem('v28_collections');
@@ -925,6 +937,16 @@ function initDatabase() {
             inquiries = [];
             localStorage.setItem('v28_inquiries', JSON.stringify(inquiries));
         }
+
+        // Initialize sandbox slideshow images
+        const storedSlideshow = localStorage.getItem('v28_slideshow_images');
+        if (storedSlideshow) {
+            slideshowImages = JSON.parse(storedSlideshow);
+        } else {
+            slideshowImages = [];
+        }
+        renderPublicSlideshows();
+        renderAdminSlideshowLists();
 
         // Mark local tester user as active
         recordUserActivity('sandbox-user', 'lshaver@vault28cards.com', 'Local Tester', false);
@@ -5408,24 +5430,33 @@ function checkEmailVerificationParam() {
 }
 
 // Hero image slideshow logic
+let heroSliderInterval = null;
 function initHeroSlider() {
-    const slides = document.querySelectorAll('.hero-slide');
-    if (slides.length === 0) return;
+    if (heroSliderInterval) clearInterval(heroSliderInterval);
     
     let currentIndex = 0;
-    setInterval(() => {
-        slides[currentIndex].classList.remove('active');
+    heroSliderInterval = setInterval(() => {
+        const slides = document.querySelectorAll('.hero-slide');
+        if (slides.length < 2) return;
+        
+        slides.forEach(s => s.classList.remove('active'));
         currentIndex = (currentIndex + 1) % slides.length;
-        slides[currentIndex].classList.add('active');
+        if (slides[currentIndex]) {
+            slides[currentIndex].classList.add('active');
+        }
     }, 4500);
 }
 
 // About Us page image slideshow logic
+let aboutSlideshowInterval = null;
 function initAboutSlideshow() {
+    if (aboutSlideshowInterval) clearInterval(aboutSlideshowInterval);
+    
     const slides = document.querySelectorAll('.about-slide');
     if (slides.length < 2) return;
     
-    const images = [
+    const activeImages = slideshowImages.filter(img => img.type === 'about').map(img => img.image);
+    const images = activeImages.length > 0 ? activeImages : [
         "/assets/inventory3.jpg",
         "/assets/inventory2.jpg",
         "/assets/inventory1.jpg",
@@ -5438,7 +5469,13 @@ function initAboutSlideshow() {
     let currentImgIndex = 0;
     let activeSlideIndex = 0; // 0 or 1
     
-    setInterval(() => {
+    // Set initial images
+    slides[0].src = images[0] || '';
+    slides[1].src = images[1] || images[0] || '';
+    
+    aboutSlideshowInterval = setInterval(() => {
+        if (images.length < 2) return;
+        
         // Find next image in rotation
         currentImgIndex = (currentImgIndex + 1) % images.length;
         
@@ -5463,6 +5500,135 @@ function initAboutSlideshow() {
         };
     }, 4000);
 }
+
+function renderPublicSlideshows() {
+    // 1. Homepage Hero Slideshow
+    const heroContainer = document.getElementById('hero-slides-container');
+    if (heroContainer) {
+        const activeHeroSlides = slideshowImages.filter(img => img.type === 'hero');
+        if (activeHeroSlides.length > 0) {
+            heroContainer.innerHTML = activeHeroSlides.map((slide, idx) => `
+                <img src="${slide.image}" class="hero-slide ${idx === 0 ? 'active' : ''}" alt="Vault 28 Slideshow Image" style="position: absolute; top: 0.5rem; left: 0.5rem; width: calc(100% - 1rem); height: calc(100% - 1rem); object-fit: cover; border-radius: 12px; transition: opacity 1.5s ease-in-out; opacity: ${idx === 0 ? '1' : '0'}; z-index: 1;" />
+            `).join('');
+        } else {
+            heroContainer.innerHTML = `
+                <img src="/assets/hero_cards.jpg" class="hero-slide active" alt="Vault 28 Sports Cards Graded" style="position: absolute; top: 0.5rem; left: 0.5rem; width: calc(100% - 1rem); height: calc(100% - 1rem); object-fit: cover; border-radius: 12px; transition: opacity 1.5s ease-in-out; opacity: 1; z-index: 1;" />
+                <img src="/assets/hero_cards_2.jpg" class="hero-slide" alt="Vault 28 Sports Cards Wax Packs" style="position: absolute; top: 0.5rem; left: 0.5rem; width: calc(100% - 1rem); height: calc(100% - 1rem); object-fit: cover; border-radius: 12px; transition: opacity 1.5s ease-in-out; opacity: 0; z-index: 1;" />
+                <img src="/assets/hero_cards_3.jpg" class="hero-slide" alt="Vault 28 Sports Cards Showcase" style="position: absolute; top: 0.5rem; left: 0.5rem; width: calc(100% - 1rem); height: calc(100% - 1rem); object-fit: cover; border-radius: 12px; transition: opacity 1.5s ease-in-out; opacity: 0; z-index: 1;" />
+            `;
+        }
+    }
+    
+    // Re-initialize the slideshow loops
+    initHeroSlider();
+    initAboutSlideshow();
+}
+
+function renderAdminSlideshowLists() {
+    const heroList = document.getElementById('admin-hero-slides-list');
+    const aboutList = document.getElementById('admin-about-slides-list');
+    
+    if (heroList) {
+        heroList.innerHTML = '';
+        const heroSlides = slideshowImages.filter(img => img.type === 'hero');
+        if (heroSlides.length === 0) {
+            heroList.innerHTML = `<div style="color:var(--text-muted); font-size:0.78rem; grid-column: 1/-1;">Running default background assets.</div>`;
+        } else {
+            heroSlides.forEach(img => {
+                const item = document.createElement('div');
+                item.style.position = 'relative';
+                item.style.width = '80px';
+                item.style.height = '80px';
+                item.style.borderRadius = '6px';
+                item.style.border = '1px solid var(--border-color)';
+                item.style.overflow = 'hidden';
+                
+                item.innerHTML = `
+                    <img src="${img.image}" style="width: 100%; height: 100%; object-fit: cover;">
+                    <button style="position: absolute; top: 4px; right: 4px; background: rgba(239, 68, 68, 0.85); border: none; color: white; border-radius: 50%; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; font-size: 10px; cursor: pointer; font-weight: bold; line-height: 1;" onclick="deleteSlideshowImage('${img.id}')">✕</button>
+                `;
+                heroList.appendChild(item);
+            });
+        }
+    }
+    
+    if (aboutList) {
+        aboutList.innerHTML = '';
+        const aboutSlides = slideshowImages.filter(img => img.type === 'about');
+        if (aboutSlides.length === 0) {
+            aboutList.innerHTML = `<div style="color:var(--text-muted); font-size:0.78rem; grid-column: 1/-1;">Running default About Us images.</div>`;
+        } else {
+            aboutSlides.forEach(img => {
+                const item = document.createElement('div');
+                item.style.position = 'relative';
+                item.style.width = '80px';
+                item.style.height = '80px';
+                item.style.borderRadius = '6px';
+                item.style.border = '1px solid var(--border-color)';
+                item.style.overflow = 'hidden';
+                
+                item.innerHTML = `
+                    <img src="${img.image}" style="width: 100%; height: 100%; object-fit: cover;">
+                    <button style="position: absolute; top: 4px; right: 4px; background: rgba(239, 68, 68, 0.85); border: none; color: white; border-radius: 50%; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; font-size: 10px; cursor: pointer; font-weight: bold; line-height: 1;" onclick="deleteSlideshowImage('${img.id}')">✕</button>
+                `;
+                aboutList.appendChild(item);
+            });
+        }
+    }
+}
+
+window.uploadSlideshowImage = function(input, type) {
+    const file = input.files[0];
+    if (!file) return;
+    
+    const reader = new FileReader();
+    reader.onload = function(evt) {
+        const base64Data = evt.target.result;
+        const id = 'slide-' + Math.random().toString(36).substr(2, 9);
+        const newSlide = { id, type, image: base64Data, createdAt: new Date().toISOString() };
+        
+        if (isFirebaseActive) {
+            db.collection("slideshow_images").doc(id).set(newSlide)
+                .then(() => {
+                    showToast("Slideshow image added successfully!", "success");
+                    input.value = '';
+                })
+                .catch(err => {
+                    console.error("Error saving slideshow image:", err);
+                    showToast("Could not upload slideshow image.", "error");
+                });
+        } else {
+            slideshowImages.push(newSlide);
+            localStorage.setItem('v28_slideshow_images', JSON.stringify(slideshowImages));
+            showToast("Slideshow image added locally!", "success");
+            input.value = '';
+            renderPublicSlideshows();
+            renderAdminSlideshowLists();
+        }
+    };
+    reader.readAsDataURL(file);
+};
+
+window.deleteSlideshowImage = function(id) {
+    if (!confirm("Permanently delete this slideshow image?")) return;
+    
+    if (isFirebaseActive) {
+        db.collection("slideshow_images").doc(id).delete()
+            .then(() => {
+                showToast("Slideshow image removed.", "success");
+            })
+            .catch(err => {
+                console.error("Error deleting slideshow image:", err);
+                showToast("Could not delete slideshow image.", "error");
+            });
+    } else {
+        slideshowImages = slideshowImages.filter(img => img.id !== id);
+        localStorage.setItem('v28_slideshow_images', JSON.stringify(slideshowImages));
+        showToast("Slideshow image removed locally.", "success");
+        renderPublicSlideshows();
+        renderAdminSlideshowLists();
+    }
+};
 
 // DOM Init
 document.addEventListener('DOMContentLoaded', () => {
