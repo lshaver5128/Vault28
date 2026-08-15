@@ -5611,38 +5611,42 @@ function renderAdminSlideshowLists() {
 }
 
 window.uploadSlideshowImage = function(input, type) {
-    const file = input.files[0];
-    if (!file) return;
+    const files = Array.from(input.files);
+    if (files.length === 0) return;
     
-    showToast("Processing image...", "info");
+    showToast(`Processing ${files.length} image(s)...`, "info");
     
-    compressImage(file, 1024, 1024, 0.7)
-        .then(base64Data => {
-            const id = 'slide-' + Math.random().toString(36).substr(2, 9);
-            const newSlide = { id, type, image: base64Data, createdAt: new Date().toISOString() };
-            
+    const uploadPromises = files.map(file => {
+        return compressImage(file, 1024, 1024, 0.7)
+            .then(base64Data => {
+                const id = 'slide-' + Math.random().toString(36).substr(2, 9);
+                const newSlide = { id, type, image: base64Data, createdAt: new Date().toISOString() };
+                
+                if (isFirebaseActive) {
+                    return db.collection("slideshow_images").doc(id).set(newSlide);
+                } else {
+                    slideshowImages.push(newSlide);
+                    return Promise.resolve();
+                }
+            });
+    });
+    
+    Promise.all(uploadPromises)
+        .then(() => {
             if (isFirebaseActive) {
-                db.collection("slideshow_images").doc(id).set(newSlide)
-                    .then(() => {
-                        showToast("Slideshow image added successfully!", "success");
-                        input.value = '';
-                    })
-                    .catch(err => {
-                        console.error("Error saving slideshow image:", err);
-                        showToast("Upload failed. Make sure your Firestore rules permit writing to 'slideshow_images'.", "error");
-                    });
+                showToast("All slideshow images uploaded successfully!", "success");
             } else {
-                slideshowImages.push(newSlide);
                 localStorage.setItem('v28_slideshow_images', JSON.stringify(slideshowImages));
-                showToast("Slideshow image added locally!", "success");
-                input.value = '';
+                showToast("All slideshow images added locally!", "success");
                 renderPublicSlideshows();
                 renderAdminSlideshowLists();
             }
+            input.value = '';
         })
         .catch(err => {
-            console.error("Compression failed:", err);
-            showToast("Failed to process photo.", "error");
+            console.error("Slideshow upload failed:", err);
+            showToast("Failed to upload one or more slideshow images. Check your Firestore rules.", "error");
+            input.value = '';
         });
 };
 

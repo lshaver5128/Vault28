@@ -1106,7 +1106,7 @@
                                     <p style="color: var(--text-muted); font-size: 0.78rem; margin-bottom: 1rem;">These cycle behind the graded card graphic on your landing page.</p>
                                     <div style="display: flex; gap: 1rem; align-items: center; margin-bottom: 1rem;">
                                         <button type="button" class="btn btn-primary btn-sm" onclick="document.getElementById('upload-hero-slide-file').click()">📸 Add Hero Slide</button>
-                                        <input type="file" id="upload-hero-slide-file" accept="image/*" style="display: none;" onchange="uploadSlideshowImage(this, 'hero')">
+                                        <input type="file" id="upload-hero-slide-file" accept="image/*" multiple style="display: none;" onchange="uploadSlideshowImage(this, 'hero')">
                                     </div>
                                     <div id="admin-hero-slides-list" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 0.75rem;">
                                         <!-- Rendered dynamically -->
@@ -1119,7 +1119,7 @@
                                     <p style="color: var(--text-muted); font-size: 0.78rem; margin-bottom: 1rem;">These rotate and cross-fade on your public About Us team profile section.</p>
                                     <div style="display: flex; gap: 1rem; align-items: center; margin-bottom: 1rem;">
                                         <button type="button" class="btn btn-primary btn-sm" onclick="document.getElementById('upload-about-slide-file').click()">📸 Add About Slide</button>
-                                        <input type="file" id="upload-about-slide-file" accept="image/*" style="display: none;" onchange="uploadSlideshowImage(this, 'about')">
+                                        <input type="file" id="upload-about-slide-file" accept="image/*" multiple style="display: none;" onchange="uploadSlideshowImage(this, 'about')">
                                     </div>
                                     <div id="admin-about-slides-list" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 0.75rem;">
                                         <!-- Rendered dynamically -->
@@ -1653,6 +1653,6 @@ const firebaseConfig = {
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 
-    <script src="/app.js?v=26"></script>
+    <script src="/app.js?v=27"></script>
 </body>
 </html>
