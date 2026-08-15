@@ -5507,6 +5507,9 @@ function initAboutSlideshow() {
 }
 
 function renderPublicSlideshows() {
+    // Sort slideshow images by order first, then fallback to createdAt
+    slideshowImages.sort((a, b) => (a.order ?? 999) - (b.order ?? 999) || new Date(a.createdAt) - new Date(b.createdAt));
+
     // 1. Homepage Hero Slideshow
     const heroContainer = document.getElementById('hero-slides-container');
     if (heroContainer) {
@@ -5530,6 +5533,9 @@ function renderPublicSlideshows() {
 }
 
 function renderAdminSlideshowLists() {
+    // Sort slideshow images by order first, then fallback to createdAt
+    slideshowImages.sort((a, b) => (a.order ?? 999) - (b.order ?? 999) || new Date(a.createdAt) - new Date(b.createdAt));
+
     const heroList = document.getElementById('admin-hero-slides-list');
     const aboutList = document.getElementById('admin-about-slides-list');
     
@@ -5552,28 +5558,45 @@ function renderAdminSlideshowLists() {
     if (heroList) {
         heroList.innerHTML = '';
         const heroSlides = slideshowImages.filter(img => img.type === 'hero');
-        const activeHeroSlides = heroSlides.length > 0 ? heroSlides : defaultHeroImages;
+        const isCustom = heroSlides.length > 0;
+        const activeHeroSlides = isCustom ? heroSlides : defaultHeroImages;
         
-        activeHeroSlides.forEach(img => {
+        activeHeroSlides.forEach((img, idx) => {
             const item = document.createElement('div');
-            item.style.position = 'relative';
+            item.style.display = 'flex';
+            item.style.flexDirection = 'column';
             item.style.width = '80px';
-            item.style.height = '80px';
-            item.style.borderRadius = '6px';
+            item.style.alignItems = 'center';
             item.style.border = '1px solid var(--border-color)';
+            item.style.borderRadius = '6px';
             item.style.overflow = 'hidden';
+            item.style.background = 'rgba(0,0,0,0.1)';
             
             let deleteBtnHtml = `<button style="position: absolute; top: 4px; right: 4px; background: rgba(239, 68, 68, 0.85); border: none; color: white; border-radius: 50%; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; font-size: 10px; cursor: pointer; font-weight: bold; line-height: 1;" onclick="deleteSlideshowImage('${img.id}')">✕</button>`;
             let badgeHtml = '';
+            let orderControlHtml = '';
+            
             if (img.isDefault) {
                 deleteBtnHtml = '';
                 badgeHtml = `<div style="position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.7); color: var(--accent-gold); font-size: 0.65rem; text-align: center; padding: 2px 0; font-weight: 700;">DEFAULT</div>`;
+            } else {
+                const isFirst = idx === 0;
+                const isLast = idx === activeHeroSlides.length - 1;
+                orderControlHtml = `
+                    <div style="display: flex; width: 100%; border-top: 1px solid var(--border-color); background: rgba(255,255,255,0.02);">
+                        <button type="button" style="flex: 1; border: none; background: none; color: var(--text-secondary); cursor: pointer; padding: 4px 0; font-size: 0.65rem; font-weight: bold; border-right: 1px solid var(--border-color); outline: none;" onclick="moveSlideshowImage('${img.id}', -1)" title="Move Left" ${isFirst ? 'disabled style="opacity:0.3; cursor:default;"' : ''}>◀</button>
+                        <button type="button" style="flex: 1; border: none; background: none; color: var(--text-secondary); cursor: pointer; padding: 4px 0; font-size: 0.65rem; font-weight: bold; outline: none;" onclick="moveSlideshowImage('${img.id}', 1)" title="Move Right" ${isLast ? 'disabled style="opacity:0.3; cursor:default;"' : ''}>▶</button>
+                    </div>
+                `;
             }
             
             item.innerHTML = `
-                <img src="${img.image}" style="width: 100%; height: 100%; object-fit: cover;">
-                ${deleteBtnHtml}
-                ${badgeHtml}
+                <div style="position: relative; width: 80px; height: 80px; flex-shrink: 0;">
+                    <img src="${img.image}" style="width: 100%; height: 100%; object-fit: cover;">
+                    ${deleteBtnHtml}
+                    ${badgeHtml}
+                </div>
+                ${orderControlHtml}
             `;
             heroList.appendChild(item);
         });
@@ -5582,28 +5605,45 @@ function renderAdminSlideshowLists() {
     if (aboutList) {
         aboutList.innerHTML = '';
         const aboutSlides = slideshowImages.filter(img => img.type === 'about');
-        const activeAboutSlides = aboutSlides.length > 0 ? aboutSlides : defaultAboutImages;
+        const isCustom = aboutSlides.length > 0;
+        const activeAboutSlides = isCustom ? aboutSlides : defaultAboutImages;
         
-        activeAboutSlides.forEach(img => {
+        activeAboutSlides.forEach((img, idx) => {
             const item = document.createElement('div');
-            item.style.position = 'relative';
+            item.style.display = 'flex';
+            item.style.flexDirection = 'column';
             item.style.width = '80px';
-            item.style.height = '80px';
-            item.style.borderRadius = '6px';
+            item.style.alignItems = 'center';
             item.style.border = '1px solid var(--border-color)';
+            item.style.borderRadius = '6px';
             item.style.overflow = 'hidden';
+            item.style.background = 'rgba(0,0,0,0.1)';
             
             let deleteBtnHtml = `<button style="position: absolute; top: 4px; right: 4px; background: rgba(239, 68, 68, 0.85); border: none; color: white; border-radius: 50%; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; font-size: 10px; cursor: pointer; font-weight: bold; line-height: 1;" onclick="deleteSlideshowImage('${img.id}')">✕</button>`;
             let badgeHtml = '';
+            let orderControlHtml = '';
+            
             if (img.isDefault) {
                 deleteBtnHtml = '';
                 badgeHtml = `<div style="position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.7); color: var(--accent-gold); font-size: 0.65rem; text-align: center; padding: 2px 0; font-weight: 700;">DEFAULT</div>`;
+            } else {
+                const isFirst = idx === 0;
+                const isLast = idx === activeAboutSlides.length - 1;
+                orderControlHtml = `
+                    <div style="display: flex; width: 100%; border-top: 1px solid var(--border-color); background: rgba(255,255,255,0.02);">
+                        <button type="button" style="flex: 1; border: none; background: none; color: var(--text-secondary); cursor: pointer; padding: 4px 0; font-size: 0.65rem; font-weight: bold; border-right: 1px solid var(--border-color); outline: none;" onclick="moveSlideshowImage('${img.id}', -1)" title="Move Left" ${isFirst ? 'disabled style="opacity:0.3; cursor:default;"' : ''}>◀</button>
+                        <button type="button" style="flex: 1; border: none; background: none; color: var(--text-secondary); cursor: pointer; padding: 4px 0; font-size: 0.65rem; font-weight: bold; outline: none;" onclick="moveSlideshowImage('${img.id}', 1)" title="Move Right" ${isLast ? 'disabled style="opacity:0.3; cursor:default;"' : ''}>▶</button>
+                    </div>
+                `;
             }
             
             item.innerHTML = `
-                <img src="${img.image}" style="width: 100%; height: 100%; object-fit: cover;">
-                ${deleteBtnHtml}
-                ${badgeHtml}
+                <div style="position: relative; width: 80px; height: 80px; flex-shrink: 0;">
+                    <img src="${img.image}" style="width: 100%; height: 100%; object-fit: cover;">
+                    ${deleteBtnHtml}
+                    ${badgeHtml}
+                </div>
+                ${orderControlHtml}
             `;
             aboutList.appendChild(item);
         });
@@ -5616,11 +5656,19 @@ window.uploadSlideshowImage = function(input, type) {
     
     showToast(`Processing ${files.length} image(s)...`, "info");
     
-    const uploadPromises = files.map(file => {
+    const typeSlidesCount = slideshowImages.filter(img => img.type === type).length;
+    
+    const uploadPromises = files.map((file, idx) => {
         return compressImage(file, 1024, 1024, 0.7)
             .then(base64Data => {
                 const id = 'slide-' + Math.random().toString(36).substr(2, 9);
-                const newSlide = { id, type, image: base64Data, createdAt: new Date().toISOString() };
+                const newSlide = { 
+                    id, 
+                    type, 
+                    image: base64Data, 
+                    createdAt: new Date().toISOString(),
+                    order: typeSlidesCount + idx 
+                };
                 
                 if (isFirebaseActive) {
                     return db.collection("slideshow_images").doc(id).set(newSlide);
@@ -5666,6 +5714,50 @@ window.deleteSlideshowImage = function(id) {
         slideshowImages = slideshowImages.filter(img => img.id !== id);
         localStorage.setItem('v28_slideshow_images', JSON.stringify(slideshowImages));
         showToast("Slideshow image removed locally.", "success");
+        renderPublicSlideshows();
+        renderAdminSlideshowLists();
+    }
+};
+
+window.moveSlideshowImage = function(id, direction) {
+    const index = slideshowImages.findIndex(img => img.id === id);
+    if (index === -1) return;
+    
+    const currentSlide = slideshowImages[index];
+    const type = currentSlide.type;
+    
+    // Get all custom slides of this type, sorted
+    const typeSlides = slideshowImages.filter(img => img.type === type);
+    typeSlides.forEach((slide, idx) => {
+        if (slide.order === undefined) slide.order = idx;
+    });
+    
+    const currentIdxInType = typeSlides.findIndex(img => img.id === id);
+    if (currentIdxInType === -1) return;
+    
+    let targetIdxInType = currentIdxInType + direction;
+    if (targetIdxInType < 0 || targetIdxInType >= typeSlides.length) return;
+    
+    const targetSlide = typeSlides[targetIdxInType];
+    
+    // Swap order fields
+    const tempOrder = currentSlide.order ?? currentIdxInType;
+    currentSlide.order = targetSlide.order ?? targetIdxInType;
+    targetSlide.order = tempOrder;
+    
+    if (isFirebaseActive) {
+        const batch = db.batch();
+        batch.update(db.collection("slideshow_images").doc(currentSlide.id), { order: currentSlide.order });
+        batch.update(db.collection("slideshow_images").doc(targetSlide.id), { order: targetSlide.order });
+        batch.commit()
+            .then(() => showToast("Slide order updated!", "success"))
+            .catch(err => {
+                console.error("Error updating slide order:", err);
+                showToast("Failed to save slide order.", "error");
+            });
+    } else {
+        localStorage.setItem('v28_slideshow_images', JSON.stringify(slideshowImages));
+        showToast("Slide order updated locally!", "success");
         renderPublicSlideshows();
         renderAdminSlideshowLists();
     }
