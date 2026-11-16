@@ -52,6 +52,10 @@ if (isFirebaseActive) {
 }
 
 const OWNER_EMAILS = ['lshaver.5128@gmail.com', 'lshaver@vault28cards.com'];
+function checkIsOwner(email) {
+    if (!email) return false;
+    return OWNER_EMAILS.includes(email.toLowerCase().trim());
+}
 
 // Global state variables
 let collections = [];
@@ -91,10 +95,10 @@ let isRegisteringUser = false; // Flag to prevent auto-login flash during sign-u
 // Default Mock Collections Data
 const DEFAULT_COLLECTIONS = [
     {
-        id: "col-jordan-1986",
-        title: "1986 Fleer NBA Rookie Hunt",
-        description: "This is a collection of classic 1980s basketball cards. Includes the legendary 1986 Fleer Michael Jordan Rookie Card in amazing condition, plus Spud Webb and Johnny Moore rookies.",
-        sport: "Sports Cards",
+        id: "col-charizard-base",
+        title: "Base Set Holo Collection & WOTC Lot",
+        description: "Classic WOTC era collection. Includes a Base Set Charizard Holo #4, Blastoise Holo, and Venusaur Holo in great raw condition, plus a full binder of 1st Edition Jungle holos.",
+        sport: "Pokémon Cards - Vintage WOTC Era",
         sellerName: "Luke S.",
         sellerEmail: "luke.s@gmail.com",
         sellerPhone: "(843) 555-9876",
@@ -110,16 +114,16 @@ const DEFAULT_COLLECTIONS = [
         createdAt: new Date(Date.now() - 3600000 * 24).toISOString(),
         cards: [
             {
-                player: "Michael Jordan",
-                brand: "Fleer Rookie #57",
-                year: 1986,
-                grade: "PSA 8 Near-Mint/Mint",
+                player: "Charizard Holo",
+                brand: "Base Set #4",
+                year: 1999,
+                grade: "Raw (Near Mint or Better)",
                 image: ""
             },
             {
-                player: "Spud Webb",
-                brand: "Fleer Rookie #120",
-                year: 1986,
+                player: "Blastoise Holo",
+                brand: "Base Set #2",
+                year: 1999,
                 grade: "PSA 9 Mint",
                 image: ""
             }
@@ -129,13 +133,13 @@ const DEFAULT_COLLECTIONS = [
             {
                 sender: "seller",
                 senderName: "Luke S.",
-                text: "Hey! Submitted my 86 Fleer basketball lot. That Jordan is exceptionally clean.",
+                text: "Hey! Submitted my Base Set Pokémon collection. The Charizard is in really clean condition.",
                 timestamp: new Date(Date.now() - 3600000 * 20).toISOString()
             },
             {
                 sender: "buyer",
                 senderName: "V28 Buying Desk",
-                text: "Hi Luke, thanks for submitting. Based on recent auction prices for a PSA 8 Jordan, we can make you a package offer of $4,800 for the whole collection including Webb.",
+                text: "Hi Luke, thanks for submitting! Based on recent sales for a raw NM Charizard Base Set plus the full Jungle holo binder, we can make you a package offer of $4,800 for the whole collection.",
                 timestamp: new Date(Date.now() - 3600000 * 16).toISOString()
             },
             {
@@ -147,10 +151,10 @@ const DEFAULT_COLLECTIONS = [
         ]
     },
     {
-        id: "col-kobe-vintage",
-        title: "1996 Topps Basketball Binder Collection",
-        description: "Old childhood binder from 1996. Features Topps Kobe Bryant Rookie card, Allen Iverson Rookie, and Michael Jordan inserts. Most cards were placed in binder pages immediately, looking for a fair offer.",
-        sport: "Basketball Cards",
+        id: "col-modern-alts",
+        title: "Modern Alt Art Binder Collection",
+        description: "Childhood binder recently pulled from storage. Features a Rayquaza VMAX Alt Art, Umbreon VMAX Alt Art, and several full art Trainers from Crown Zenith. Looking for a fair offer.",
+        sport: "Pokémon Cards - Modern Singles",
         sellerName: "Marcus T.",
         sellerEmail: "marcus.t@gmail.com",
         sellerPhone: "(843) 555-4321",
@@ -166,9 +170,9 @@ const DEFAULT_COLLECTIONS = [
         createdAt: new Date(Date.now() - 3600000 * 2).toISOString(),
         cards: [
             {
-                player: "Kobe Bryant",
-                brand: "Topps Rookie #138",
-                year: 1996,
+                player: "Rayquaza VMAX Alt Art",
+                brand: "Evolving Skies #218",
+                year: 2021,
                 grade: "Raw (Near Mint or Better)",
                 image: ""
             }
@@ -178,7 +182,7 @@ const DEFAULT_COLLECTIONS = [
             {
                 sender: "seller",
                 senderName: "Marcus T.",
-                text: "Submitted my old basketball binder. Let me know what you guys think of the Kobe condition.",
+                text: "Submitted my modern alt art binder. Let me know what you guys think about condition on the Rayquaza.",
                 timestamp: new Date(Date.now() - 3600000 * 2).toISOString()
             },
             {
@@ -194,24 +198,24 @@ const DEFAULT_COLLECTIONS = [
 const DEFAULT_RECENT_PURCHASES = [
     {
         id: "rp-1",
-        title: "1989 Bowman & Vintage Baseball Lot",
-        description: "Unopened 1989 Bowman Baseball boxes and multiple sorted storage cases of 70s-90s vintage baseball cards.",
+        title: "WOTC Base Set & Jungle Holo Collection",
+        description: "Acquired a complete run of Base Set holos plus a nearly complete Jungle holo set, all stored flat in binder pages.",
         location: "Summerville, SC",
         image: "assets/inventory3.jpg",
         createdAt: "2026-07-18T12:00:00.000Z"
     },
     {
         id: "rp-2",
-        title: "Classic Baseball Binders Lot",
-        description: "Acquired two massive card albums filled with 1970s and 1980s Topps, featuring rookie team sets and Hall of Famers.",
+        title: "Vintage Pokémon Binder Lot",
+        description: "Two large binders filled with 1st Edition and Unlimited WOTC era cards, featuring rare holos and reverse holos from multiple sets.",
         location: "Charleston, SC",
         image: "assets/inventory2.jpg",
         createdAt: "2026-07-18T11:00:00.000Z"
     },
     {
         id: "rp-3",
-        title: "90s Basketball & Memorabilia Lot",
-        description: "A local buy of 90s basketball sets, hobby boxes, vintage Future Stars magazines, and classic team banners.",
+        title: "Modern Sealed Booster Box Lot",
+        description: "A local buy of sealed Pokémon booster boxes and elite trainer boxes from recent Scarlet & Violet era sets.",
         location: "Mt. Pleasant, SC",
         image: "assets/inventory4.jpg",
         createdAt: "2026-07-18T10:00:00.000Z"
@@ -221,48 +225,48 @@ const DEFAULT_RECENT_PURCHASES = [
 // Default Mock Shop Products Data
 const DEFAULT_PRODUCTS = [
     {
-        id: "prod-jordan-1986",
-        title: "1986 Fleer Michael Jordan Rookie Card #57",
-        description: "The Holy Grail of modern basketball cards. A beautiful PSA 8 specimen. Excellent centering, sharp corners, and deep colors. Fully certified.",
+        id: "prod-charizard-psa9",
+        title: "1999 Base Set Charizard Holo #4 — PSA 9 Mint",
+        description: "The crown jewel of Pokémon cards. A stunning PSA 9 Mint Base Set Charizard. Excellent centering, crisp edges, and vivid holo pattern. One of the most iconic cards ever printed.",
         price: 4800,
-        condition: "PSA 8 Near-Mint/Mint",
-        category: "Basketball Cards",
+        condition: "PSA 9 Mint",
+        category: "Pokémon - Vintage WOTC",
         availability: "Available",
         shipping: "$5.00 Insured Shipping / Free Summerville SC Pickup",
         image: "",
         createdAt: new Date(Date.now() - 3600000 * 48).toISOString()
     },
     {
-        id: "prod-lebron-2003",
-        title: "2003 Topps Chrome LeBron James Rookie Card #111",
-        description: "Immaculate rookie card of King James. A beautiful PSA 9 Mint card from Topps Chrome. Pristine surface and clean edges. Highly sought after collectible.",
-        price: 3200,
-        condition: "PSA 9 Mint",
-        category: "Basketball Cards",
+        id: "prod-umbreon-alt",
+        title: "Umbreon VMAX Alt Art — Evolving Skies #215",
+        description: "One of the most sought-after modern Pokémon cards. Pristine near-mint condition with flawless artwork. A must-have for any serious collector.",
+        price: 320,
+        condition: "Near Mint",
+        category: "Pokémon - Modern Singles",
         availability: "Available",
         shipping: "Free Insured Shipping / Local Pickup Available",
         image: "",
         createdAt: new Date(Date.now() - 3600000 * 36).toISOString()
     },
     {
-        id: "prod-mahomes-sealed",
-        title: "2017 NFL Donruss Optic Retail Blaster Box Sealed",
-        description: "Original factory sealed 2017 Donruss Optic Football blaster box. Hunt for Patrick Mahomes rookie cards and holographic parallels.",
-        price: 350,
+        id: "prod-sv-booster-box",
+        title: "Surging Sparks Booster Box — Factory Sealed",
+        description: "Original factory sealed Pokémon Scarlet & Violet: Surging Sparks booster box. 36 packs. Hunt for Pikachu Ex full arts and rare gold cards.",
+        price: 150,
         condition: "Factory Sealed",
-        category: "Sealed Boxes & Packs",
+        category: "Pokémon - Sealed Products",
         availability: "Available",
         shipping: "$8.00 Shipping / Free Local Pickup",
         image: "",
         createdAt: new Date(Date.now() - 3600000 * 12).toISOString()
     },
     {
-        id: "prod-trout-2011",
-        title: "2011 Topps Update Mike Trout Rookie Card #US175",
-        description: "The definitive modern baseball rookie card. Graded PSA 10 Gem Mint. Immaculate centering, pristine edges, and crisp registration.",
-        price: 1500,
+        id: "prod-blastoise-psa10",
+        title: "1999 Base Set Blastoise Holo #2 — PSA 10 Gem Mint",
+        description: "Flawless PSA 10 Gem Mint Base Set Blastoise. Perfect centering, pristine edges, and vivid holo. An exceptional specimen of one of the most beloved original holos.",
+        price: 2800,
         condition: "PSA 10 Gem Mint",
-        category: "Baseball Cards",
+        category: "Pokémon - Vintage WOTC",
         availability: "Sold",
         shipping: "Sold - Local Pickup Summerville SC",
         image: "",
@@ -277,21 +281,21 @@ const DEFAULT_REVIEWS = [
         name: "Mike T.",
         location: "Summerville, SC",
         stars: 5,
-        text: "Sold my childhood sports card collection to Vault 28 Trading Co. The online submission took 5 minutes, we negotiated in the live chat, and I got paid cash immediately. Simple, honest, and easy!"
+        text: "Sold my childhood Pokémon collection to Vault 28 Trading Co. The online submission took 5 minutes, we negotiated in the live chat, and I got paid cash immediately. Simple, honest, and easy!"
     },
     {
         id: "rev-2",
         name: "Sarah L.",
         location: "Charleston, SC",
         stars: 5,
-        text: "Best sports card buyer in South Carolina. Met locally near Summerville for a safe handoff. Got a very fair cash offer for my raw basketball card binders without the eBay seller fees."
+        text: "Best Pokémon card buyer in South Carolina. Met locally near Summerville for a safe handoff. Got a very fair cash offer for my Base Set holos and binders without the eBay seller fees."
     },
     {
         id: "rev-3",
         name: "David K.",
         location: "Columbia, SC",
         stars: 5,
-        text: "Had a massive bulk collection of vintage cards. Vault 28 made a solid package offer and coordinated shipping. Great communication and no pressure to sell."
+        text: "Had a massive bulk collection of vintage Pokémon cards. Vault 28 made a solid package offer and coordinated shipping. Great communication and no pressure to sell."
     }
 ];
 
@@ -414,6 +418,7 @@ function generateCardMockupImage(player, year, brand, sport) {
 
 // Database Seeding function for Cloud Firestore
 function seedCloudDatabase() {
+    if (!isFirebaseActive) return;
     // Seed collections
     DEFAULT_COLLECTIONS.forEach(col => {
         col.cards = col.cards.map(card => {
@@ -432,6 +437,11 @@ function seedCloudDatabase() {
     // Seed reviews
     DEFAULT_REVIEWS.forEach(rev => {
         db.collection("reviews").doc(rev.id).set(rev);
+    });
+
+    // Seed recent purchases
+    DEFAULT_RECENT_PURCHASES.forEach(p => {
+        db.collection("recent_purchases").doc(p.id).set(p);
     });
 
     // Seed config settings
@@ -453,7 +463,7 @@ function switchView(viewId, pushState = true) {
     if (viewId === 'buyer-dashboard' || viewId === 'buyer-detail') {
         if (isFirebaseActive) {
             const user = firebase.auth().currentUser;
-            if (!user || !OWNER_EMAILS.includes(user.email)) {
+            if (!user || !checkIsOwner(user.email)) {
                 switchView('seller-landing', false);
                 return;
             }
@@ -529,7 +539,7 @@ function handleInitialRouting() {
     }
     
     if (initialAdminTab) {
-        if (!isFirebaseActive || (firebase.auth().currentUser && OWNER_EMAILS.includes(firebase.auth().currentUser.email))) {
+        if (!isFirebaseActive || (firebase.auth().currentUser && checkIsOwner(firebase.auth().currentUser.email))) {
             targetView = 'buyer-dashboard';
             const tabTarget = initialAdminTab;
             initialAdminTab = null;
@@ -700,7 +710,7 @@ function initDatabase() {
             const roleLabel = document.getElementById('user-display-role');
             const roleSwitcher = document.getElementById('role-switcher-wrapper');
             
-            if (OWNER_EMAILS.includes(user.email)) {
+            if (checkIsOwner(user.email)) {
                 roleLabel.textContent = "Vault 28 Owner";
                 roleLabel.style.color = "var(--accent-cyan)";
                 roleSwitcher.style.display = 'flex';
@@ -712,10 +722,13 @@ function initDatabase() {
                 usersListener = db.collection("users").onSnapshot((snapshot) => {
                     users = [];
                     snapshot.forEach(doc => {
-                        users.push({ id: doc.id, ...doc.data() });
+                        users.push({ id: doc.id, uid: doc.id, ...doc.data() });
                     });
                     users.sort((a, b) => new Date(b.registeredAt || 0) - new Date(a.registeredAt || 0));
                     renderAdminUsersTable();
+                }, (error) => {
+                    console.error("Error listening to users collection:", error);
+                    showToast("Could not load registered users list. This is usually caused by missing Firestore Security Rules. Make sure your 'users' collection read rules permit owner access.", "error");
                 });
 
                 // Listen to inquiries collection
@@ -759,7 +772,7 @@ function initDatabase() {
 
             // Query collections based on user
             let query = db.collection("collections");
-            if (!OWNER_EMAILS.includes(user.email)) {
+            if (!checkIsOwner(user.email)) {
                 query = query.where("sellerUid", "==", user.uid);
             }
 
@@ -771,10 +784,10 @@ function initDatabase() {
                 collections.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
                 
                 triggerUIRefresh();
-            });
+            }, (err) => console.error("Error listening to collections:", err));
 
             // Listen to inquiries matching user's email if they are a regular customer
-            if (!OWNER_EMAILS.includes(user.email)) {
+            if (!checkIsOwner(user.email)) {
                 inquiriesListener = db.collection("inquiries").where("email", "==", user.email).onSnapshot((snapshot) => {
                     inquiries = [];
                     snapshot.forEach(doc => {
@@ -825,6 +838,15 @@ function initDatabase() {
                 snapshot.forEach(doc => {
                     reviews.push({ id: doc.id, ...doc.data() });
                 });
+                if (reviews.length === 0) {
+                    reviews = [...DEFAULT_REVIEWS];
+                    const batch = db.batch();
+                    DEFAULT_REVIEWS.forEach(rev => {
+                        const docRef = db.collection("reviews").doc(rev.id);
+                        batch.set(docRef, rev);
+                    });
+                    batch.commit().catch(err => console.error("Failed to auto-seed default reviews to Firestore:", err));
+                }
                 renderPublicReviews();
                 renderAdminReviewsList();
             });
@@ -845,24 +867,17 @@ function initDatabase() {
                 });
                 recentPurchases.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
                 
-                // Auto-seed defaults if Firestore collection is empty and we haven't seeded yet
-                if (recentPurchases.length === 0 && !localStorage.getItem('v28_recent_purchases_seeded')) {
-                    localStorage.setItem('v28_recent_purchases_seeded', 'true');
+                if (recentPurchases.length === 0) {
+                    recentPurchases = [...DEFAULT_RECENT_PURCHASES];
                     const batch = db.batch();
                     DEFAULT_RECENT_PURCHASES.forEach(p => {
                         const docRef = db.collection("recent_purchases").doc(p.id);
                         batch.set(docRef, p);
                     });
-                    batch.commit().then(() => {
-                        console.log("Default recent purchases seeded to Firestore.");
-                    }).catch(err => {
-                        console.error("Failed to seed default purchases:", err);
-                        localStorage.removeItem('v28_recent_purchases_seeded');
-                    });
-                } else {
-                    renderRecentlyPurchasedGallery();
-                    renderAdminRecentPurchasesList();
+                    batch.commit().catch(err => console.error("Failed to auto-seed default recent purchases to Firestore:", err));
                 }
+                renderRecentlyPurchasedGallery();
+                renderAdminRecentPurchasesList();
             });
 
             // Sync public slideshow images
@@ -1023,7 +1038,7 @@ function setRole(role, shouldSwitchView = true) {
     } else {
         if (isFirebaseActive) {
             const user = firebase.auth().currentUser;
-            if (!user || !OWNER_EMAILS.includes(user.email)) {
+            if (!user || !checkIsOwner(user.email)) {
                 showToast("Owner authorization required.", "error");
                 setRole('seller', shouldSwitchView);
                 return;
@@ -4110,11 +4125,6 @@ window.deleteAdminPurchase = function(id) {
 document.getElementById('btn-admin-reset-db').addEventListener('click', () => {
     if (!confirm("Are you sure you want to delete all customizations and reseed the platform with defaults? This will erase all custom cards and collections.")) return;
     
-    if (isFirebaseActive) {
-        showToast("Reset cloud database in Firebase console. Local reset starting...");
-        // Fallback local reset
-    }
-    
     localStorage.clear();
     collections = [];
     products = [];
@@ -4126,7 +4136,12 @@ document.getElementById('btn-admin-reset-db').addEventListener('click', () => {
         area: "Summerville, Charleston, and surrounding SC areas (Or secure nationwide shipping)"
     };
     
-    showToast("Local Database Reset. Reseeding...", "success");
+    if (isFirebaseActive) {
+        seedCloudDatabase();
+        showToast("Cloud & Local Database Reset. Reseeding...", "success");
+    } else {
+        showToast("Local Database Reset. Reseeding...", "success");
+    }
     initDatabase();
 });
 
