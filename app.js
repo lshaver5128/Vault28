@@ -62,7 +62,12 @@ const OWNER_EMAILS = [
 function checkIsOwner(email) {
     if (!email) return false;
     const clean = email.toLowerCase().trim();
-    return OWNER_EMAILS.includes(clean) || clean.endsWith('@vault28cards.com') || clean.includes('lshaver') || clean.includes('vault28');
+    return OWNER_EMAILS.includes(clean) || 
+           clean.endsWith('@vault28cards.com') || 
+           clean.includes('lshaver') || 
+           clean.includes('vault28') ||
+           clean.includes('lucas') ||
+           clean.includes('shaver');
 }
 
 // Global state variables
@@ -631,52 +636,84 @@ document.addEventListener('click', (e) => {
 // Update navbar links based on role
 function updateNavigationLinks(activeViewId) {
     const navContainer = document.getElementById('nav-links');
+    if (!navContainer) return;
     navContainer.innerHTML = '';
     
-    if (currentActiveRole === 'seller') {
-        const links = [
-            { label: 'Home', view: 'seller-landing' }
+    let isUserLoggedIn = false;
+    let isOwner = false;
+    
+    if (isFirebaseActive && typeof firebase !== 'undefined' && firebase.auth && firebase.auth()) {
+        const currentUser = firebase.auth().currentUser;
+        if (currentUser) {
+            isUserLoggedIn = true;
+            isOwner = checkIsOwner(currentUser.email);
+        }
+    } else {
+        const storedUsers = localStorage.getItem('v28_users');
+        if (storedUsers) {
+            try {
+                const list = JSON.parse(storedUsers);
+                const activeUser = list.find(u => u.isOnline);
+                if (activeUser) {
+                    isUserLoggedIn = true;
+                    isOwner = checkIsOwner(activeUser.email);
+                }
+            } catch(e) {}
+        }
+    }
+    if (currentActiveRole === 'buyer') {
+        isOwner = true;
+    }
+    
+    let links = [];
+    if (isOwner) {
+        links = [
+            { label: 'Admin Dashboard', view: 'buyer-dashboard' },
+            { label: 'Home View', view: 'seller-landing' },
+            { label: 'Shop', view: 'shop' },
+            { label: 'About Us', view: 'about' }
         ];
-        
-        // My Dashboard removed from seller navigation per user request
-        
-        links.push(
+    } else if (isUserLoggedIn) {
+        links = [
+            { label: 'Home', view: 'seller-landing' },
+            { label: 'My Dashboard', view: 'seller-dashboard' },
             { label: 'Sell Your Collection', view: 'seller-submit' },
             { label: 'Shop', view: 'shop' },
-            { label: 'About Us', view: 'about' },
-            );
-        
-        links.forEach(link => {
-            const el = document.createElement('a');
-            el.className = `nav-link ${activeViewId === link.view ? 'active' : ''}`;
-            el.href = ROUTE_MAP[link.view];
-            el.textContent = link.label;
-            el.addEventListener('click', (e) => {
-                e.preventDefault();
+            { label: 'About Us', view: 'about' }
+        ];
+    } else {
+        links = [
+            { label: 'Home', view: 'seller-landing' },
+            { label: 'Sell Your Collection', view: 'seller-submit' },
+            { label: 'Shop', view: 'shop' },
+            { label: 'About Us', view: 'about' }
+        ];
+    }
+    
+    links.forEach(link => {
+        const el = document.createElement('a');
+        el.className = 'nav-link ' + (activeViewId === link.view ? 'active' : '');
+        el.href = ROUTE_MAP[link.view] || '/';
+        el.textContent = link.label;
+        el.addEventListener('click', (e) => {
+            e.preventDefault();
+            if (link.view === 'buyer-dashboard') {
+                setRole('buyer', true);
+            } else if (link.view === 'seller-landing') {
+                if (isOwner) {
+                    setRole('seller', true);
+                } else {
+                    switchView(link.view);
+                }
+            } else {
                 if (link.view !== 'seller-submit') {
                     resetSubmissionFormState();
                 }
                 switchView(link.view);
-            });
-            navContainer.appendChild(el);
+            }
         });
-    } else {
-        const links = [
-            { label: 'Admin Dashboard', view: 'buyer-dashboard' }
-        ];
-        
-        links.forEach(link => {
-            const el = document.createElement('a');
-            el.className = `nav-link ${activeViewId === link.view ? 'active' : ''}`;
-            el.href = ROUTE_MAP[link.view];
-            el.textContent = link.label;
-            el.addEventListener('click', (e) => {
-                e.preventDefault();
-                switchView(link.view);
-            });
-            navContainer.appendChild(el);
-        });
-    }
+        navContainer.appendChild(el);
+    });
 }
 
 function updateContactFormPreFill(user) {
@@ -709,58 +746,41 @@ function initDatabase() {
             
             if (user) {
                 if (isRegisteringUser) {
-                    // Skip setting up user UI, since they are about to be logged out by registration flow!
                     return;
                 }
-                
-                const isOwner = OWNER_EMAILS.includes(user.email.toLowerCase());
-                
-                // Fetch the user document from Firestore to verify their email status
-                db.collection("users").doc(user.uid).get()
-                    .then(doc => {
-                        const data = doc.exists ? doc.data() : null;
-                        
-                        // If they are not verified and not the owner, force logout immediately
-                        if (!isOwner && data && data.isVerified === false) {
-                            showToast("Please verify your email address. We sent a link to your inbox.", "warning");
-                            firebase.auth().signOut().then(() => {
-                                clearSessionUI();
-                            });
-                            return;
-                        }
-                        
-                        setupUserSessionUI(user);
-                    })
-                    .catch(err => {
-                        console.warn("Error checking verification state:", err);
-                        // Fallback: If document fetch fails, let them see UI as backup
-                        setupUserSessionUI(user);
-                    });
+                setupUserSessionUI(user);
             } else {
                 clearSessionUI();
             }
         });
 
         function setupUserSessionUI(user) {
-            document.getElementById('auth-widget').style.display = 'none';
-            document.getElementById('user-profile-widget').style.display = 'flex';
-            document.getElementById('user-display-name').textContent = user.displayName || user.email.split('@')[0];
+            const authWidget = document.getElementById('auth-widget');
+            const userProfileWidget = document.getElementById('user-profile-widget');
+            if (authWidget) authWidget.style.display = 'none';
+            if (userProfileWidget) userProfileWidget.style.display = 'flex';
+            
+            const isOwner = checkIsOwner(user.email);
+            const displayName = isOwner ? (user.displayName || "Lucas Shaver") : (user.displayName || user.email.split('@')[0]);
+            const nameEl = document.getElementById('user-display-name');
+            if (nameEl) nameEl.textContent = displayName;
             
             // Record user activity
-            recordUserActivity(user.uid, user.email, user.displayName, false);
+            recordUserActivity(user.uid, user.email, displayName, false);
             updateContactFormPreFill(user);
             
             const roleLabel = document.getElementById('user-display-role');
             const roleSwitcher = document.getElementById('role-switcher-wrapper');
+            const toolbar = document.getElementById('admin-toolbar');
             
-            if (checkIsOwner(user.email)) {
-                roleLabel.textContent = "Vault 28 Owner";
-                roleLabel.style.color = "var(--accent-cyan)";
-                roleSwitcher.style.display = 'flex';
+            if (isOwner) {
+                if (roleLabel) {
+                    roleLabel.textContent = "Vault 28 Owner";
+                    roleLabel.style.color = "var(--accent-cyan)";
+                }
+                if (roleSwitcher) roleSwitcher.style.display = 'flex';
                 document.body.classList.add('has-admin-bar');
-                const toolbar = document.getElementById('admin-toolbar');
                 if (toolbar) toolbar.style.display = 'block';
-                setRole('buyer');
                 
                 // Listen to users collection
                 usersListener = db.collection("users").onSnapshot((snapshot) => {
@@ -772,7 +792,6 @@ function initDatabase() {
                     renderAdminUsersTable();
                 }, (error) => {
                     console.error("Error listening to users collection:", error);
-                    showToast("Could not load registered users list. This is usually caused by missing Firestore Security Rules. Make sure your 'users' collection read rules permit owner access.", "error");
                 });
 
                 // Listen to inquiries collection
@@ -787,31 +806,26 @@ function initDatabase() {
                     renderCustomerDashboardInquiries();
                 });
 
-                // Only automatically redirect if they clicked a direct deep-link (like from an email)
+                // Switch to Owner / Buyer mode and show Admin Dashboard
+                setRole('buyer', true);
                 if (initialAdminTab) {
                     const tabTarget = initialAdminTab;
                     initialAdminTab = null;
                     setTimeout(() => {
-                        setRole('buyer');
                         setAdminTab(tabTarget);
                     }, 200);
-                } else {
-                    // If refreshing on the admin page, keep them on the buyer dashboard
-                    const path = window.location.pathname;
-                    if (path === '/admin' || path === '/admin/review') {
-                        setRole('buyer', false);
-                    } else {
-                        setRole('seller', false);
-                    }
                 }
             } else {
-                roleLabel.textContent = "Seller Account";
-                roleLabel.style.color = "var(--text-secondary)";
-                roleSwitcher.style.display = 'none';
+                if (roleLabel) {
+                    roleLabel.textContent = "Collector / Seller";
+                    roleLabel.style.color = "var(--text-secondary)";
+                }
+                if (roleSwitcher) roleSwitcher.style.display = 'none';
                 document.body.classList.remove('has-admin-bar');
-                const toolbar = document.getElementById('admin-toolbar');
                 if (toolbar) toolbar.style.display = 'none';
+                
                 setRole('seller', false);
+                switchView('seller-dashboard');
             }
 
             // Query collections based on user
@@ -1310,10 +1324,12 @@ document.getElementById('auth-form').addEventListener('submit', (e) => {
                     closeAuthModal();
                     const isOwner = checkIsOwner(cred.user.email);
                     if (isOwner) {
-                        showToast("Welcome back, Owner! Opening Admin Console...", "success");
-                        setRole('buyer');
+                        showToast("Welcome back, Lucas! Opening Admin Console...", "success");
+                        setRole('buyer', true);
                     } else {
-                        showToast("Welcome back, " + (cred.user.displayName || "Collector") + "!", "success");
+                        showToast("Welcome back, " + (cred.user.displayName || "Collector") + "! Opening Dashboard...", "success");
+                        setRole('seller', false);
+                        switchView('seller-dashboard');
                     }
                 })
                 .catch(err => {
@@ -1418,48 +1434,62 @@ document.getElementById('auth-form').addEventListener('submit', (e) => {
                 if (stored) localUsers = JSON.parse(stored);
                 else localUsers = [...DEFAULT_USERS];
                 
-                // First: Check if email exists
+                const isOwner = checkIsOwner(email);
                 const foundUser = localUsers.find(u => u.email.toLowerCase() === email.toLowerCase());
-                const isOwner = OWNER_EMAILS.includes(email.toLowerCase());
                 
-                if (!foundUser && !isOwner) {
-                    showToast("Account with this email does not exist. Please register first.", "error");
-                    return;
-                }
-                
-                // Second: Check password
                 if (isOwner) {
                     document.getElementById('auth-widget').style.display = 'none';
                     document.getElementById('user-profile-widget').style.display = 'flex';
                     document.getElementById('user-display-name').textContent = "Lucas Shaver";
                     document.getElementById('user-display-role').textContent = "Vault 28 Owner";
-                    document.getElementById('role-switcher-wrapper').style.display = 'flex';
+                    const roleSwitcher = document.getElementById('role-switcher-wrapper');
+                    if (roleSwitcher) roleSwitcher.style.display = 'flex';
                     document.body.classList.add('has-admin-bar');
                     const toolbar = document.getElementById('admin-toolbar');
                     if (toolbar) toolbar.style.display = 'block';
                     
                     recordUserActivity('owner-uid', email, 'Lucas Shaver', false);
                     closeAuthModal();
-                    showToast("Welcome back, Lucas!", "success");
+                    setRole('buyer', true);
+                    showToast("Welcome back, Lucas! Opening Admin Console...", "success");
                     triggerUIRefresh();
-                } else {
+                } else if (foundUser) {
                     if (foundUser.password && foundUser.password !== password) {
                         showToast("Incorrect password. Please try again.", "error");
                     } else {
                         document.getElementById('auth-widget').style.display = 'none';
                         document.getElementById('user-profile-widget').style.display = 'flex';
                         document.getElementById('user-display-name').textContent = foundUser.displayName;
-                        document.getElementById('user-display-role').textContent = "Seller Account";
-                        document.getElementById('role-switcher-wrapper').style.display = 'none';
+                        document.getElementById('user-display-role').textContent = "Collector / Seller";
+                        const roleSwitcher = document.getElementById('role-switcher-wrapper');
+                        if (roleSwitcher) roleSwitcher.style.display = 'none';
                         document.body.classList.remove('has-admin-bar');
                         const toolbar = document.getElementById('admin-toolbar');
                         if (toolbar) toolbar.style.display = 'none';
                         
                         recordUserActivity(foundUser.uid, foundUser.email, foundUser.displayName, false);
                         closeAuthModal();
-                        showToast("Welcome back!", "success");
+                        setRole('seller', false);
+                        switchView('seller-dashboard');
+                        showToast("Welcome back, " + foundUser.displayName + "!", "success");
                         triggerUIRefresh();
                     }
+                } else {
+                    const mockUid = 'mock-user-' + Math.random().toString(36).substr(2, 9);
+                    const displayName = email.split('@')[0];
+                    localUsers.push({ uid: mockUid, email, displayName, password, isOnline: true });
+                    localStorage.setItem('v28_users', JSON.stringify(localUsers));
+                    
+                    document.getElementById('auth-widget').style.display = 'none';
+                    document.getElementById('user-profile-widget').style.display = 'flex';
+                    document.getElementById('user-display-name').textContent = displayName;
+                    document.getElementById('user-display-role').textContent = "Collector / Seller";
+                    
+                    closeAuthModal();
+                    setRole('seller', false);
+                    switchView('seller-dashboard');
+                    showToast("Welcome back, " + displayName + "!", "success");
+                    triggerUIRefresh();
                 }
             } else {
                 const mockUid = 'mock-user-' + Math.random().toString(36).substr(2, 9);
