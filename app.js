@@ -90,7 +90,6 @@ let upcomingShowsListener = null;
 let slideshowImagesListener = null;
 let users = [];
 let recentPurchases = [];
-    upcomingShows = [];
 let upcomingShows = [];
 let slideshowImages = [];
 let isRegisteringUser = false; // Flag to prevent auto-login flash during sign-up
@@ -200,6 +199,14 @@ const DEFAULT_COLLECTIONS = [
 
 
 // Default Mock Upcoming Shows / Events Data
+
+// Default Hero Slides (Vending Booth & Showcase)
+const DEFAULT_HERO_SLIDES = [
+    { id: 'def-hero-1', type: 'hero', image: '/assets/vending_booth_1.png', order: 0, isDefault: true, createdAt: '2026-11-17T00:00:00.000Z' },
+    { id: 'def-hero-2', type: 'hero', image: '/assets/vending_booth_2.png', order: 1, isDefault: true, createdAt: '2026-11-17T00:01:00.000Z' },
+    { id: 'def-hero-3', type: 'hero', image: '/assets/vending_booth_3.png', order: 2, isDefault: true, createdAt: '2026-11-17T00:02:00.000Z' }
+];
+
 const DEFAULT_UPCOMING_SHOWS = [
     {
         id: "show-hhi-beaufort-10",
@@ -5311,7 +5318,8 @@ window.sendCustomerThreadReply = function() {
 // Step Wizard State Manager
 let currentWizardStep = 1;
 
-window.updateWizardUI = function() {
+function updateWizardUI() {
+    window.updateWizardUI = updateWizardUI;
     // Hide all panes
     document.querySelectorAll('.wizard-pane').forEach(p => p.style.display = 'none');
     // Show current pane
@@ -6017,82 +6025,83 @@ window.deleteUpcomingShow = function(id) {
     }
 };
 
-// Owner View Event Image Upload Handler
-if (document.getElementById('btn-admin-event-photo-upload')) {
-    document.getElementById('btn-admin-event-photo-upload').addEventListener('click', () => {
-        document.getElementById('admin-event-photo-file').click();
-    });
-}
-
-if (document.getElementById('admin-event-photo-file')) {
-    document.getElementById('admin-event-photo-file').addEventListener('change', (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
-        showToast("Optimizing event image...", "info");
-        compressImage(file, 900, 900, 0.75)
-            .then(base64 => {
-                document.getElementById('admin-event-photo-base64').value = base64;
-                const prev = document.getElementById('admin-event-photo-preview');
-                if (prev) prev.src = base64;
-                const prevBox = document.getElementById('admin-event-photo-preview-box');
-                if (prevBox) prevBox.style.display = 'block';
-                const status = document.getElementById('admin-event-photo-status');
-                if (status) {
-                    status.textContent = `📸 Ready: ${file.name}`;
-                    status.style.color = 'var(--accent-blue-neon)';
-                }
-            })
-            .catch(err => {
-                console.error("Event image compression error:", err);
-                showToast("Failed to process event image", "error");
-            });
-    });
-}
-
-// Owner View Event Form Submit Handler
-if (document.getElementById('admin-event-form')) {
-    document.getElementById('admin-event-form').addEventListener('submit', (e) => {
-        e.preventDefault();
-        const title = document.getElementById('admin-event-title').value.trim();
-        const date = document.getElementById('admin-event-date').value.trim();
-        const booth = document.getElementById('admin-event-booth').value.trim();
-        const venue = document.getElementById('admin-event-venue').value.trim();
-        const location = document.getElementById('admin-event-location').value.trim();
-        const description = document.getElementById('admin-event-desc').value.trim();
-        const link = document.getElementById('admin-event-link').value.trim();
-        const image = document.getElementById('admin-event-photo-base64').value || 'assets/show_poster_hhi.png';
-
-        const showId = 'show-' + Math.random().toString(36).substr(2, 9);
-        const newShow = {
-            id: showId,
-            title,
-            date,
-            booth,
-            venue,
-            location,
-            description,
-            link,
-            image,
-            createdAt: new Date().toISOString()
-        };
-
-        if (isFirebaseActive) {
-            db.collection("upcoming_shows").doc(showId).set(newShow)
-                .then(() => {
-                    showToast("Upcoming card show added to Firestore!", "success");
-                    resetAdminEventForm();
+function initUpcomingShowsManager() {
+    const uploadBtn = document.getElementById('btn-admin-event-photo-upload');
+    const fileInput = document.getElementById('admin-event-photo-file');
+    const eventForm = document.getElementById('admin-event-form');
+    
+    if (uploadBtn && fileInput && !uploadBtn._bound) {
+        uploadBtn._bound = true;
+        uploadBtn.addEventListener('click', () => fileInput.click());
+    }
+    
+    if (fileInput && !fileInput._bound) {
+        fileInput._bound = true;
+        fileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            showToast("Optimizing event image...", "info");
+            compressImage(file, 900, 900, 0.75)
+                .then(base64 => {
+                    const hiddenInput = document.getElementById('admin-event-photo-base64');
+                    if (hiddenInput) hiddenInput.value = base64;
+                    const prev = document.getElementById('admin-event-photo-preview');
+                    if (prev) prev.src = base64;
+                    const prevBox = document.getElementById('admin-event-photo-preview-box');
+                    if (prevBox) prevBox.style.display = 'block';
+                    const status = document.getElementById('admin-event-photo-status');
+                    if (status) {
+                        status.textContent = `📸 Ready: ${file.name}`;
+                        status.style.color = 'var(--accent-blue-neon)';
+                    }
                 })
                 .catch(err => {
-                    showToast("Error saving show to Firestore", "error");
-                    console.error(err);
+                    console.error("Event image compression error:", err);
+                    showToast("Failed to process event image", "error");
                 });
-        } else {
+        });
+    }
+    
+    if (eventForm && !eventForm._bound) {
+        eventForm._bound = true;
+        eventForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const title = (document.getElementById('admin-event-title')?.value || '').trim();
+            const date = (document.getElementById('admin-event-date')?.value || '').trim();
+            const booth = (document.getElementById('admin-event-booth')?.value || '').trim();
+            const venue = (document.getElementById('admin-event-venue')?.value || '').trim();
+            const location = (document.getElementById('admin-event-location')?.value || '').trim();
+            const description = (document.getElementById('admin-event-desc')?.value || '').trim();
+            const link = (document.getElementById('admin-event-link')?.value || '').trim();
+            const image = document.getElementById('admin-event-photo-base64')?.value || 'assets/show_poster_hhi.png';
+
+            const showId = 'show-' + Date.now() + '-' + Math.random().toString(36).substr(2, 6);
+            const newShow = {
+                id: showId,
+                title,
+                date,
+                booth,
+                venue,
+                location,
+                description,
+                link,
+                image,
+                createdAt: new Date().toISOString()
+            };
+
+            // Immediately save to local state and storage
             upcomingShows.unshift(newShow);
             saveLocalUpcomingShows();
-            showToast("Upcoming card show added locally!", "success");
             resetAdminEventForm();
             renderUpcomingShowsHomepage();
             renderAdminUpcomingShowsList();
-        }
-    });
+            showToast("Upcoming card show added to homepage & database!", "success");
+
+            if (isFirebaseActive) {
+                db.collection("upcoming_shows").doc(showId).set(newShow)
+                    .catch(err => console.warn("Firestore upcoming show sync notice:", err));
+            }
+        });
+    }
 }
+initUpcomingShowsManager();
