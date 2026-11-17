@@ -725,6 +725,136 @@ function updateContactFormPreFill(user) {
     }
 }
 
+// Session UI Management
+function setupUserSessionUI(user) {
+    if (!user) return;
+    const authWidget = document.getElementById('auth-widget');
+    const userProfileWidget = document.getElementById('user-profile-widget');
+    if (authWidget) authWidget.style.display = 'none';
+    if (userProfileWidget) userProfileWidget.style.display = 'flex';
+    
+    const isOwner = checkIsOwner(user.email);
+    const displayName = isOwner ? "Lucas Shaver" : (user.displayName || user.email.split('@')[0]);
+    const nameEl = document.getElementById('user-display-name');
+    if (nameEl) nameEl.textContent = displayName;
+    
+    // Record user activity
+    recordUserActivity(user.uid || 'user', user.email, displayName, false);
+    updateContactFormPreFill(user);
+    
+    const roleLabel = document.getElementById('user-display-role');
+    const roleSwitcher = document.getElementById('role-switcher-wrapper');
+    const toolbar = document.getElementById('admin-toolbar');
+    
+    if (isOwner) {
+        if (roleLabel) {
+            roleLabel.textContent = "Vault 28 Owner";
+            roleLabel.style.color = "var(--accent-cyan)";
+        }
+        if (roleSwitcher) roleSwitcher.style.display = 'flex';
+        document.body.classList.add('has-admin-bar');
+        if (toolbar) toolbar.style.display = 'block';
+        
+        if (isFirebaseActive && typeof db !== 'undefined') {
+            // Listen to users collection
+            usersListener = db.collection("users").onSnapshot((snapshot) => {
+                users = [];
+                snapshot.forEach(doc => {
+                    users.push({ id: doc.id, uid: doc.id, ...doc.data() });
+                });
+                users.sort((a, b) => new Date(b.registeredAt || 0) - new Date(a.registeredAt || 0));
+                renderAdminUsersTable();
+            }, (error) => {
+                console.error("Error listening to users collection:", error);
+            });
+
+            // Listen to inquiries collection
+            inquiriesListener = db.collection("inquiries").onSnapshot((snapshot) => {
+                inquiries = [];
+                snapshot.forEach(doc => {
+                    inquiries.push({ id: doc.id, ...doc.data() });
+                });
+                inquiries.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+                updateInquiriesBadge();
+                renderAdminInquiriesList();
+                renderCustomerDashboardInquiries();
+            });
+        }
+
+        // Switch to Owner / Buyer mode and show Admin Dashboard
+        setRole('buyer', true);
+        if (initialAdminTab) {
+            const tabTarget = initialAdminTab;
+            initialAdminTab = null;
+            setTimeout(() => {
+                setAdminTab(tabTarget);
+            }, 200);
+        }
+    } else {
+        if (roleLabel) {
+            roleLabel.textContent = "Collector / Seller";
+            roleLabel.style.color = "var(--text-secondary)";
+        }
+        if (roleSwitcher) roleSwitcher.style.display = 'none';
+        document.body.classList.remove('has-admin-bar');
+        if (toolbar) toolbar.style.display = 'none';
+        
+        setRole('seller', false);
+        switchView('seller-dashboard');
+    }
+
+    if (isFirebaseActive && typeof db !== 'undefined') {
+        // Query collections based on user
+        let query = db.collection("collections");
+        if (!isOwner) {
+            query = query.where("sellerUid", "==", user.uid);
+        }
+
+        collectionsListener = query.onSnapshot((snapshot) => {
+            collections = [];
+            snapshot.forEach(doc => {
+                collections.push({ id: doc.id, ...doc.data() });
+            });
+            collections.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+            triggerUIRefresh();
+        }, (err) => console.error("Error listening to collections:", err));
+
+        // Listen to inquiries matching user's email if they are a regular customer
+        if (!isOwner) {
+            inquiriesListener = db.collection("inquiries").where("email", "==", user.email).onSnapshot((snapshot) => {
+                inquiries = [];
+                snapshot.forEach(doc => {
+                    inquiries.push({ id: doc.id, ...doc.data() });
+                });
+                inquiries.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+                renderCustomerDashboardInquiries();
+            }, (error) => {
+                console.warn("Failed to listen to inquiries:", error);
+            });
+        }
+    }
+}
+
+function clearSessionUI() {
+    const authWidget = document.getElementById('auth-widget');
+    const userProfileWidget = document.getElementById('user-profile-widget');
+    if (authWidget) authWidget.style.display = 'flex';
+    if (userProfileWidget) userProfileWidget.style.display = 'none';
+    
+    const roleSwitcher = document.getElementById('role-switcher-wrapper');
+    if (roleSwitcher) roleSwitcher.style.display = 'none';
+    document.body.classList.remove('has-admin-bar');
+    const toolbar = document.getElementById('admin-toolbar');
+    if (toolbar) toolbar.style.display = 'none';
+    
+    updateContactFormPreFill(null);
+    collections = [];
+    users = [];
+    setRole('seller', false);
+    switchView('seller-landing', false);
+    triggerUIRefresh();
+}
+
 // Database Synchronization & Initializers
 function initDatabase() {
     if (isFirebaseActive) {
@@ -744,130 +874,6 @@ function initDatabase() {
                 clearSessionUI();
             }
         });
-
-        function setupUserSessionUI(user) {
-            const authWidget = document.getElementById('auth-widget');
-            const userProfileWidget = document.getElementById('user-profile-widget');
-            if (authWidget) authWidget.style.display = 'none';
-            if (userProfileWidget) userProfileWidget.style.display = 'flex';
-            
-            const isOwner = checkIsOwner(user.email);
-            const displayName = isOwner ? (user.displayName || "Lucas Shaver") : (user.displayName || user.email.split('@')[0]);
-            const nameEl = document.getElementById('user-display-name');
-            if (nameEl) nameEl.textContent = displayName;
-            
-            // Record user activity
-            recordUserActivity(user.uid, user.email, displayName, false);
-            updateContactFormPreFill(user);
-            
-            const roleLabel = document.getElementById('user-display-role');
-            const roleSwitcher = document.getElementById('role-switcher-wrapper');
-            const toolbar = document.getElementById('admin-toolbar');
-            
-            if (isOwner) {
-                if (roleLabel) {
-                    roleLabel.textContent = "Vault 28 Owner";
-                    roleLabel.style.color = "var(--accent-cyan)";
-                }
-                if (roleSwitcher) roleSwitcher.style.display = 'flex';
-                document.body.classList.add('has-admin-bar');
-                if (toolbar) toolbar.style.display = 'block';
-                
-                // Listen to users collection
-                usersListener = db.collection("users").onSnapshot((snapshot) => {
-                    users = [];
-                    snapshot.forEach(doc => {
-                        users.push({ id: doc.id, uid: doc.id, ...doc.data() });
-                    });
-                    users.sort((a, b) => new Date(b.registeredAt || 0) - new Date(a.registeredAt || 0));
-                    renderAdminUsersTable();
-                }, (error) => {
-                    console.error("Error listening to users collection:", error);
-                });
-
-                // Listen to inquiries collection
-                inquiriesListener = db.collection("inquiries").onSnapshot((snapshot) => {
-                    inquiries = [];
-                    snapshot.forEach(doc => {
-                        inquiries.push({ id: doc.id, ...doc.data() });
-                    });
-                    inquiries.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
-                    updateInquiriesBadge();
-                    renderAdminInquiriesList();
-                    renderCustomerDashboardInquiries();
-                });
-
-                // Switch to Owner / Buyer mode and show Admin Dashboard
-                setRole('buyer', true);
-                if (initialAdminTab) {
-                    const tabTarget = initialAdminTab;
-                    initialAdminTab = null;
-                    setTimeout(() => {
-                        setAdminTab(tabTarget);
-                    }, 200);
-                }
-            } else {
-                if (roleLabel) {
-                    roleLabel.textContent = "Collector / Seller";
-                    roleLabel.style.color = "var(--text-secondary)";
-                }
-                if (roleSwitcher) roleSwitcher.style.display = 'none';
-                document.body.classList.remove('has-admin-bar');
-                if (toolbar) toolbar.style.display = 'none';
-                
-                setRole('seller', false);
-                switchView('seller-dashboard');
-            }
-
-            // Query collections based on user
-            let query = db.collection("collections");
-            if (!checkIsOwner(user.email)) {
-                query = query.where("sellerUid", "==", user.uid);
-            }
-
-            collectionsListener = query.onSnapshot((snapshot) => {
-                collections = [];
-                snapshot.forEach(doc => {
-                    collections.push({ id: doc.id, ...doc.data() });
-                });
-                collections.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-                
-                triggerUIRefresh();
-            }, (err) => console.error("Error listening to collections:", err));
-
-            // Listen to inquiries matching user's email if they are a regular customer
-            if (!checkIsOwner(user.email)) {
-                inquiriesListener = db.collection("inquiries").where("email", "==", user.email).onSnapshot((snapshot) => {
-                    inquiries = [];
-                    snapshot.forEach(doc => {
-                        inquiries.push({ id: doc.id, ...doc.data() });
-                    });
-                    inquiries.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
-                    renderCustomerDashboardInquiries();
-                }, (error) => {
-                    console.warn("Failed to listen to inquiries:", error);
-                });
-            }
-            
-            // Route cleanly on session setup
-            handleInitialRouting();
-        }
-
-        function clearSessionUI() {
-            document.getElementById('auth-widget').style.display = 'flex';
-            document.getElementById('user-profile-widget').style.display = 'none';
-            document.getElementById('role-switcher-wrapper').style.display = 'none';
-            document.body.classList.remove('has-admin-bar');
-            const toolbar = document.getElementById('admin-toolbar');
-            if (toolbar) toolbar.style.display = 'none';
-            
-            updateContactFormPreFill(null);
-            collections = [];
-            users = [];
-            setRole('seller', false);
-            handleInitialRouting();
-            triggerUIRefresh();
-        }
 
             // Sync public products
             productsListener = db.collection("products").onSnapshot(snapshot => {
@@ -1311,7 +1317,10 @@ document.getElementById('btn-header-signout').addEventListener('click', () => {
         if (user) {
             setUserOffline(user.uid);
         }
-        firebase.auth().signOut().then(() => showToast("Signed out successfully."));
+        firebase.auth().signOut().then(() => {
+            clearSessionUI();
+            showToast("Signed out successfully.");
+        });
     } else {
         setUserOffline('sandbox-user');
         document.getElementById('auth-widget').style.display = 'flex';
@@ -1368,14 +1377,12 @@ document.getElementById('auth-form').addEventListener('submit', (e) => {
             firebase.auth().signInWithEmailAndPassword(email, password)
                 .then((cred) => {
                     closeAuthModal();
+                    setupUserSessionUI(cred.user);
                     const isOwner = checkIsOwner(cred.user.email);
                     if (isOwner) {
                         showToast("Welcome back, Lucas! Opening Admin Console...", "success");
-                        setRole('buyer', true);
                     } else {
                         showToast("Welcome back, " + (cred.user.displayName || "Collector") + "! Opening Dashboard...", "success");
-                        setRole('seller', false);
-                        switchView('seller-dashboard');
                     }
                 })
                 .catch(err => {
