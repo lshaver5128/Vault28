@@ -6,7 +6,7 @@
     <title>Vault 28 Trading Co. | Buy & Sell Pokémon Card Collections</title>
     <meta name="description" content="Sell your Pokémon card collections — vintage Base Set, WOTC, modern secret rares, sealed products, and complete binders. Based near Summerville, SC. Fast cash offers.">
     <meta name="google-site-verification" content="QYIy_EZy3nVUwvhrjrVTm0CM_KEltQ9HQjpMEuQ2eIw" />
-    <link rel="stylesheet" href="/style.css?v=51">
+    <link rel="stylesheet" href="/style.css?v=52">
     <!-- Browser Tab Icon (Favicon) -->
     <link rel="icon" type="image/png" href="/assets/logo_new.png">
 </head>
@@ -1156,7 +1156,7 @@
 
                         <!-- Manage Slideshow Images -->
                         <div class="glass-card" style="padding: 1.5rem; margin-top: 2rem; grid-column: 1 / -1;">
-                            <h3 style="font-size: 1.2rem; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;"><span>🖼️ Manage Slideshow Images</span><span class="badge" style="background: rgba(16,185,129,0.15); border: 1px solid rgba(16,185,129,0.4); color: #34d399; font-size: 0.72rem; padding: 2px 8px;">Firestore Cloud Synced</span></h3>
+                            <h3 style="font-size: 1.2rem; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;"><span>🖼️ Manage Slideshow Images</span><span class="badge" style="background: rgba(16,185,129,0.15); border: 1px solid rgba(16,185,129,0.4); color: #34d399; font-size: 0.72rem; padding: 2px 8px;">Firestore Cloud Synced</span><button type="button" class="btn btn-secondary btn-sm" style="font-size: 0.75rem; padding: 4px 10px; margin-left: auto;" onclick="syncSlideshowsToFirestore()">🔄 Push Slides to Firestore</button></h3>
                             <p style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 1.5rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.75rem;">
                                 Upload custom photos for your slideshows. Homepage slides save to your <code>homepage_slideshow</code> database, and About Us slides save to your <code>about_slideshow</code> database. They are pulled and synced in real-time.
                             </p>
@@ -1714,6 +1714,6 @@ const firebaseConfig = {
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 
-    <script src="/app.js?v=51"></script>
+    <script src="/app.js?v=52"></script>
 </body>
 </html>

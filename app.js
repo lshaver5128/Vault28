@@ -5832,18 +5832,25 @@ function uploadSlideshowImage(input, type) {
             input.value = '';
 
             // Save directly to its respective Firestore database
-            if (isFirebaseActive) {
+            const firestoreDb = db || (typeof firebase !== 'undefined' && firebase.firestore ? firebase.firestore() : null);
+            if (isFirebaseActive && firestoreDb) {
                 const savePromises = newSlides.map(slide => {
-                    return db.collection(targetCollection).doc(slide.id).set(slide);
+                    return firestoreDb.collection(targetCollection).doc(slide.id).set(slide);
                 });
                 
                 Promise.all(savePromises)
                     .then(() => {
+                        console.log(`[Firestore Success] Saved ${newSlides.length} photo(s) to ${targetCollection}`);
                         showToast(`Saved ${newSlides.length} photo(s) to ${targetCollection} database!`, "success");
                     })
                     .catch(firestoreErr => {
-                        console.error(`Firestore ${targetCollection} sync notice:`, firestoreErr);
-                        showToast(`Photo saved locally. Cloud sync: ` + (firestoreErr.message || "check rules"), "warning");
+                        console.error(`Firestore ${targetCollection} sync error:`, firestoreErr);
+                        if (firestoreErr.code === 'permission-denied' || (firestoreErr.message && firestoreErr.message.includes('permission'))) {
+                            showToast(`Firebase Rules Blocked: Allow "${targetCollection}" in Firebase Console > Rules`, "error", 10000);
+                            alert(`Firebase Permission Denied:\n\nFirebase rejected writing to "${targetCollection}" because your security rules in the Firebase Console need to be updated.\n\nPlease go to Firebase Console > Firestore Database > Rules, add "${targetCollection}", and click "Publish".`);
+                        } else {
+                            showToast(`Cloud sync notice: ` + (firestoreErr.message || "check rules"), "warning");
+                        }
                     });
             } else {
                 showToast(`Added ${newSlides.length} photo(s) to ${typeLabel} slideshow!`, "success");
@@ -5856,6 +5863,46 @@ function uploadSlideshowImage(input, type) {
         });
 }
 window.uploadSlideshowImage = uploadSlideshowImage;
+
+window.syncSlideshowsToFirestore = function() {
+    const firestoreDb = db || (typeof firebase !== 'undefined' && firebase.firestore ? firebase.firestore() : null);
+    if (!isFirebaseActive || !firestoreDb) {
+        showToast("Firebase is not connected.", "error");
+        return;
+    }
+    showToast("Syncing slideshows to Firestore database...", "info");
+    
+    let promises = [];
+    homepageSlides.forEach(slide => {
+        if (!slide.id.startsWith('def-')) {
+            promises.push(firestoreDb.collection("homepage_slideshow").doc(slide.id).set(slide));
+        }
+    });
+    aboutSlides.forEach(slide => {
+        if (!slide.id.startsWith('def-')) {
+            promises.push(firestoreDb.collection("about_slideshow").doc(slide.id).set(slide));
+        }
+    });
+    
+    if (promises.length === 0) {
+        showToast("No custom slides to sync.", "info");
+        return;
+    }
+    
+    Promise.all(promises)
+        .then(() => {
+            showToast("Successfully synced all slideshow images to Firestore!", "success");
+            alert("Success! All slideshow images have been written to your Firestore database collections.");
+        })
+        .catch(err => {
+            console.error("Manual Firestore sync error:", err);
+            if (err.code === 'permission-denied' || (err.message && err.message.includes('permission'))) {
+                alert("Firebase Rules Blocked:\n\nYour Firebase Console rules do not yet allow writes to 'homepage_slideshow' or 'about_slideshow'.\n\nPlease go to Firebase Console > Firestore Database > Rules and publish the updated rules.");
+            } else {
+                showToast("Sync failed: " + err.message, "error");
+            }
+        });
+};
 
 function deleteSlideshowImage(id, type) {
     if (!confirm("Permanently delete this slideshow image?")) return;
