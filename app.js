@@ -53,21 +53,12 @@ if (isFirebaseActive) {
 
 const OWNER_EMAILS = [
     'lshaver.5128@gmail.com',
-    'lshaver5128@gmail.com',
-    'lshaver@vault28cards.com',
-    'lucas.shaver@lander.edu',
-    'lucasshaver@lander.edu',
-    'vault28cards@gmail.com'
+    'lshaver5128@gmail.com'
 ];
 function checkIsOwner(email) {
     if (!email) return false;
     const clean = email.toLowerCase().trim();
-    return OWNER_EMAILS.includes(clean) || 
-           clean.endsWith('@vault28cards.com') || 
-           clean.includes('lshaver') || 
-           clean.includes('vault28') ||
-           clean.includes('lucas') ||
-           clean.includes('shaver');
+    return clean === 'lshaver.5128@gmail.com' || clean === 'lshaver5128@gmail.com';
 }
 
 // Global state variables
