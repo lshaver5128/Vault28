@@ -6,7 +6,7 @@
     <title>Vault 28 Trading Co. | Buy & Sell Pokémon Card Collections</title>
     <meta name="description" content="Sell your Pokémon card collections — vintage Base Set, WOTC, modern secret rares, sealed products, and complete binders. Based near Summerville, SC. Fast cash offers.">
     <meta name="google-site-verification" content="QYIy_EZy3nVUwvhrjrVTm0CM_KEltQ9HQjpMEuQ2eIw" />
-    <link rel="stylesheet" href="/style.css?v=38">
+    <link rel="stylesheet" href="/style.css?v=39">
     <!-- Browser Tab Icon (Favicon) -->
     <link rel="icon" type="image/png" href="/assets/logo_new.png">
 </head>
@@ -213,7 +213,7 @@
                         </div>
                         <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
                             <button class="btn btn-primary" onclick="switchView('seller-submit')" style="flex: 1; min-width: 140px;">📬 Contact to Sell</button>
-                            <a href="https://doubleholo.com/share/inventory/uShxb33j-YMWQ6e4" target="_blank" rel="noopener" class="btn btn-secondary" style="flex: 1; min-width: 140px; text-align: center;">🃏 Our Inventory</a>
+                            <a href="https://doubleholo.com/profile/vault28cards" target="_blank" rel="noopener" class="btn btn-secondary" style="flex: 1; min-width: 140px; text-align: center;">🃏 Our Inventory</a>
                         </div>
                     </div>
                 </div>
@@ -277,12 +277,43 @@
 
             <!-- Featured Inventory Section -->
             <div class="reveal" style="padding: 4rem 0; border-top: 1px solid var(--border-color); margin-top: 5rem;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
-                    <h2 class="section-title" style="margin: 0; text-align: left;">Featured <span>Inventory</span></h2>
-                    <button class="btn btn-outline-cyan" onclick="switchView('shop')">Browse Full Shop →</button>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2.5rem; flex-wrap: wrap; gap: 1rem;">
+                    <div>
+                        <h2 class="section-title" style="margin: 0; text-align: left;">Active <span>Store Inventory</span></h2>
+                        <p style="color: var(--text-secondary); margin-top: 0.35rem; font-size: 0.95rem;">Shop our verified inventory on DoubleHolo &amp; eBay, or propose a trade.</p>
+                    </div>
+                    <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+                        <a href="https://doubleholo.com/profile/vault28cards" target="_blank" rel="noopener" class="btn btn-outline-cyan btn-sm">🃏 DoubleHolo Store</a>
+                        <a href="https://ebay.io/m/kn2rG0" target="_blank" rel="noopener" class="btn btn-secondary btn-sm" style="border-color: var(--accent-gold); color: var(--accent-gold);">🛍️ eBay Store</a>
+                    </div>
                 </div>
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; text-align: left;" id="landing-featured-inventory">
-                    <!-- Featured items loaded dynamically via app.js -->
+                
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1.5rem; text-align: left;">
+                    <!-- DoubleHolo Quick Card -->
+                    <div class="glass-card" style="padding: 1.75rem; border-top: 3px solid var(--accent-cyan); display: flex; flex-direction: column; justify-content: space-between; gap: 1.25rem;">
+                        <div>
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+                                <span style="font-size: 1.5rem;">🃏</span>
+                                <span class="badge" style="background: rgba(56, 189, 248, 0.12); color: var(--accent-blue-neon); border: 1px solid rgba(56, 189, 248, 0.3); font-size: 0.75rem;">LIVE INVENTORY</span>
+                            </div>
+                            <h3 style="font-size: 1.25rem; font-family: var(--font-title); color: #fff; margin: 0 0 0.35rem 0;">DoubleHolo Collection</h3>
+                            <p style="color: var(--text-secondary); font-size: 0.9rem; line-height: 1.6; margin: 0;">Browse our real-time Pokémon binder inventory, trade singles, and market pricing.</p>
+                        </div>
+                        <a href="https://doubleholo.com/profile/vault28cards" target="_blank" rel="noopener" class="btn btn-primary btn-sm" style="text-align: center;">Explore DoubleHolo Inventory →</a>
+                    </div>
+
+                    <!-- eBay Quick Card -->
+                    <div class="glass-card" style="padding: 1.75rem; border-top: 3px solid var(--accent-gold); display: flex; flex-direction: column; justify-content: space-between; gap: 1.25rem;">
+                        <div>
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+                                <span style="font-size: 1.5rem;">🛍️</span>
+                                <span class="badge" style="background: rgba(223, 183, 80, 0.12); color: var(--accent-gold); border: 1px solid rgba(223, 183, 80, 0.3); font-size: 0.75rem;">GRADED &amp; SEALED</span>
+                            </div>
+                            <h3 style="font-size: 1.25rem; font-family: var(--font-title); color: #fff; margin: 0 0 0.35rem 0;">Official eBay Store</h3>
+                            <p style="color: var(--text-secondary); font-size: 0.9rem; line-height: 1.6; margin: 0;">PSA/BGS graded slabs, vintage holos, sealed products, and auctions with buyer protection.</p>
+                        </div>
+                        <a href="https://ebay.io/m/kn2rG0" target="_blank" rel="noopener" class="btn btn-secondary btn-sm" style="border-color: var(--accent-gold); color: #fff; text-align: center;">Visit eBay Storefront →</a>
+                    </div>
                 </div>
             </div>
 
@@ -296,7 +327,7 @@
                     <button class="btn btn-primary" onclick="switchView('seller-submit')" style="box-shadow: 0 0 25px rgba(223, 183, 80, 0.35); padding: 1rem 2rem; font-size: 1.05rem;">
                         📬 Contact Us to Sell
                     </button>
-                    <a href="https://doubleholo.com/share/inventory/uShxb33j-YMWQ6e4" target="_blank" rel="noopener" class="btn btn-secondary" style="padding: 1rem 2rem; font-size: 1.05rem;">
+                    <a href="https://doubleholo.com/profile/vault28cards" target="_blank" rel="noopener" class="btn btn-secondary" style="padding: 1rem 2rem; font-size: 1.05rem;">
                         🃏 View Our Inventory
                     </a>
                 </div>
@@ -353,7 +384,7 @@
                     <p style="color: var(--text-secondary); font-size: 0.95rem; line-height: 1.6; max-width: 580px; margin: 0 auto 1.25rem auto;">
                         Browse our current inventory and reach out if you see something you'd like to trade for. We're always open to fair trades!
                     </p>
-                    <a href="https://doubleholo.com/share/inventory/uShxb33j-YMWQ6e4" target="_blank" rel="noopener" class="btn btn-secondary" style="display: inline-block; font-size: 0.95rem; padding: 0.75rem 1.5rem;">
+                    <a href="https://doubleholo.com/profile/vault28cards" target="_blank" rel="noopener" class="btn btn-secondary" style="display: inline-block; font-size: 0.95rem; padding: 0.75rem 1.5rem;">
                         🃏 View Our Current Inventory
                     </a>
                 </div>
@@ -497,20 +528,113 @@
 
         <!-- Seller View 5: Shop Page -->
         <section id="shop" class="page-view">
-            <div style="max-width: 700px; margin: 4rem auto; text-align: center;">
-                <div class="glass-card" style="padding: 4rem 2rem; display: flex; flex-direction: column; align-items: center; gap: 1.5rem; border: 2px solid var(--accent-gold); box-shadow: 0 0 25px rgba(223, 183, 80, 0.3);">
-                    <div style="font-size: 3.5rem; line-height: 1; margin-bottom: 0.5rem;">🔒</div>
-                    <h2 style="font-family: var(--font-title); font-size: 2.2rem; color: var(--accent-gold); margin: 0; text-transform: uppercase; letter-spacing: 0.05em;">Vault 28 Shop</h2>
-                    <div class="badge badge-pending" style="font-size: 0.85rem; padding: 0.4rem 1rem; border-radius: 20px;">Coming Soon</div>
-                    <p style="color: var(--text-secondary); line-height: 1.7; font-size: 1.1rem; max-width: 500px; margin-top: 0.5rem;">
-                        We are currently cataloging our Pokémon inventory — vintage WOTC holos, graded slabs, modern secret rares, and sealed products from our vault.
+            <div style="max-width: 1100px; margin: 2rem auto; text-align: center;">
+                <div class="page-title-group" style="margin-bottom: 3.5rem;">
+                    <div class="badge badge-negotiating" style="margin-bottom: 0.75rem; padding: 0.4rem 1.1rem; font-size: 0.85rem; letter-spacing: 0.08em; background: rgba(56, 189, 248, 0.12); color: var(--accent-blue-neon); border: 1px solid rgba(56, 189, 248, 0.35);">
+                        🛍️ Official Online Storefronts
+                    </div>
+                    <h2 style="font-size: 2.4rem; font-family: var(--font-title); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.5rem;">
+                        Vault 28 <span>Shop &amp; Inventory</span>
+                    </h2>
+                    <p style="color: var(--text-secondary); max-width: 650px; margin: 0 auto; font-size: 1.05rem; line-height: 1.6;">
+                        Explore our active Pokémon card inventory, vintage singles, graded slabs, and sealed products across our official verified store channels.
                     </p>
-                    <p style="color: var(--text-muted); line-height: 1.6; font-size: 0.95rem; max-width: 480px;">
-                        The shop will be open for browsing and direct inquiries soon. In the meantime, we are actively buying! If you have a Pokémon collection you'd like to turn into cash, get a free valuation today.
-                    </p>
-                            <button class="btn btn-primary" id="btn-shop-coming-soon-sell" style="margin-top: 1.5rem; padding: 0.75rem 2rem; font-size: 1rem; box-shadow: 0 0 15px rgba(223, 183, 80, 0.3);">
-                        📬 Contact Us to Sell
-                    </button>
+                </div>
+
+                <!-- 2 Large Store Cards Grid -->
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 2.5rem; text-align: left; margin-bottom: 3.5rem;">
+                    
+                    <!-- Store 1: DoubleHolo Store -->
+                    <div class="glass-card" style="padding: 2.5rem; display: flex; flex-direction: column; border: 2px solid rgba(56, 189, 248, 0.4); border-radius: 20px; box-shadow: 0 15px 40px rgba(0,0,0,0.6), 0 0 25px rgba(56, 189, 248, 0.15); transition: transform 0.3s ease, box-shadow 0.3s ease;">
+                        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem;">
+                            <div style="width: 58px; height: 58px; border-radius: 14px; background: rgba(56, 189, 248, 0.15); border: 1.5px solid rgba(56, 189, 248, 0.4); display: flex; align-items: center; justify-content: center; font-size: 1.8rem;">
+                                🃏
+                            </div>
+                            <span class="badge" style="background: rgba(56, 189, 248, 0.15); color: var(--accent-blue-neon); border: 1px solid rgba(56, 189, 248, 0.35); font-size: 0.78rem; font-weight: 700; padding: 4px 10px; border-radius: 20px;">
+                                LIVE INVENTORY
+                            </span>
+                        </div>
+
+                        <h3 style="font-size: 1.6rem; font-family: var(--font-title); color: #fff; margin: 0 0 0.4rem 0; letter-spacing: 0.03em;">
+                            DoubleHolo Store
+                        </h3>
+                        <div style="font-size: 0.85rem; color: var(--accent-cyan); font-weight: 600; margin-bottom: 1rem;">
+                            @vault28cards on DoubleHolo
+                        </div>
+
+                        <p style="color: var(--text-secondary); font-size: 0.95rem; line-height: 1.65; margin: 0 0 1.5rem 0; flex-grow: 1;">
+                            Browse our complete live Pokémon card inventory, raw vintage holos, modern secret rares, and trade stock. View condition photos, check current market values, and propose trades directly.
+                        </p>
+
+                        <div style="display: flex; flex-direction: column; gap: 0.6rem; margin-bottom: 1.75rem; border-top: 1px solid var(--border-color); padding-top: 1.25rem;">
+                            <div style="font-size: 0.88rem; color: var(--text-primary); display: flex; align-items: center; gap: 0.5rem;">
+                                <span style="color: var(--accent-cyan);">✓</span> Real-Time Binder &amp; Raw Singles
+                            </div>
+                            <div style="font-size: 0.88rem; color: var(--text-primary); display: flex; align-items: center; gap: 0.5rem;">
+                                <span style="color: var(--accent-cyan);">✓</span> Trade Proposals Accepted
+                            </div>
+                            <div style="font-size: 0.88rem; color: var(--text-primary); display: flex; align-items: center; gap: 0.5rem;">
+                                <span style="color: var(--accent-cyan);">✓</span> Direct Collector-to-Collector Valuation
+                            </div>
+                        </div>
+
+                        <a href="https://doubleholo.com/profile/vault28cards" target="_blank" rel="noopener" class="btn btn-primary" style="padding: 0.9rem 1.5rem; font-size: 1rem; display: flex; align-items: center; justify-content: center; gap: 0.6rem; box-shadow: 0 0 20px rgba(56, 189, 248, 0.35);">
+                            🃏 Open DoubleHolo Store <span style="font-size: 1.1rem;">→</span>
+                        </a>
+                    </div>
+
+                    <!-- Store 2: eBay Store -->
+                    <div class="glass-card" style="padding: 2.5rem; display: flex; flex-direction: column; border: 2px solid rgba(223, 183, 80, 0.4); border-radius: 20px; box-shadow: 0 15px 40px rgba(0,0,0,0.6), 0 0 25px rgba(223, 183, 80, 0.15); transition: transform 0.3s ease, box-shadow 0.3s ease;">
+                        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem;">
+                            <div style="width: 58px; height: 58px; border-radius: 14px; background: rgba(223, 183, 80, 0.15); border: 1.5px solid rgba(223, 183, 80, 0.4); display: flex; align-items: center; justify-content: center; font-size: 1.8rem;">
+                                🛍️
+                            </div>
+                            <span class="badge" style="background: rgba(223, 183, 80, 0.15); color: var(--accent-gold); border: 1px solid rgba(223, 183, 80, 0.35); font-size: 0.78rem; font-weight: 700; padding: 4px 10px; border-radius: 20px;">
+                                OFFICIAL EBAY STORE
+                            </span>
+                        </div>
+
+                        <h3 style="font-size: 1.6rem; font-family: var(--font-title); color: #fff; margin: 0 0 0.4rem 0; letter-spacing: 0.03em;">
+                            Official eBay Store
+                        </h3>
+                        <div style="font-size: 0.85rem; color: var(--accent-gold); font-weight: 600; margin-bottom: 1rem;">
+                            Vault 28 on eBay
+                        </div>
+
+                        <p style="color: var(--text-secondary); font-size: 0.95rem; line-height: 1.65; margin: 0 0 1.5rem 0; flex-grow: 1;">
+                            Shop our active eBay listings featuring graded slabs (PSA, BGS, CGC), high-end vintage singles, sealed booster boxes, and weekly auctions with secure payment protection and fast tracked shipping.
+                        </p>
+
+                        <div style="display: flex; flex-direction: column; gap: 0.6rem; margin-bottom: 1.75rem; border-top: 1px solid var(--border-color); padding-top: 1.25rem;">
+                            <div style="font-size: 0.88rem; color: var(--text-primary); display: flex; align-items: center; gap: 0.5rem;">
+                                <span style="color: var(--accent-gold);">✓</span> Graded PSA &amp; BGS Slabs
+                            </div>
+                            <div style="font-size: 0.88rem; color: var(--text-primary); display: flex; align-items: center; gap: 0.5rem;">
+                                <span style="color: var(--accent-gold);">✓</span> 100% Authenticity &amp; Buyer Protection
+                            </div>
+                            <div style="font-size: 0.88rem; color: var(--text-primary); display: flex; align-items: center; gap: 0.5rem;">
+                                <span style="color: var(--accent-gold);">✓</span> Fast, Secure Packaging &amp; Tracking
+                            </div>
+                        </div>
+
+                        <a href="https://ebay.io/m/kn2rG0" target="_blank" rel="noopener" class="btn btn-secondary" style="padding: 0.9rem 1.5rem; font-size: 1rem; display: flex; align-items: center; justify-content: center; gap: 0.6rem; border-color: var(--accent-gold); color: #fff; box-shadow: 0 0 20px rgba(223, 183, 80, 0.25);">
+                            🛍️ Visit Our eBay Store <span style="font-size: 1.1rem;">→</span>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Want to sell/trade instead card banner -->
+                <div class="glass-card" style="padding: 2.25rem; border: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1.5rem; text-align: left;">
+                    <div>
+                        <h4 style="font-size: 1.3rem; font-family: var(--font-title); color: var(--accent-gold); margin: 0 0 0.4rem 0;">Looking to Sell or Trade Your Cards?</h4>
+                        <p style="color: var(--text-secondary); margin: 0; font-size: 0.95rem; max-width: 600px;">
+                            We buy raw Pokémon collections for cash and offer trade credit against our entire eBay and DoubleHolo inventory. Text us or DM @Vault28Cards today.
+                        </p>
+                    </div>
+                    <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+                        <button class="btn btn-primary" onclick="switchView('seller-submit')">📬 Contact Us to Sell</button>
+                        <a href="sms:+17744243561" class="btn btn-secondary">💬 Text (774) 424-3561</a>
+                    </div>
                 </div>
             </div>
         </section>
@@ -1712,6 +1836,6 @@ const firebaseConfig = {
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 
-    <script src="/app.js?v=38"></script>
+    <script src="/app.js?v=39"></script>
 </body>
 </html>

@@ -201,6 +201,15 @@ const DEFAULT_COLLECTIONS = [
 // Default Mock Upcoming Shows / Events Data
 
 // Default Hero Slides (Vending Booth & Showcase)
+
+// Default About Slides (Vending Booth & Showcase)
+const DEFAULT_ABOUT_SLIDES = [
+    { id: 'def-about-1', type: 'about', image: '/assets/vending_booth_1.png', order: 0, isDefault: true, createdAt: '2026-11-17T00:00:00.000Z' },
+    { id: 'def-about-2', type: 'about', image: '/assets/vending_booth_2.png', order: 1, isDefault: true, createdAt: '2026-11-17T00:01:00.000Z' },
+    { id: 'def-about-3', type: 'about', image: '/assets/vending_booth_3.png', order: 2, isDefault: true, createdAt: '2026-11-17T00:02:00.000Z' },
+    { id: 'def-about-4', type: 'about', image: '/assets/show_poster_hhi.png', order: 3, isDefault: true, createdAt: '2026-11-17T00:03:00.000Z' }
+];
+
 const DEFAULT_HERO_SLIDES = [
     { id: 'def-hero-1', type: 'hero', image: '/assets/vending_booth_1.png', order: 0, isDefault: true, createdAt: '2026-11-17T00:00:00.000Z' },
     { id: 'def-hero-2', type: 'hero', image: '/assets/vending_booth_2.png', order: 1, isDefault: true, createdAt: '2026-11-17T00:01:00.000Z' },
@@ -478,6 +487,7 @@ function seedCloudDatabase() {
 
 // Router Implementation
 function switchView(viewId, pushState = true) {
+    if (viewId === 'about') { renderPublicSlideshows(); initAboutSlideshow(); }
     // Auth Guard check for seller dashboard access
     if (isFirebaseActive && !firebase.auth().currentUser) {
         if (viewId === 'seller-dashboard' || viewId === 'seller-detail') {
@@ -5503,71 +5513,77 @@ function initAboutSlideshow() {
     if (aboutSlideshowInterval) clearInterval(aboutSlideshowInterval);
     
     const slides = document.querySelectorAll('.about-slide');
+    if (!slides || slides.length === 0) return;
+    
+    let activeSlide = document.querySelector('.about-slide.active');
+    if (!activeSlide && slides.length > 0) {
+        slides[0].classList.add('active');
+        activeSlide = slides[0];
+    }
+    
     if (slides.length < 2) return;
     
-    const activeImages = slideshowImages.filter(img => img.type === 'about').map(img => img.image);
-    const images = activeImages.length > 0 ? activeImages : [
-        "/assets/vending_booth_1.png",
-        "/assets/vending_booth_2.png",
-        "/assets/vending_booth_3.png",
-        "/assets/show_poster_hhi.png",
-        "/assets/vault28_banner.png"
-    ];
-    
-    let currentImgIndex = 0;
-    let activeSlideIndex = 0; // 0 or 1
-    
-    // Set initial images
-    slides[0].src = images[0] || '';
-    slides[1].src = images[1] || images[0] || '';
+    let currentIndex = Array.from(slides).indexOf(activeSlide);
+    if (currentIndex === -1) currentIndex = 0;
     
     aboutSlideshowInterval = setInterval(() => {
-        if (images.length < 2) return;
+        const currentSlides = document.querySelectorAll('.about-slide');
+        if (!currentSlides || currentSlides.length < 2) return;
         
-        // Find next image in rotation
-        currentImgIndex = (currentImgIndex + 1) % images.length;
-        
-        // Find slide elements
-        const activeSlide = slides[activeSlideIndex];
-        const nextSlideIndex = (activeSlideIndex + 1) % 2;
-        const nextSlide = slides[nextSlideIndex];
-        
-        // Load next image on the hidden slide
-        nextSlide.src = images[currentImgIndex];
-        
-        // Wait for image pre-loading to complete to avoid flickering, then cross-fade
-        nextSlide.onload = function() {
-            nextSlide.style.opacity = '1';
-            nextSlide.style.zIndex = '1';
-            
-            activeSlide.style.opacity = '0';
-            activeSlide.style.zIndex = '0';
-            
-            // Swap active pointer
-            activeSlideIndex = nextSlideIndex;
-        };
-    }, 4000);
+        currentSlides.forEach(s => s.classList.remove('active'));
+        currentIndex = (currentIndex + 1) % currentSlides.length;
+        if (currentSlides[currentIndex]) {
+            currentSlides[currentIndex].classList.add('active');
+        }
+    }, 4500);
 }
 
 function renderPublicSlideshows() {
     // Sort slideshow images by order first, then fallback to createdAt
-    slideshowImages.sort((a, b) => (a.order ?? 999) - (b.order ?? 999) || new Date(a.createdAt) - new Date(b.createdAt));
+    slideshowImages.sort((a, b) => (a.order ?? 999) - (b.order ?? 999) || new Date(a.createdAt || 0) - new Date(b.createdAt || 0));
 
     // 1. Homepage Hero Slideshow
     const heroContainer = document.getElementById('hero-slides-container');
     if (heroContainer) {
-        const activeHeroSlides = slideshowImages.filter(img => img.type === 'hero');
-        if (activeHeroSlides.length > 0) {
-            heroContainer.innerHTML = activeHeroSlides.map((slide, idx) => `
-                <img src="${slide.image}" class="hero-slide ${idx === 0 ? 'active' : ''}" alt="Vault 28 Slideshow Image" style="position: absolute; top: 0.5rem; left: 0.5rem; width: calc(100% - 1rem); height: calc(100% - 1rem); object-fit: cover; border-radius: 12px; transition: opacity 1.5s ease-in-out; opacity: ${idx === 0 ? '1' : '0'}; z-index: 1;" />
-            `).join('');
+        const customHeroSlides = slideshowImages.filter(img => img.type === 'hero');
+        const activeHeroSlides = customHeroSlides.length > 0 ? customHeroSlides : DEFAULT_HERO_SLIDES;
+        
+        heroContainer.innerHTML = activeHeroSlides.map((slide, idx) => `
+            <img src="${slide.image}" class="hero-slide ${idx === 0 ? 'active' : ''}" alt="Vault 28 Slideshow Image" />
+        `).join('');
+    }
+
+    // 2. About Us Page Slideshow
+    const aboutContainer = document.getElementById('about-slideshow-container');
+    if (aboutContainer) {
+        const customAboutSlides = slideshowImages.filter(img => img.type === 'about');
+        const customHeroSlides = slideshowImages.filter(img => img.type === 'hero' && !img.isDefault);
+        
+        // Show custom about slides, or custom hero slides, or default about slides
+        let activeAboutSlides = [];
+        if (customAboutSlides.length > 0) {
+            activeAboutSlides = customAboutSlides;
+        } else if (customHeroSlides.length > 0) {
+            activeAboutSlides = customHeroSlides;
         } else {
-            heroContainer.innerHTML = `
-                <img src="/assets/vending_booth_1.png" class="hero-slide active" alt="Vault 28 Vending Booth" style="position: absolute; top: 0.5rem; left: 0.5rem; width: calc(100% - 1rem); height: calc(100% - 1rem); object-fit: cover; border-radius: 12px; transition: opacity 1.5s ease-in-out; opacity: 1; z-index: 1;" />
-                <img src="/assets/vending_booth_2.png" class="hero-slide" alt="Vault 28 Cards Showcase" style="position: absolute; top: 0.5rem; left: 0.5rem; width: calc(100% - 1rem); height: calc(100% - 1rem); object-fit: cover; border-radius: 12px; transition: opacity 1.5s ease-in-out; opacity: 0; z-index: 1;" />
-                <img src="/assets/vending_booth_3.png" class="hero-slide" alt="Vault 28 Card Inventory" style="position: absolute; top: 0.5rem; left: 0.5rem; width: calc(100% - 1rem); height: calc(100% - 1rem); object-fit: cover; border-radius: 12px; transition: opacity 1.5s ease-in-out; opacity: 0; z-index: 1;" />
-            `;
+            activeAboutSlides = DEFAULT_ABOUT_SLIDES;
         }
+        
+        aboutContainer.innerHTML = activeAboutSlides.map((slide, idx) => `
+            <img src="${slide.image}" class="about-slide ${idx === 0 ? 'active' : ''}" alt="Vault 28 Journey" />
+        `).join('') + `
+            <!-- Floating Badge -->
+            <div style="position: absolute; bottom: 16px; left: 16px; right: 16px; z-index: 5; background: rgba(5,7,12,0.88); backdrop-filter: blur(12px); border: 1px solid rgba(223,183,80,0.5); border-radius: 12px; padding: 10px 14px; display: flex; align-items: center; justify-content: space-between; pointer-events: none;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <span style="font-size: 1.2rem;">🎪</span>
+                    <div>
+                        <div style="font-size: 0.82rem; font-weight: 700; color: #fff; line-height: 1.1;">Vault 28 Live</div>
+                        <div style="font-size: 0.72rem; color: var(--accent-gold);">On The Road &amp; In Person</div>
+                    </div>
+                </div>
+                <span class="badge" style="background: rgba(56, 189, 248, 0.15); border: 1px solid rgba(56, 189, 248, 0.4); color: var(--accent-blue-neon); font-size: 0.72rem; padding: 3px 10px;">SUMMERVILLE, SC</span>
+            </div>
+        `;
     }
     
     // Re-initialize the slideshow loops
