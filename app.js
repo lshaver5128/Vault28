@@ -5507,13 +5507,11 @@ function initAboutSlideshow() {
     
     const activeImages = slideshowImages.filter(img => img.type === 'about').map(img => img.image);
     const images = activeImages.length > 0 ? activeImages : [
-        "/assets/inventory3.jpg",
-        "/assets/inventory2.jpg",
-        "/assets/inventory1.jpg",
-        "/assets/inventory4.jpg",
-        "/assets/inventory5.jpg",
-        "/assets/hero_cards_2.jpg",
-        "/assets/hero_cards_3.jpg"
+        "/assets/vending_booth_1.png",
+        "/assets/vending_booth_2.png",
+        "/assets/vending_booth_3.png",
+        "/assets/show_poster_hhi.png",
+        "/assets/vault28_banner.png"
     ];
     
     let currentImgIndex = 0;
@@ -5591,13 +5589,10 @@ function renderAdminSlideshowLists() {
     ];
     
     const defaultAboutImages = [
-        { id: 'def-about-1', image: '/assets/inventory3.jpg', isDefault: true },
-        { id: 'def-about-2', image: '/assets/inventory2.jpg', isDefault: true },
-        { id: 'def-about-3', image: '/assets/inventory1.jpg', isDefault: true },
-        { id: 'def-about-4', image: '/assets/inventory4.jpg', isDefault: true },
-        { id: 'def-about-5', image: '/assets/inventory5.jpg', isDefault: true },
-        { id: 'def-about-6', image: '/assets/hero_cards_2.jpg', isDefault: true },
-        { id: 'def-about-7', image: '/assets/hero_cards_3.jpg', isDefault: true }
+        { id: 'def-about-1', image: '/assets/vending_booth_1.png', isDefault: true },
+        { id: 'def-about-2', image: '/assets/vending_booth_2.png', isDefault: true },
+        { id: 'def-about-3', image: '/assets/vending_booth_3.png', isDefault: true },
+        { id: 'def-about-4', image: '/assets/show_poster_hhi.png', isDefault: true }
     ];
     
     if (heroList) {
