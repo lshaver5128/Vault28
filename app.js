@@ -5753,44 +5753,60 @@ window.uploadSlideshowImage = function(input, type) {
     
     showToast(`Processing ${files.length} image(s)...`, "info");
     
+    // If hero slides are empty, seed with the default booth photos so user photos are added alongside
+    if (type === 'hero' && slideshowImages.filter(img => img.type === 'hero').length === 0) {
+        slideshowImages.push(...DEFAULT_HERO_SLIDES);
+    }
+    
     const typeSlidesCount = slideshowImages.filter(img => img.type === type).length;
     
-    const uploadPromises = files.map((file, idx) => {
-        return compressImage(file, 1024, 1024, 0.7)
+    const compressionPromises = files.map((file, idx) => {
+        return compressImage(file, 900, 900, 0.72)
             .then(base64Data => {
-                const id = 'slide-' + Math.random().toString(36).substr(2, 9);
-                const newSlide = { 
-                    id, 
-                    type, 
-                    image: base64Data, 
+                const id = 'slide-' + Date.now() + '-' + Math.random().toString(36).substr(2, 6);
+                return {
+                    id,
+                    type,
+                    image: base64Data,
                     createdAt: new Date().toISOString(),
-                    order: typeSlidesCount + idx 
+                    order: typeSlidesCount + idx
                 };
-                
-                if (isFirebaseActive) {
-                    return db.collection("slideshow_images").doc(id).set(newSlide);
-                } else {
-                    slideshowImages.push(newSlide);
-                    return Promise.resolve();
-                }
             });
     });
-    
-    Promise.all(uploadPromises)
-        .then(() => {
-            if (isFirebaseActive) {
-                showToast("All slideshow images uploaded successfully!", "success");
-            } else {
-                localStorage.setItem('v28_slideshow_images', JSON.stringify(slideshowImages));
-                showToast("All slideshow images added locally!", "success");
-                renderPublicSlideshows();
-                renderAdminSlideshowLists();
-            }
+
+    Promise.all(compressionPromises)
+        .then(newSlides => {
+            // ALWAYS save to local state and localStorage first so the image is NEVER lost!
+            newSlides.forEach(slide => slideshowImages.push(slide));
+            localStorage.setItem('v28_slideshow_images', JSON.stringify(slideshowImages));
+            
+            // Re-render immediately so the slideshow and admin panel display the new photo(s) right away!
+            renderPublicSlideshows();
+            renderAdminSlideshowLists();
             input.value = '';
+
+            // Now attempt Firestore cloud sync if Firebase is active
+            if (isFirebaseActive) {
+                const batchPromises = newSlides.map(slide => {
+                    return db.collection("slideshow_images").doc(slide.id).set(slide);
+                });
+                
+                Promise.all(batchPromises)
+                    .then(() => {
+                        showToast(`Successfully added ${newSlides.length} photo(s) & synced to cloud!`, "success");
+                    })
+                    .catch(firestoreErr => {
+                        console.warn("Firestore cloud sync notice:", firestoreErr);
+                        // Still active and working on the site via localStorage!
+                        showToast(`Photo added to slideshow! (Saved locally — see Firestore rules for cloud sync)`, "warning");
+                    });
+            } else {
+                showToast(`Added ${newSlides.length} photo(s) to slideshow!`, "success");
+            }
         })
         .catch(err => {
-            console.error("Slideshow upload failed:", err);
-            showToast("Failed to upload one or more slideshow images. Check your Firestore rules.", "error");
+            console.error("Image processing error:", err);
+            showToast("Failed to process one or more images.", "error");
             input.value = '';
         });
 };
@@ -5798,230 +5814,47 @@ window.uploadSlideshowImage = function(input, type) {
 window.deleteSlideshowImage = function(id) {
     if (!confirm("Permanently delete this slideshow image?")) return;
     
-    if (isFirebaseActive) {
+    slideshowImages = slideshowImages.filter(img => img.id !== id);
+    localStorage.setItem('v28_slideshow_images', JSON.stringify(slideshowImages));
+    renderPublicSlideshows();
+    renderAdminSlideshowLists();
+    showToast("Slideshow image removed.", "success");
+    
+    if (isFirebaseActive && !id.startsWith('def-')) {
         db.collection("slideshow_images").doc(id).delete()
-            .then(() => {
-                showToast("Slideshow image removed.", "success");
-            })
-            .catch(err => {
-                console.error("Error deleting slideshow image:", err);
-                showToast("Could not delete slideshow image.", "error");
-            });
-    } else {
-        slideshowImages = slideshowImages.filter(img => img.id !== id);
-        localStorage.setItem('v28_slideshow_images', JSON.stringify(slideshowImages));
-        showToast("Slideshow image removed locally.", "success");
-        renderPublicSlideshows();
-        renderAdminSlideshowLists();
+            .catch(err => console.warn("Firestore delete slide notice:", err));
     }
 };
 
 window.reorderSlideshowImages = function(type, sourceIdx, targetIdx) {
-    // Get all custom slides of this type, sorted
     const typeSlides = slideshowImages.filter(img => img.type === type);
     typeSlides.forEach((slide, idx) => {
         if (slide.order === undefined) slide.order = idx;
     });
     
-    // Remove the item from its old position and insert it at the target position
     const [movedSlide] = typeSlides.splice(sourceIdx, 1);
     typeSlides.splice(targetIdx, 0, movedSlide);
     
-    // Re-assign order indices based on their new positions in the array
     const updates = [];
     typeSlides.forEach((slide, idx) => {
         slide.order = idx;
         updates.push(slide);
     });
     
+    localStorage.setItem('v28_slideshow_images', JSON.stringify(slideshowImages));
+    renderPublicSlideshows();
+    renderAdminSlideshowLists();
+    showToast("Slideshow reordered!", "success");
+    
     if (isFirebaseActive) {
         const batch = db.batch();
         updates.forEach(slide => {
-            batch.update(db.collection("slideshow_images").doc(slide.id), { order: slide.order });
+            if (!slide.id.startsWith('def-')) {
+                batch.update(db.collection("slideshow_images").doc(slide.id), { order: slide.order });
+            }
         });
         batch.commit()
-            .then(() => showToast("Slideshow reordered!", "success"))
-            .catch(err => {
-                console.error("Error saving new slideshow order:", err);
-                showToast("Failed to save slideshow order.", "error");
-            });
-    } else {
-        localStorage.setItem('v28_slideshow_images', JSON.stringify(slideshowImages));
-        showToast("Slideshow reordered locally!", "success");
-        renderPublicSlideshows();
-        renderAdminSlideshowLists();
-    }
-};
-
-// DOM Init
-document.addEventListener('DOMContentLoaded', () => {
-    const banner = document.getElementById('sandbox-banner');
-    if (banner) banner.style.display = 'none';
-    
-    const btnSetup = document.getElementById('btn-setup-db');
-    if (btnSetup) {
-        btnSetup.addEventListener('click', () => {
-            document.getElementById('db-setup-modal').style.display = 'flex';
-        });
-    }
-    const btnCloseDb = document.getElementById('btn-close-db-modal');
-    if (btnCloseDb) {
-        btnCloseDb.addEventListener('click', () => {
-            const modal = document.getElementById('db-setup-modal');
-            if (modal) modal.style.display = 'none';
-        });
-    }
-    const btnCloseDbOk = document.getElementById('btn-close-db-modal-ok');
-    if (btnCloseDbOk) {
-        btnCloseDbOk.addEventListener('click', () => {
-            const modal = document.getElementById('db-setup-modal');
-            if (modal) modal.style.display = 'none';
-        });
-    }
-
-    initDatabase();
-    checkEmailVerificationParam();
-    setRole('seller', false);
-    initScrollReveal();
-    initHeroSlider();
-    initAboutSlideshow();
-    updateWizardUI();
-});
-
-
-// ==================== UPCOMING SHOWS & EVENTS HANDLERS & RENDERS ====================
-
-// Render Upcoming Shows on Homepage
-function renderUpcomingShowsHomepage() {
-    const container = document.getElementById('landing-events-gallery');
-    const section = document.getElementById('section-upcoming-shows');
-    if (!container) return;
-
-    if (upcomingShows.length === 0) {
-        if (section) section.style.display = 'none';
-        container.innerHTML = '';
-        return;
-    }
-
-    if (section) section.style.display = 'block';
-
-    container.innerHTML = upcomingShows.map(item => `
-        <div class="glass-card" style="display: flex; flex-direction: column; overflow: hidden; border: 1.5px solid rgba(223, 183, 80, 0.28); border-radius: 16px; padding: 0; box-shadow: var(--shadow-card), 0 0 25px rgba(56, 189, 248, 0.08); transition: transform 0.3s ease, border-color 0.3s ease;">
-            <!-- Event Image / Flyer Banner -->
-            <div style="position: relative; width: 100%; height: 230px; overflow: hidden; background: #06080e;">
-                <img src="${item.image || 'assets/show_poster_hhi.png'}" alt="${escapeHTML(item.title)}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.src='assets/show_poster_hhi.png'">
-                <div style="position: absolute; top: 12px; left: 12px; background: rgba(5,7,12,0.85); backdrop-filter: blur(8px); border: 1px solid var(--accent-gold); border-radius: 20px; padding: 4px 12px; font-size: 0.78rem; font-weight: 700; color: var(--accent-gold); letter-spacing: 0.04em;">
-                    🎪 VENDING LIVE
-                </div>
-                ${item.booth ? `
-                <div style="position: absolute; bottom: 12px; left: 12px; background: rgba(5,7,12,0.88); backdrop-filter: blur(8px); border: 1px solid rgba(56,189,248,0.4); border-radius: 6px; padding: 4px 10px; font-size: 0.78rem; font-weight: 600; color: var(--accent-blue-neon);">
-                    🏷️ ${escapeHTML(item.booth)}
-                </div>` : ''}
-            </div>
-
-            <!-- Event Content -->
-            <div style="padding: 1.5rem; display: flex; flex-direction: column; flex-grow: 1; gap: 0.85rem;">
-                <div style="display: flex; align-items: center; gap: 0.5rem; color: var(--accent-gold); font-size: 0.88rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em;">
-                    <span>📅</span> ${escapeHTML(item.date || 'Upcoming Date')}
-                </div>
-                <h3 style="font-size: 1.35rem; font-family: var(--font-title); font-weight: 800; line-height: 1.25; margin: 0; color: #fff;">
-                    ${escapeHTML(item.title)}
-                </h3>
-                <div style="display: flex; flex-direction: column; gap: 0.35rem; font-size: 0.88rem; color: var(--text-secondary);">
-                    ${item.venue ? `<div><strong>🏛️ Venue:</strong> ${escapeHTML(item.venue)}</div>` : ''}
-                    <div><strong>📍 Location:</strong> ${escapeHTML(item.location || 'Local Show')}</div>
-                </div>
-                <p style="color: var(--text-secondary); font-size: 0.9rem; line-height: 1.6; margin-top: 0.25rem; flex-grow: 1;">
-                    ${escapeHTML(item.description)}
-                </p>
-                <div style="border-top: 1px solid var(--border-color); padding-top: 1rem; margin-top: auto; display: flex; gap: 0.75rem; flex-wrap: wrap;">
-                    <a href="sms:+17744243561" class="btn btn-primary btn-sm" style="flex: 1; min-width: 130px; font-size: 0.88rem;">
-                        💬 Text About Show
-                    </a>
-                    <a href="${item.link || 'https://instagram.com/Vault28Cards'}" target="_blank" rel="noopener" class="btn btn-secondary btn-sm" style="flex: 1; min-width: 130px; font-size: 0.88rem; text-align: center;">
-                        📸 Follow on IG
-                    </a>
-                </div>
-            </div>
-        </div>
-    `).join('');
-}
-
-// Render Events List in Owner Admin Console
-function renderAdminUpcomingShowsList() {
-    const list = document.getElementById('admin-events-list');
-    const badgeCount = document.getElementById('admin-events-list-count');
-    const tabBadge = document.getElementById('admin-badge-events');
-    if (badgeCount) badgeCount.textContent = upcomingShows.length;
-    if (tabBadge) tabBadge.textContent = upcomingShows.length;
-    if (!list) return;
-
-    list.innerHTML = '';
-    if (upcomingShows.length === 0) {
-        list.innerHTML = `<div style="color:var(--text-muted); font-size:0.88rem; padding: 1.5rem; text-align: center; border: 1px dashed var(--border-color); border-radius: 8px;">No upcoming shows listed yet. Add one using the form!</div>`;
-        return;
-    }
-
-    upcomingShows.forEach(s => {
-        const item = document.createElement('div');
-        item.style.padding = '0.9rem';
-        item.style.border = '1px solid var(--border-color)';
-        item.style.borderRadius = '10px';
-        item.style.background = 'rgba(0,0,0,0.2)';
-        item.style.display = 'flex';
-        item.style.justifyContent = 'space-between';
-        item.style.alignItems = 'center';
-        item.style.gap = '1rem';
-
-        item.innerHTML = `
-            <div style="display: flex; gap: 1rem; align-items: center; min-width: 0;">
-                <img src="${s.image || 'assets/show_poster_hhi.png'}" alt="Show Image" style="width: 58px; height: 58px; border-radius: 8px; object-fit: cover; border: 1px solid var(--border-color); flex-shrink: 0;" onerror="this.src='assets/show_poster_hhi.png'">
-                <div style="min-width: 0;">
-                    <div style="font-weight: 700; font-size: 0.95rem; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${escapeHTML(s.title)}</div>
-                    <div style="font-size: 0.8rem; color: var(--accent-gold);">${escapeHTML(s.date)}</div>
-                    <div style="font-size: 0.78rem; color: var(--text-muted);">${escapeHTML(s.location)}${s.booth ? ' • ' + escapeHTML(s.booth) : ''}</div>
-                </div>
-            </div>
-            <button class="btn btn-secondary btn-sm" onclick="deleteUpcomingShow('${s.id}')" style="color: var(--accent-red); border-color: rgba(239,68,68,0.25); flex-shrink: 0; padding: 0.4rem 0.75rem; font-size: 0.8rem;">
-                🗑️ Delete
-            </button>
-        `;
-        list.appendChild(item);
-    });
-}
-
-function resetAdminEventForm() {
-    const form = document.getElementById('admin-event-form');
-    if (form) form.reset();
-    const base64 = document.getElementById('admin-event-photo-base64');
-    if (base64) base64.value = '';
-    const prevBox = document.getElementById('admin-event-photo-preview-box');
-    if (prevBox) prevBox.style.display = 'none';
-    const status = document.getElementById('admin-event-photo-status');
-    if (status) {
-        status.textContent = 'No photo chosen';
-        status.style.color = 'var(--text-secondary)';
-    }
-}
-
-window.deleteUpcomingShow = function(id) {
-    if (!confirm("Are you sure you want to delete this upcoming show? It will be removed from Firestore and the homepage.")) return;
-
-    if (isFirebaseActive) {
-        db.collection("upcoming_shows").doc(id).delete()
-            .then(() => {
-                showToast("Upcoming show deleted from Firestore", "info");
-            })
-            .catch(err => {
-                showToast("Failed to delete event from Firestore", "error");
-                console.error(err);
-            });
-    } else {
-        upcomingShows = upcomingShows.filter(s => s.id !== id);
-        saveLocalUpcomingShows();
-        renderUpcomingShowsHomepage();
-        renderAdminUpcomingShowsList();
-        showToast("Upcoming show deleted locally", "info");
+            .catch(err => console.warn("Firestore reorder notice:", err));
     }
 };
 
