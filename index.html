@@ -6,7 +6,7 @@
     <title>Vault 28 Trading Co. | Buy & Sell Pokémon Card Collections</title>
     <meta name="description" content="Sell your Pokémon card collections — vintage Base Set, WOTC, modern secret rares, sealed products, and complete binders. Based near Summerville, SC. Fast cash offers.">
     <meta name="google-site-verification" content="QYIy_EZy3nVUwvhrjrVTm0CM_KEltQ9HQjpMEuQ2eIw" />
-    <link rel="stylesheet" href="/style.css?v=52">
+    <link rel="stylesheet" href="/style.css?v=53">
     <!-- Browser Tab Icon (Favicon) -->
     <link rel="icon" type="image/png" href="/assets/logo_new.png">
 </head>
@@ -35,8 +35,8 @@
                 <div style="display: flex; align-items: center; gap: 1rem;">
                     <!-- Admin switcher widget -->
                     <div class="role-switcher-container" id="role-switcher-wrapper" style="display: none;" title="Switch between Seller and Vault 28 Buyer view to test the application">
-                        <button class="role-btn active" id="btn-role-seller" data-role="seller">Seller View</button>
-                        <button class="role-btn" id="btn-role-buyer" data-role="buyer">
+                        <button class="role-btn" id="btn-role-seller" data-role="seller" onclick="setRole('seller')">Seller View</button>
+                        <button class="role-btn active" id="btn-role-buyer" data-role="buyer" onclick="setRole('buyer')">
                             Buyer (Owner) View
                             <span class="update-dot" id="buyer-update-dot"></span>
                         </button>
@@ -1714,6 +1714,6 @@ const firebaseConfig = {
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 
-    <script src="/app.js?v=52"></script>
+    <script src="/app.js?v=53"></script>
 </body>
 </html>

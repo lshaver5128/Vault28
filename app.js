@@ -511,16 +511,13 @@ function updateNavigationLinks(activeViewId) {
     navContainer.innerHTML = '';
     
     let isUserLoggedIn = false;
-    let isOwner = false;
     
-    if (document.body.classList.contains('has-admin-bar') || currentActiveRole === 'buyer') {
-        isOwner = true;
+    if (document.body.classList.contains('has-admin-bar')) {
         isUserLoggedIn = true;
     } else if (isFirebaseActive && typeof firebase !== 'undefined' && firebase.auth && firebase.auth()) {
         const currentUser = firebase.auth().currentUser;
         if (currentUser) {
             isUserLoggedIn = true;
-            isOwner = checkIsOwner(currentUser.email);
         }
     } else {
         const storedUsers = localStorage.getItem('v28_users');
@@ -530,14 +527,17 @@ function updateNavigationLinks(activeViewId) {
                 const activeUser = list.find(u => u.isOnline);
                 if (activeUser) {
                     isUserLoggedIn = true;
-                    isOwner = checkIsOwner(activeUser.email);
                 }
             } catch(e) {}
         }
     }
     
+    // When currentActiveRole is 'buyer', show Owner admin links.
+    // When currentActiveRole is 'seller', show full Seller links (Home, My Dashboard, Sell Your Collection, Shop, About Us)!
+    const isOwnerMode = (currentActiveRole === 'buyer');
+    
     let links = [];
-    if (isOwner) {
+    if (isOwnerMode) {
         links = [
             { label: 'Admin Dashboard', view: 'buyer-dashboard' },
             { label: 'Home View', view: 'seller-landing' },
@@ -570,12 +570,6 @@ function updateNavigationLinks(activeViewId) {
             e.preventDefault();
             if (link.view === 'buyer-dashboard') {
                 setRole('buyer', true);
-            } else if (link.view === 'seller-landing') {
-                if (isOwner) {
-                    setRole('seller', true);
-                } else {
-                    switchView(link.view);
-                }
             } else {
                 if (link.view !== 'seller-submit') {
                     resetSubmissionFormState();
@@ -1092,25 +1086,41 @@ function setRole(role, shouldSwitchView = true) {
     currentActiveRole = role;
     const btnSeller = document.getElementById('btn-role-seller');
     const btnBuyer = document.getElementById('btn-role-buyer');
+    const roleLabel = document.getElementById('user-display-role');
     
     if (role === 'seller') {
         if (btnSeller) btnSeller.classList.add('active');
         if (btnBuyer) btnBuyer.classList.remove('active');
         const updateDot = document.getElementById('buyer-update-dot');
         if (updateDot) updateDot.style.display = 'none';
-        if (shouldSwitchView) {
-            switchView('seller-landing');
+        if (roleLabel) {
+            roleLabel.textContent = "Seller View";
+            roleLabel.style.color = "var(--text-secondary)";
         }
+        if (shouldSwitchView) {
+            switchView('seller-dashboard');
+        } else {
+            updateNavigationLinks(document.querySelector('.view-state.active')?.id || 'seller-dashboard');
+        }
+        showToast("Switched to Seller View", "info");
     } else {
         if (btnBuyer) btnBuyer.classList.add('active');
         if (btnSeller) btnSeller.classList.remove('active');
         const updateDot = document.getElementById('buyer-update-dot');
         if (updateDot) updateDot.style.display = 'none';
+        if (roleLabel) {
+            roleLabel.textContent = "Vault 28 Owner";
+            roleLabel.style.color = "var(--accent-cyan)";
+        }
         if (shouldSwitchView) {
             switchView('buyer-dashboard');
+        } else {
+            updateNavigationLinks('buyer-dashboard');
         }
+        showToast("Switched to Owner View", "info");
     }
 }
+window.setRole = setRole;
 
 function showToast(message, type = 'info') {
     const container = document.body;
