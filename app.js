@@ -5597,9 +5597,10 @@ function renderHomepageSlideshow() {
     const heroContainer = document.getElementById('hero-slides-container');
     if (heroContainer) {
         const activeHeroSlides = homepageSlides.length > 0 ? homepageSlides : DEFAULT_HERO_SLIDES;
-        heroContainer.innerHTML = activeHeroSlides.map((slide, idx) => `
-            <img src="${slide.image}" class="hero-slide ${idx === 0 ? 'active' : ''}" alt="Vault 28 Slideshow Image" />
-        `).join('');
+        heroContainer.innerHTML = activeHeroSlides.map((slide, idx) => {
+            const imgSrc = slide.image || slide.url || slide.imageUrl || slide.src || '';
+            return `<img src="${imgSrc}" class="hero-slide ${idx === 0 ? 'active' : ''}" alt="Vault 28 Slideshow Image" />`;
+        }).join('');
     }
     initHeroSlider();
 }
@@ -5609,9 +5610,10 @@ function renderAboutSlideshow() {
     const aboutContainer = document.getElementById('about-slideshow-container');
     if (aboutContainer) {
         const activeAboutSlides = aboutSlides.length > 0 ? aboutSlides : DEFAULT_ABOUT_SLIDES;
-        aboutContainer.innerHTML = activeAboutSlides.map((slide, idx) => `
-            <img src="${slide.image}" class="about-slide ${idx === 0 ? 'active' : ''}" alt="Vault 28 Journey" />
-        `).join('') + `
+        aboutContainer.innerHTML = activeAboutSlides.map((slide, idx) => {
+            const imgSrc = slide.image || slide.url || slide.imageUrl || slide.src || '';
+            return `<img src="${imgSrc}" class="about-slide ${idx === 0 ? 'active' : ''}" alt="Vault 28 Journey" />`;
+        }).join('') + `
             <!-- Floating Badge -->
             <div style="position: absolute; bottom: 16px; left: 16px; right: 16px; z-index: 5; background: rgba(5,7,12,0.88); backdrop-filter: blur(12px); border: 1px solid rgba(223,183,80,0.5); border-radius: 12px; padding: 10px 14px; display: flex; align-items: center; justify-content: space-between; pointer-events: none;">
                 <div style="display: flex; align-items: center; gap: 8px;">
@@ -5695,8 +5697,9 @@ function renderAdminHomepageSlidesList() {
             });
         }
         
+        const imgSrc = img.image || img.url || img.imageUrl || img.src || '';
         item.innerHTML = `
-            <img src="${img.image}" style="width: 100%; height: 100%; object-fit: cover; pointer-events: none;">
+            <img src="${imgSrc}" style="width: 100%; height: 100%; object-fit: cover; pointer-events: none;">
             ${deleteBtnHtml}
             ${badgeHtml}
         `;
@@ -5766,8 +5769,9 @@ function renderAdminAboutSlidesList() {
             });
         }
         
+        const imgSrc = img.image || img.url || img.imageUrl || img.src || '';
         item.innerHTML = `
-            <img src="${img.image}" style="width: 100%; height: 100%; object-fit: cover; pointer-events: none;">
+            <img src="${imgSrc}" style="width: 100%; height: 100%; object-fit: cover; pointer-events: none;">
             ${deleteBtnHtml}
             ${badgeHtml}
         `;
