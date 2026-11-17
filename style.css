@@ -1,41 +1,52 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap');
+﻿@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap');
 
 :root {
-    --bg-primary: #0a0b0e;
-    --bg-secondary: #111216;
-    --bg-tertiary: #181a1f;
-    --bg-card: rgba(24, 26, 31, 0.7);
-    --border-color: rgba(223, 183, 80, 0.08);
-    --border-hover: rgba(223, 183, 80, 0.2);
-    
-    /* Gold & Bronze gradients / Accent colors */
-    --accent-emerald: #f5d075;
-    --accent-emerald-glow: rgba(245, 208, 117, 0.15);
-    --accent-cyan: #dfb750;
-    --accent-cyan-glow: rgba(223, 183, 80, 0.15);
-    --accent-blue: #8a6d25;
-    --accent-purple: #ab8b35;
-    --accent-orange: #dfb750;
-    --accent-orange-glow: rgba(223, 183, 80, 0.15);
-    --accent-red: #ef4444;
+    /* Pure black base — matching the logo's deep black background */
+    --bg-primary: #060709;
+    --bg-secondary: #0d0f14;
+    --bg-tertiary: #131620;
+    --bg-card: rgba(16, 18, 26, 0.75);
+    --border-color: rgba(223, 183, 80, 0.12);
+    --border-hover: rgba(223, 183, 80, 0.3);
+
+    /* Gold — primary brand color from logo ring & text */
     --accent-gold: #dfb750;
-    
+    --accent-gold-bright: #f5d077;
+    --accent-gold-dim: #9a7c38;
+
+    /* Blue neon — the Blastoise glow from the logo */
+    --accent-blue-neon: #4db8ff;
+    --accent-blue-neon-glow: rgba(77, 184, 255, 0.18);
+
+    /* Legacy variable aliases so existing code still works */
+    --accent-emerald: #f5d077;
+    --accent-emerald-glow: rgba(245, 208, 119, 0.15);
+    --accent-cyan: #dfb750;
+    --accent-cyan-glow: rgba(223, 183, 80, 0.18);
+    --accent-blue: #9a7c38;
+    --accent-purple: #b8952a;
+    --accent-orange: #dfb750;
+    --accent-orange-glow: rgba(223, 183, 80, 0.18);
+    --accent-red: #ef4444;
+
     --text-primary: #f8fafc;
-    --text-secondary: #a3a8b3;
-    --text-muted: #6b7280;
-    
+    --text-secondary: #9ea5b5;
+    --text-muted: #5c6270;
+
     --font-main: 'Inter', system-ui, -apple-system, sans-serif;
     --font-title: 'Outfit', system-ui, -apple-system, sans-serif;
-    
+
     --transition-fast: 0.2s ease;
     --transition-normal: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     --transition-slow: 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-    
-    --shadow-neon-cyan: 0 0 20px rgba(223, 183, 80, 0.25);
-    --shadow-neon-emerald: 0 0 20px rgba(245, 208, 117, 0.25);
-    --shadow-neon-orange: 0 0 20px rgba(223, 183, 80, 0.25);
-    --shadow-neon-gold: 0 0 25px rgba(223, 183, 80, 0.3);
-    --shadow-card: 0 10px 30px -10px rgba(0, 0, 0, 0.7);
+
+    /* Dual-tone neon shadows: gold primary, blue secondary */
+    --shadow-neon-cyan: 0 0 20px rgba(223, 183, 80, 0.3);
+    --shadow-neon-emerald: 0 0 20px rgba(245, 208, 119, 0.3);
+    --shadow-neon-orange: 0 0 20px rgba(223, 183, 80, 0.3);
+    --shadow-neon-gold: 0 0 30px rgba(223, 183, 80, 0.4), 0 0 60px rgba(77, 184, 255, 0.08);
+    --shadow-neon-blue: 0 0 20px rgba(77, 184, 255, 0.35);
+    --shadow-card: 0 10px 30px -10px rgba(0, 0, 0, 0.8);
 }
 
 * {
@@ -50,9 +61,11 @@ body {
     font-family: var(--font-main);
     line-height: 1.5;
     overflow-x: hidden;
+    /* Dual-tone ambient: gold top-left, blue-neon bottom-right — mirrors logo */
     background-image: 
-        radial-gradient(circle at 10% 20%, rgba(223, 183, 80, 0.04) 0%, transparent 40%),
-        radial-gradient(circle at 90% 80%, rgba(171, 139, 53, 0.03) 0%, transparent 45%);
+        radial-gradient(circle at 8% 15%, rgba(223, 183, 80, 0.055) 0%, transparent 42%),
+        radial-gradient(circle at 92% 85%, rgba(77, 184, 255, 0.045) 0%, transparent 42%),
+        radial-gradient(circle at 50% 50%, rgba(6, 7, 9, 0.6) 0%, transparent 80%);
     background-attachment: fixed;
 }
 
@@ -94,10 +107,12 @@ a {
 
 /* Header & Navbar */
 header {
-    background: rgba(6, 9, 19, 0.75);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    border-bottom: 1px solid var(--border-color);
+    background: rgba(4, 5, 8, 0.85);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-bottom: 1px solid rgba(223, 183, 80, 0.15);
+    /* Subtle gold line under header */
+    box-shadow: 0 1px 0 rgba(223, 183, 80, 0.08), 0 4px 24px rgba(0,0,0,0.6);
     position: fixed;
     top: 0;
     left: 0;
@@ -354,14 +369,18 @@ body.has-admin-bar main.container {
 }
 
 .btn-primary {
-    background: linear-gradient(135deg, var(--accent-cyan), var(--accent-blue));
-    color: #0a0b0e;
-    box-shadow: var(--shadow-neon-cyan);
+    background: linear-gradient(135deg, #dfb750 0%, #c9a140 60%, #b8952a 100%);
+    color: #060709;
+    font-weight: 700;
+    box-shadow: 0 0 18px rgba(223, 183, 80, 0.3), 0 2px 8px rgba(0,0,0,0.5);
+    text-shadow: none;
+    border: 1px solid rgba(245, 208, 119, 0.3);
 }
 
 .btn-primary:hover {
     transform: translateY(-2px);
-    box-shadow: 0 0 25px rgba(223, 183, 80, 0.45);
+    background: linear-gradient(135deg, #f5d077 0%, #dfb750 60%, #c9a140 100%);
+    box-shadow: 0 0 28px rgba(223, 183, 80, 0.5), 0 0 10px rgba(77, 184, 255, 0.15), 0 4px 12px rgba(0,0,0,0.5);
 }
 
 .btn-secondary {
@@ -406,17 +425,18 @@ body.has-admin-bar main.container {
 /* Cards & Containers */
 .glass-card {
     background: var(--bg-card);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
     border: 1px solid var(--border-color);
     border-radius: 16px;
     padding: 1.5rem;
-    box-shadow: var(--shadow-card);
+    box-shadow: var(--shadow-card), inset 0 1px 0 rgba(255,255,255,0.03);
     transition: var(--transition-normal);
 }
 
 .glass-card:hover {
-    border-color: var(--border-hover);
+    border-color: rgba(223, 183, 80, 0.25);
+    box-shadow: var(--shadow-card), 0 0 20px rgba(223, 183, 80, 0.06), inset 0 1px 0 rgba(255,255,255,0.04);
 }
 
 /* Graded Slab Mockup CSS */
@@ -613,9 +633,10 @@ body.has-admin-bar main.container {
     left: 50%;
     transform: translate(-50%, -50%);
     width: 600px;
-    height: 250px;
-    background: radial-gradient(circle, rgba(6, 182, 212, 0.15) 0%, rgba(139, 92, 246, 0.05) 50%, transparent 100%);
-    filter: blur(50px);
+    height: 300px;
+    /* Blue neon orb — matching the Blastoise aura in the logo */
+    background: radial-gradient(circle, rgba(77, 184, 255, 0.12) 0%, rgba(223, 183, 80, 0.06) 50%, transparent 100%);
+    filter: blur(55px);
     pointer-events: none;
     z-index: 0;
 }
@@ -624,14 +645,15 @@ body.has-admin-bar main.container {
     display: inline-block;
     padding: 6px 16px;
     border-radius: 20px;
-    background: rgba(255, 255, 255, 0.04);
-    border: 1px solid var(--border-color);
+    background: rgba(77, 184, 255, 0.07);
+    border: 1px solid rgba(77, 184, 255, 0.2);
     font-size: 0.85rem;
     font-weight: 600;
-    color: var(--accent-cyan);
+    color: var(--accent-blue-neon);
     margin-bottom: 1.5rem;
-    letter-spacing: 0.05em;
+    letter-spacing: 0.08em;
     text-transform: uppercase;
+    text-shadow: 0 0 10px rgba(77, 184, 255, 0.4);
 }
 
 .hero-title {
@@ -644,9 +666,11 @@ body.has-admin-bar main.container {
 }
 
 .hero-title span {
-    background: linear-gradient(135deg, var(--accent-cyan) 0%, var(--accent-emerald) 100%);
+    /* Gold gradient for hero accent text — primary brand color */
+    background: linear-gradient(135deg, #f5d077 0%, #dfb750 50%, #c9a140 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
+    text-shadow: none;
 }
 
 .hero-subtitle {
@@ -678,7 +702,9 @@ body.has-admin-bar main.container {
 }
 
 .section-title span {
-    color: var(--accent-cyan);
+    /* Blue neon accent for section heading highlights */
+    color: var(--accent-blue-neon);
+    text-shadow: 0 0 20px rgba(77, 184, 255, 0.3);
 }
 
 .features-grid {
@@ -726,6 +752,45 @@ body.has-admin-bar main.container {
 .feature-card p {
     color: var(--text-secondary);
     font-size: 1.05rem;
+}
+
+/* Brand Banner Card Showcase */
+.brand-banner-card {
+    position: relative;
+    border-radius: 18px;
+    overflow: hidden;
+    border: 2px solid rgba(223, 183, 80, 0.35);
+    box-shadow: 0 15px 45px rgba(0, 0, 0, 0.85), 0 0 35px rgba(56, 189, 248, 0.22);
+    transition: transform var(--transition-normal), box-shadow var(--transition-normal), border-color var(--transition-normal);
+    background: #000;
+}
+
+.brand-banner-card:hover {
+    transform: translateY(-4px);
+    border-color: rgba(223, 183, 80, 0.65);
+    box-shadow: 0 20px 55px rgba(0, 0, 0, 0.95), 0 0 45px rgba(56, 189, 248, 0.38);
+}
+
+/* Animations for Hero Logo */
+@keyframes heroLogoBob {
+    0%, 100% {
+        transform: translateY(0px) scale(1);
+        filter: drop-shadow(0 0 35px rgba(56, 189, 248, 0.5)) drop-shadow(0 0 60px rgba(223, 183, 80, 0.25));
+    }
+    50% {
+        transform: translateY(-10px) scale(1.02);
+        filter: drop-shadow(0 0 45px rgba(56, 189, 248, 0.65)) drop-shadow(0 0 75px rgba(223, 183, 80, 0.35));
+    }
+}
+
+@keyframes heroRingRotate {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+@keyframes heroGlowPulse {
+    0% { transform: scale(0.92); opacity: 0.6; }
+    100% { transform: scale(1.1); opacity: 0.95; }
 }
 
 /* Dashboard Layouts */

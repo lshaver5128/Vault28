@@ -6,17 +6,17 @@
     <title>Vault 28 Trading Co. | Buy & Sell Pokémon Card Collections</title>
     <meta name="description" content="Sell your Pokémon card collections — vintage Base Set, WOTC, modern secret rares, sealed products, and complete binders. Based near Summerville, SC. Fast cash offers.">
     <meta name="google-site-verification" content="QYIy_EZy3nVUwvhrjrVTm0CM_KEltQ9HQjpMEuQ2eIw" />
-    <link rel="stylesheet" href="/style.css?v=2">
+    <link rel="stylesheet" href="/style.css?v=32">
     <!-- Browser Tab Icon (Favicon) -->
-    <link rel="icon" type="image/png" href="/assets/logo_transparent.png">
+    <link rel="icon" type="image/png" href="/assets/logo_new.png">
 </head>
 <body>
 
     <!-- Unified Sticky/Fixed Top Container -->
     <div class="fixed-top-container">
         <!-- Work In Progress Alert Banner -->
-        <div id="wip-banner" style="background: linear-gradient(90deg, #b8860b 0%, #dfb750 50%, #b8860b 100%); color: #0a0b0e; text-align: center; padding: 10px 16px; font-size: 0.82rem; font-weight: 600; letter-spacing: 0.03em; box-shadow: 0 2px 10px rgba(0,0,0,0.3); display: flex; justify-content: center; align-items: center; gap: 8px; flex-wrap: wrap; position: relative; font-family: var(--font-main);">
-            <span>🚧 <strong>Work In Progress:</strong> We are currently polishing the platform. If you encounter any issues, please text us at <a href="tel:774-424-3561" style="text-decoration: underline; font-weight: 700; color: inherit;">774-424-3561</a> or email <a href="mailto:lshaver@vault28cards.com" style="text-decoration: underline; font-weight: 700; color: inherit;">lshaver@vault28cards.com</a>.</span>
+        <div id="wip-banner" style="background: linear-gradient(90deg, #05070c 0%, #101626 50%, #05070c 100%); border-bottom: 1px solid rgba(223, 183, 80, 0.35); color: #e2e8f0; text-align: center; padding: 10px 16px; font-size: 0.84rem; font-weight: 500; letter-spacing: 0.03em; box-shadow: 0 4px 15px rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center; gap: 10px; flex-wrap: wrap; position: relative; font-family: var(--font-main);">
+            <span style="display: inline-flex; align-items: center; gap: 6px;"><span style="color: var(--accent-gold); font-size: 1rem;">⚡</span> <strong style="color: var(--accent-gold); letter-spacing: 0.05em; text-transform: uppercase;">Vault 28 Notice:</strong> Now exclusively buying &amp; trading <strong>Raw Pokémon Cards</strong>! Text <a href="tel:774-424-3561" style="color: var(--accent-blue-neon); text-decoration: underline; font-weight: 700;">(774) 424-3561</a> or DM <a href="https://instagram.com/Vault28Cards" target="_blank" rel="noopener" style="color: var(--accent-blue-neon); text-decoration: underline; font-weight: 700;">@Vault28Cards</a></span>
         </div>
 
         <!-- Local DB Setup Sandbox Banner (only visible if Firebase config isn't pasted) -->
@@ -49,8 +49,8 @@
         <header>
             <div class="container navbar">
                 <a href="/" class="logo" id="brand-logo" style="display: flex; align-items: center; gap: 0.75rem;">
-                    <img src="/assets/logo_transparent.png" alt="Vault 28 Logo" style="height: 50px; width: 50px; border-radius: 50%; object-fit: cover;" id="logo-img" onerror="this.style.display='none';">
-                    <span id="logo-text" style="font-family: var(--font-title); font-weight: 800; font-size: 1.4rem;">VAULT <span style="color: var(--accent-gold); font-style: normal; background: none; -webkit-text-fill-color: initial;">28</span> <span style="font-size: 0.85rem; font-weight: 600; letter-spacing: 0.08em; color: var(--text-secondary); margin-left: 0.25rem;">TRADING CO.</span></span>
+                    <img src="/assets/logo_new.png" alt="Vault 28 Trading Co." style="height: 56px; width: 56px; border-radius: 50%; object-fit: cover; border: 2px solid rgba(223,183,80,0.35); box-shadow: 0 0 12px rgba(100,180,255,0.25);">
+                    <span id="logo-text" style="font-family: var(--font-title); font-weight: 900; font-size: 1.35rem; letter-spacing: 0.03em; color: #fff; text-shadow: 0 0 12px rgba(100,180,255,0.3);">VAULT <span style="color: var(--accent-gold); font-style: normal; background: none; -webkit-text-fill-color: initial;">28</span><br><span style="font-size: 0.72rem; font-weight: 600; letter-spacing: 0.12em; color: var(--accent-gold); margin-left: 0.1rem; opacity: 0.9; display: block; margin-top: -2px;">TRADING CO.</span></span>
                 </a>
                 
                 <!-- Dynamic Navigation Links -->
@@ -60,7 +60,7 @@
 
                 <div style="display: flex; align-items: center; gap: 1rem;">
                     <!-- Header CTA Button -->
-                    <button class="btn btn-primary btn-sm" id="btn-nav-free-offer" style="box-shadow: 0 0 15px rgba(223, 183, 80, 0.25);">Get a Free Offer</button>
+                    <button class="btn btn-primary btn-sm" id="btn-nav-free-offer" style="box-shadow: 0 0 15px rgba(223, 183, 80, 0.25);">📬 Contact Us to Sell</button>
 
                     <!-- Auth Widget (Sign In / Register) -->
                     <div id="auth-widget" style="display: flex; gap: 0.5rem;">
@@ -104,16 +104,31 @@
                     </div>
                 </div>
                 
-                <!-- Eye-catching Right Column Graphic -->
+                <!-- Eye-catching Right Column Graphic — Official Logo Badge -->
                 <div class="hero-graphic-container" style="position: relative; display: flex; justify-content: center; align-items: center; z-index: 1;">
-                    <!-- Ambient gold/cyan glowing ring behind the card mockup -->
-                    <div class="graphic-glow-ring" style="position: absolute; width: 340px; height: 340px; background: radial-gradient(circle, rgba(223, 183, 80, 0.12) 0%, rgba(6, 182, 212, 0.08) 50%, transparent 100%); filter: blur(30px); border-radius: 50%; pointer-events: none;"></div>
+                    <!-- Ambient electric blue & gold glowing aura -->
+                    <div style="position: absolute; width: 380px; height: 380px; background: radial-gradient(circle, rgba(56, 189, 248, 0.22) 0%, rgba(223, 183, 80, 0.08) 55%, transparent 100%); filter: blur(40px); border-radius: 50%; pointer-events: none; animation: heroGlowPulse 4s ease-in-out infinite alternate;"></div>
+                    <!-- Rotating outer gold rings -->
+                    <div style="position: absolute; width: 320px; height: 320px; border-radius: 50%; border: 1.5px solid rgba(223,183,80,0.22); animation: heroRingRotate 24s linear infinite; pointer-events: none;"></div>
+                    <div style="position: absolute; width: 340px; height: 340px; border-radius: 50%; border: 1px dashed rgba(56,189,248,0.18); animation: heroRingRotate 32s linear infinite reverse; pointer-events: none;"></div>
                     
-                    <div class="floating-hero-image-wrapper" style="position: relative; border-radius: 16px; border: 1px solid rgba(255,255,255,0.08); background: rgba(24, 26, 31, 0.6); backdrop-filter: blur(12px); padding: 0.5rem; box-shadow: 0 20px 40px rgba(0,0,0,0.4), inset 0 1px 1px rgba(255,255,255,0.1); width: 100%; max-width: 360px; overflow: hidden; aspect-ratio: 1 / 1;" id="hero-slides-container">
-                        <img src="/assets/hero_cards.jpg" class="hero-slide active" alt="Vault 28 Pokémon Cards Graded" style="position: absolute; top: 0.5rem; left: 0.5rem; width: calc(100% - 1rem); height: calc(100% - 1rem); object-fit: cover; border-radius: 12px; transition: opacity 1.5s ease-in-out; opacity: 0; z-index: 1;" />
-                        <img src="/assets/hero_cards_2.jpg" class="hero-slide" alt="Vault 28 Pokémon Sealed Products" style="position: absolute; top: 0.5rem; left: 0.5rem; width: calc(100% - 1rem); height: calc(100% - 1rem); object-fit: cover; border-radius: 12px; transition: opacity 1.5s ease-in-out; opacity: 0; z-index: 1;" />
-                        <img src="/assets/hero_cards_3.jpg" class="hero-slide" alt="Vault 28 Pokémon Collection Showcase" style="position: absolute; top: 0.5rem; left: 0.5rem; width: calc(100% - 1rem); height: calc(100% - 1rem); object-fit: cover; border-radius: 12px; transition: opacity 1.5s ease-in-out; opacity: 0; z-index: 1;" />
+                    <!-- Main Logo Emblem -->
+                    <div style="position: relative; z-index: 2; border-radius: 50%; padding: 6px; background: radial-gradient(circle, rgba(56,189,248,0.25) 0%, rgba(223,183,80,0.3) 100%); box-shadow: 0 0 50px rgba(56, 189, 248, 0.45), 0 0 80px rgba(223, 183, 80, 0.2), 0 20px 60px rgba(0,0,0,0.9); animation: heroLogoBob 6s ease-in-out infinite;">
+                        <img src="/assets/logo_new.png" alt="Vault 28 Trading Co. - Pokémon Cards" style="width: 280px; height: 280px; border-radius: 50%; object-fit: cover; display: block; border: 3px solid rgba(223,183,80,0.6);">
                     </div>
+
+                    <!-- Hidden slides container so app.js admin slider hooks remain intact without errors -->
+                    <div id="hero-slides-container" style="display: none;">
+                        <img src="/assets/logo_new.png" class="hero-slide active" alt="Vault 28 Logo" />
+                        <img src="/assets/vault28_banner.png" class="hero-slide" alt="Vault 28 Banner" />
+                    </div>
+                </div>
+            </div>
+
+            <!-- Official Vault 28 Brand Banner Showcase -->
+            <div class="reveal" style="margin: 2.5rem 0 1rem 0;">
+                <div class="brand-banner-card">
+                    <img src="/assets/vault28_banner.png" alt="Vault 28 Trading Co. Banner" style="width: 100%; height: auto; display: block; object-fit: cover;">
                 </div>
             </div>
 
@@ -133,12 +148,12 @@
                     <div class="glass-card feature-card" style="text-align: center;">
                         <div class="feature-icon-wrapper" style="margin: 0 auto 1rem auto;">1</div>
                         <h3>Submit Details</h3>
-                        <p>Tell us what you have. Upload photos or videos of your trading cards, TCG collections, or sealed product.</p>
+                        <p>Tell us what you have. Reach out via Text, Email, or Instagram DM @Vault28Cards with photos of your raw Pokémon cards.</p>
                     </div>
                     <div class="glass-card feature-card" style="text-align: center;">
                         <div class="feature-icon-wrapper" style="margin: 0 auto 1rem auto;">2</div>
                         <h3>Receive an Offer</h3>
-                        <p>Our specialists review your items and send a fair, no-obligation valuation counter-offer directly to your dashboard.</p>
+                        <p>We evaluate your cards based on current market rates and send you a transparent, fair cash or trade offer.</p>
                     </div>
                     <div class="glass-card feature-card" style="text-align: center;">
                         <div class="feature-icon-wrapper" style="margin: 0 auto 1rem auto;">3</div>
@@ -515,9 +530,9 @@
                         </p>
                     </div>
                     <div style="position: relative;">
-                        <div id="about-slideshow-container" style="border-radius: 12px; overflow: hidden; border: 2px solid var(--accent-gold); box-shadow: 0 0 20px rgba(223, 183, 80, 0.25); transform: rotate(-1.5deg); position: relative; height: 350px; background-color: #0c0f19;">
-                            <img class="about-slide" src="/assets/inventory3.jpg" alt="Vault 28 Inventory" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; opacity: 1; transition: opacity 1.2s ease-in-out; z-index: 1;">
-                            <img class="about-slide" src="/assets/inventory2.jpg" alt="Vault 28 Inventory" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity 1.2s ease-in-out; z-index: 0;">
+                        <div id="about-slideshow-container" style="border-radius: 16px; overflow: hidden; border: 2px solid var(--accent-gold); box-shadow: 0 0 30px rgba(56, 189, 248, 0.3), 0 10px 40px rgba(0,0,0,0.8); transform: rotate(-1deg); position: relative; height: 350px; background-color: #000; display: flex; align-items: center; justify-content: center;">
+                            <img src="/assets/vault28_banner.png" alt="Vault 28 Banner" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0.45; filter: blur(2px);">
+                            <img src="/assets/logo_new.png" alt="Vault 28 Logo" style="position: relative; z-index: 2; width: 220px; height: 220px; border-radius: 50%; border: 3px solid rgba(223,183,80,0.7); box-shadow: 0 0 35px rgba(56,189,248,0.5);">
                         </div>
                     </div>
                 </div>
@@ -1303,7 +1318,7 @@
     <footer style="background: var(--bg-secondary); border-top: 1px solid var(--border-color); padding: 4rem 0; text-align: center; margin-top: 5rem;">
         <div class="container" style="display: flex; flex-direction: column; align-items: center; gap: 1.5rem;">
             <a href="/" class="logo" style="display: flex; align-items: center; gap: 0.5rem; justify-content: center;">
-                <img src="/assets/logo_transparent.png" alt="Vault 28 Logo" style="height: 50px; width: 50px; border-radius: 50%; object-fit: cover;" id="footer-logo-img" onerror="this.style.display='none';">
+                <img src="/assets/logo_new.png" alt="Vault 28 Trading Co." style="height: 56px; width: 56px; border-radius: 50%; object-fit: cover; border: 2px solid rgba(223,183,80,0.35); box-shadow: 0 0 12px rgba(100,180,255,0.25);">
                 <span id="footer-logo-text" style="font-family: var(--font-title); font-weight: 800; font-size: 1.3rem;">VAULT <span style="color: var(--accent-gold); font-style: normal; background: none; -webkit-text-fill-color: initial;">28</span> <span style="font-size: 0.8rem; font-weight: 600; letter-spacing: 0.08em; color: var(--text-secondary); margin-left: 0.25rem;">TRADING CO.</span></span>
             </a>
             <p style="color: var(--text-secondary); font-size: 0.85rem; max-width: 500px; line-height: 1.6; margin: 0;">
@@ -1535,6 +1550,6 @@ const firebaseConfig = {
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 
-    <script src="/app.js?v=31"></script>
+    <script src="/app.js?v=32"></script>
 </body>
 </html>

@@ -1527,7 +1527,7 @@ function compressImage(file, maxWidth = 1024, maxHeight = 1024, quality = 0.7) {
 
 // client-side standard email template generator
 function generateStandardEmailHtml(title, bodyHtml, actionButtonHtml = '') {
-    const logoUrl = `${window.location.origin}/assets/logo_transparent.png`;
+    const logoUrl = `${window.location.origin}/assets/logo_new.png`;
     return `
         <div style="background-color: #0c0f19; padding: 40px 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; text-align: center;">
             <!-- Brand Header -->
@@ -4493,7 +4493,7 @@ document.getElementById('contact-form-inquiry').addEventListener('submit', (e) =
         // Save to inquiries collection for console logging
         db.collection("inquiries").doc(newInquiry.id).set(newInquiry);
         
-        const logoUrl = `${window.location.origin}/assets/logo_transparent.png`;
+        const logoUrl = `${window.location.origin}/assets/logo_new.png`;
 
         let emailAttachedPhotosHtml = '';
         if (contactAttachedPhotos && contactAttachedPhotos.length > 0) {
@@ -5535,9 +5535,8 @@ function renderPublicSlideshows() {
             `).join('');
         } else {
             heroContainer.innerHTML = `
-                <img src="/assets/hero_cards.jpg" class="hero-slide active" alt="Vault 28 Sports Cards Graded" style="position: absolute; top: 0.5rem; left: 0.5rem; width: calc(100% - 1rem); height: calc(100% - 1rem); object-fit: cover; border-radius: 12px; transition: opacity 1.5s ease-in-out; opacity: 1; z-index: 1;" />
-                <img src="/assets/hero_cards_2.jpg" class="hero-slide" alt="Vault 28 Sports Cards Wax Packs" style="position: absolute; top: 0.5rem; left: 0.5rem; width: calc(100% - 1rem); height: calc(100% - 1rem); object-fit: cover; border-radius: 12px; transition: opacity 1.5s ease-in-out; opacity: 0; z-index: 1;" />
-                <img src="/assets/hero_cards_3.jpg" class="hero-slide" alt="Vault 28 Sports Cards Showcase" style="position: absolute; top: 0.5rem; left: 0.5rem; width: calc(100% - 1rem); height: calc(100% - 1rem); object-fit: cover; border-radius: 12px; transition: opacity 1.5s ease-in-out; opacity: 0; z-index: 1;" />
+                <img src="/assets/logo_new.png" class="hero-slide active" alt="Vault 28 Pokémon Cards Emblem" style="position: absolute; top: 0.5rem; left: 0.5rem; width: calc(100% - 1rem); height: calc(100% - 1rem); object-fit: cover; border-radius: 12px; transition: opacity 1.5s ease-in-out; opacity: 1; z-index: 1;" />
+                <img src="/assets/vault28_banner.png" class="hero-slide" alt="Vault 28 Pokémon Banner" style="position: absolute; top: 0.5rem; left: 0.5rem; width: calc(100% - 1rem); height: calc(100% - 1rem); object-fit: cover; border-radius: 12px; transition: opacity 1.5s ease-in-out; opacity: 0; z-index: 1;" />
             `;
         }
     }
