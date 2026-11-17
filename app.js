@@ -86,9 +86,12 @@ let settingsListener = null;
 let inquiriesListener = null;
 let usersListener = null;
 let recentPurchasesListener = null;
+let upcomingShowsListener = null;
 let slideshowImagesListener = null;
 let users = [];
 let recentPurchases = [];
+    upcomingShows = [];
+let upcomingShows = [];
 let slideshowImages = [];
 let isRegisteringUser = false; // Flag to prevent auto-login flash during sign-up
 
@@ -192,6 +195,24 @@ const DEFAULT_COLLECTIONS = [
                 timestamp: new Date(Date.now() - 3600000 * 2).toISOString()
             }
         ]
+    }
+];
+
+
+// Default Mock Upcoming Shows / Events Data
+const DEFAULT_UPCOMING_SHOWS = [
+    {
+        id: "show-hhi-beaufort-10",
+        title: "10th HHI-Beaufort Card Show",
+        date: "Saturday, November 28, 2026",
+        time: "9:00 AM – 3:00 PM",
+        location: "Hilton Head Island / Beaufort, SC",
+        venue: "Hilton Head Beach & Tennis Resort",
+        booth: "Vault 28 Trading Co. Booth",
+        description: "Come visit our vending booth! We will be buying raw Pokémon cards on the spot for cash or trades. Bring your vintage WOTC, modern singles, and binder collections!",
+        image: "assets/show_poster_hhi.png",
+        link: "https://instagram.com/Vault28Cards",
+        createdAt: "2026-11-17T12:00:00.000Z"
     }
 ];
 
@@ -993,6 +1014,7 @@ function saveLocalProducts() { localStorage.setItem('v28_products', JSON.stringi
 function saveLocalReviews() { localStorage.setItem('v28_reviews', JSON.stringify(reviews)); }
 function saveLocalSettings() { localStorage.setItem('v28_settings', JSON.stringify(settings)); }
 function saveLocalRecentPurchases() { localStorage.setItem('v28_recent_purchases', JSON.stringify(recentPurchases)); }
+function saveLocalUpcomingShows() { localStorage.setItem('v28_upcoming_shows', JSON.stringify(upcomingShows)); }
 
 function triggerUIRefresh() {
     document.getElementById('admin-badge-submissions').textContent = collections.length;
@@ -2759,6 +2781,9 @@ function setAdminTab(tabName) {
 
 document.getElementById('tab-btn-submissions').addEventListener('click', () => setAdminTab('submissions'));
 document.getElementById('tab-btn-inventory').addEventListener('click', () => setAdminTab('inventory'));
+if (document.getElementById('tab-btn-events')) {
+    document.getElementById('tab-btn-events').addEventListener('click', () => setAdminTab('events'));
+}
 document.getElementById('tab-btn-content').addEventListener('click', () => setAdminTab('content'));
 document.getElementById('tab-btn-users').addEventListener('click', () => setAdminTab('users'));
 if (document.getElementById('tab-btn-inquiries')) {
@@ -5854,3 +5879,220 @@ document.addEventListener('DOMContentLoaded', () => {
     initAboutSlideshow();
     updateWizardUI();
 });
+
+
+// ==================== UPCOMING SHOWS & EVENTS HANDLERS & RENDERS ====================
+
+// Render Upcoming Shows on Homepage
+function renderUpcomingShowsHomepage() {
+    const container = document.getElementById('landing-events-gallery');
+    const section = document.getElementById('section-upcoming-shows');
+    if (!container) return;
+
+    if (upcomingShows.length === 0) {
+        if (section) section.style.display = 'none';
+        container.innerHTML = '';
+        return;
+    }
+
+    if (section) section.style.display = 'block';
+
+    container.innerHTML = upcomingShows.map(item => `
+        <div class="glass-card" style="display: flex; flex-direction: column; overflow: hidden; border: 1.5px solid rgba(223, 183, 80, 0.28); border-radius: 16px; padding: 0; box-shadow: var(--shadow-card), 0 0 25px rgba(56, 189, 248, 0.08); transition: transform 0.3s ease, border-color 0.3s ease;">
+            <!-- Event Image / Flyer Banner -->
+            <div style="position: relative; width: 100%; height: 230px; overflow: hidden; background: #06080e;">
+                <img src="${item.image || 'assets/show_poster_hhi.png'}" alt="${escapeHTML(item.title)}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.src='assets/show_poster_hhi.png'">
+                <div style="position: absolute; top: 12px; left: 12px; background: rgba(5,7,12,0.85); backdrop-filter: blur(8px); border: 1px solid var(--accent-gold); border-radius: 20px; padding: 4px 12px; font-size: 0.78rem; font-weight: 700; color: var(--accent-gold); letter-spacing: 0.04em;">
+                    🎪 VENDING LIVE
+                </div>
+                ${item.booth ? `
+                <div style="position: absolute; bottom: 12px; left: 12px; background: rgba(5,7,12,0.88); backdrop-filter: blur(8px); border: 1px solid rgba(56,189,248,0.4); border-radius: 6px; padding: 4px 10px; font-size: 0.78rem; font-weight: 600; color: var(--accent-blue-neon);">
+                    🏷️ ${escapeHTML(item.booth)}
+                </div>` : ''}
+            </div>
+
+            <!-- Event Content -->
+            <div style="padding: 1.5rem; display: flex; flex-direction: column; flex-grow: 1; gap: 0.85rem;">
+                <div style="display: flex; align-items: center; gap: 0.5rem; color: var(--accent-gold); font-size: 0.88rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em;">
+                    <span>📅</span> ${escapeHTML(item.date || 'Upcoming Date')}
+                </div>
+                <h3 style="font-size: 1.35rem; font-family: var(--font-title); font-weight: 800; line-height: 1.25; margin: 0; color: #fff;">
+                    ${escapeHTML(item.title)}
+                </h3>
+                <div style="display: flex; flex-direction: column; gap: 0.35rem; font-size: 0.88rem; color: var(--text-secondary);">
+                    ${item.venue ? `<div><strong>🏛️ Venue:</strong> ${escapeHTML(item.venue)}</div>` : ''}
+                    <div><strong>📍 Location:</strong> ${escapeHTML(item.location || 'Local Show')}</div>
+                </div>
+                <p style="color: var(--text-secondary); font-size: 0.9rem; line-height: 1.6; margin-top: 0.25rem; flex-grow: 1;">
+                    ${escapeHTML(item.description)}
+                </p>
+                <div style="border-top: 1px solid var(--border-color); padding-top: 1rem; margin-top: auto; display: flex; gap: 0.75rem; flex-wrap: wrap;">
+                    <a href="sms:+17744243561" class="btn btn-primary btn-sm" style="flex: 1; min-width: 130px; font-size: 0.88rem;">
+                        💬 Text About Show
+                    </a>
+                    <a href="${item.link || 'https://instagram.com/Vault28Cards'}" target="_blank" rel="noopener" class="btn btn-secondary btn-sm" style="flex: 1; min-width: 130px; font-size: 0.88rem; text-align: center;">
+                        📸 Follow on IG
+                    </a>
+                </div>
+            </div>
+        </div>
+    `).join('');
+}
+
+// Render Events List in Owner Admin Console
+function renderAdminUpcomingShowsList() {
+    const list = document.getElementById('admin-events-list');
+    const badgeCount = document.getElementById('admin-events-list-count');
+    const tabBadge = document.getElementById('admin-badge-events');
+    if (badgeCount) badgeCount.textContent = upcomingShows.length;
+    if (tabBadge) tabBadge.textContent = upcomingShows.length;
+    if (!list) return;
+
+    list.innerHTML = '';
+    if (upcomingShows.length === 0) {
+        list.innerHTML = `<div style="color:var(--text-muted); font-size:0.88rem; padding: 1.5rem; text-align: center; border: 1px dashed var(--border-color); border-radius: 8px;">No upcoming shows listed yet. Add one using the form!</div>`;
+        return;
+    }
+
+    upcomingShows.forEach(s => {
+        const item = document.createElement('div');
+        item.style.padding = '0.9rem';
+        item.style.border = '1px solid var(--border-color)';
+        item.style.borderRadius = '10px';
+        item.style.background = 'rgba(0,0,0,0.2)';
+        item.style.display = 'flex';
+        item.style.justifyContent = 'space-between';
+        item.style.alignItems = 'center';
+        item.style.gap = '1rem';
+
+        item.innerHTML = `
+            <div style="display: flex; gap: 1rem; align-items: center; min-width: 0;">
+                <img src="${s.image || 'assets/show_poster_hhi.png'}" alt="Show Image" style="width: 58px; height: 58px; border-radius: 8px; object-fit: cover; border: 1px solid var(--border-color); flex-shrink: 0;" onerror="this.src='assets/show_poster_hhi.png'">
+                <div style="min-width: 0;">
+                    <div style="font-weight: 700; font-size: 0.95rem; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${escapeHTML(s.title)}</div>
+                    <div style="font-size: 0.8rem; color: var(--accent-gold);">${escapeHTML(s.date)}</div>
+                    <div style="font-size: 0.78rem; color: var(--text-muted);">${escapeHTML(s.location)}${s.booth ? ' • ' + escapeHTML(s.booth) : ''}</div>
+                </div>
+            </div>
+            <button class="btn btn-secondary btn-sm" onclick="deleteUpcomingShow('${s.id}')" style="color: var(--accent-red); border-color: rgba(239,68,68,0.25); flex-shrink: 0; padding: 0.4rem 0.75rem; font-size: 0.8rem;">
+                🗑️ Delete
+            </button>
+        `;
+        list.appendChild(item);
+    });
+}
+
+function resetAdminEventForm() {
+    const form = document.getElementById('admin-event-form');
+    if (form) form.reset();
+    const base64 = document.getElementById('admin-event-photo-base64');
+    if (base64) base64.value = '';
+    const prevBox = document.getElementById('admin-event-photo-preview-box');
+    if (prevBox) prevBox.style.display = 'none';
+    const status = document.getElementById('admin-event-photo-status');
+    if (status) {
+        status.textContent = 'No photo chosen';
+        status.style.color = 'var(--text-secondary)';
+    }
+}
+
+window.deleteUpcomingShow = function(id) {
+    if (!confirm("Are you sure you want to delete this upcoming show? It will be removed from Firestore and the homepage.")) return;
+
+    if (isFirebaseActive) {
+        db.collection("upcoming_shows").doc(id).delete()
+            .then(() => {
+                showToast("Upcoming show deleted from Firestore", "info");
+            })
+            .catch(err => {
+                showToast("Failed to delete event from Firestore", "error");
+                console.error(err);
+            });
+    } else {
+        upcomingShows = upcomingShows.filter(s => s.id !== id);
+        saveLocalUpcomingShows();
+        renderUpcomingShowsHomepage();
+        renderAdminUpcomingShowsList();
+        showToast("Upcoming show deleted locally", "info");
+    }
+};
+
+// Owner View Event Image Upload Handler
+if (document.getElementById('btn-admin-event-photo-upload')) {
+    document.getElementById('btn-admin-event-photo-upload').addEventListener('click', () => {
+        document.getElementById('admin-event-photo-file').click();
+    });
+}
+
+if (document.getElementById('admin-event-photo-file')) {
+    document.getElementById('admin-event-photo-file').addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        showToast("Optimizing event image...", "info");
+        compressImage(file, 900, 900, 0.75)
+            .then(base64 => {
+                document.getElementById('admin-event-photo-base64').value = base64;
+                const prev = document.getElementById('admin-event-photo-preview');
+                if (prev) prev.src = base64;
+                const prevBox = document.getElementById('admin-event-photo-preview-box');
+                if (prevBox) prevBox.style.display = 'block';
+                const status = document.getElementById('admin-event-photo-status');
+                if (status) {
+                    status.textContent = `📸 Ready: ${file.name}`;
+                    status.style.color = 'var(--accent-blue-neon)';
+                }
+            })
+            .catch(err => {
+                console.error("Event image compression error:", err);
+                showToast("Failed to process event image", "error");
+            });
+    });
+}
+
+// Owner View Event Form Submit Handler
+if (document.getElementById('admin-event-form')) {
+    document.getElementById('admin-event-form').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const title = document.getElementById('admin-event-title').value.trim();
+        const date = document.getElementById('admin-event-date').value.trim();
+        const booth = document.getElementById('admin-event-booth').value.trim();
+        const venue = document.getElementById('admin-event-venue').value.trim();
+        const location = document.getElementById('admin-event-location').value.trim();
+        const description = document.getElementById('admin-event-desc').value.trim();
+        const link = document.getElementById('admin-event-link').value.trim();
+        const image = document.getElementById('admin-event-photo-base64').value || 'assets/show_poster_hhi.png';
+
+        const showId = 'show-' + Math.random().toString(36).substr(2, 9);
+        const newShow = {
+            id: showId,
+            title,
+            date,
+            booth,
+            venue,
+            location,
+            description,
+            link,
+            image,
+            createdAt: new Date().toISOString()
+        };
+
+        if (isFirebaseActive) {
+            db.collection("upcoming_shows").doc(showId).set(newShow)
+                .then(() => {
+                    showToast("Upcoming card show added to Firestore!", "success");
+                    resetAdminEventForm();
+                })
+                .catch(err => {
+                    showToast("Error saving show to Firestore", "error");
+                    console.error(err);
+                });
+        } else {
+            upcomingShows.unshift(newShow);
+            saveLocalUpcomingShows();
+            showToast("Upcoming card show added locally!", "success");
+            resetAdminEventForm();
+            renderUpcomingShowsHomepage();
+            renderAdminUpcomingShowsList();
+        }
+    });
+}
