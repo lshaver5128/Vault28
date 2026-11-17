@@ -6,7 +6,7 @@
     <title>Vault 28 Trading Co. | Buy & Sell Pokémon Card Collections</title>
     <meta name="description" content="Sell your Pokémon card collections — vintage Base Set, WOTC, modern secret rares, sealed products, and complete binders. Based near Summerville, SC. Fast cash offers.">
     <meta name="google-site-verification" content="QYIy_EZy3nVUwvhrjrVTm0CM_KEltQ9HQjpMEuQ2eIw" />
-    <link rel="stylesheet" href="/style.css?v=48">
+    <link rel="stylesheet" href="/style.css?v=49">
     <!-- Browser Tab Icon (Favicon) -->
     <link rel="icon" type="image/png" href="/assets/logo_new.png">
 </head>
@@ -1156,9 +1156,9 @@
 
                         <!-- Manage Slideshow Images -->
                         <div class="glass-card" style="padding: 1.5rem; margin-top: 2rem; grid-column: 1 / -1;">
-                            <h3 style="font-size: 1.2rem; margin-bottom: 0.5rem;">Manage Slideshow Images</h3>
+                            <h3 style="font-size: 1.2rem; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;"><span>🖼️ Manage Slideshow Images</span><span class="badge" style="background: rgba(16,185,129,0.15); border: 1px solid rgba(16,185,129,0.4); color: #34d399; font-size: 0.72rem; padding: 2px 8px;">Firestore Cloud Synced</span></h3>
                             <p style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 1.5rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.75rem;">
-                                Upload custom images to run through your website. Custom uploads will replace the default showcase files.
+                                Upload custom photos for your slideshows. Homepage slides save to your <code>homepage_slideshow</code> database, and About Us slides save to your <code>about_slideshow</code> database. They are pulled and synced in real-time.
                             </p>
                             
                             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; align-items: start;">
@@ -1167,8 +1167,8 @@
                                     <h4 style="font-size: 1rem; margin-bottom: 0.5rem; color: var(--accent-cyan); text-transform: uppercase; font-family: var(--font-title); letter-spacing: 0.05em;">Homepage Hero Slides</h4>
                                     <p style="color: var(--text-muted); font-size: 0.78rem; margin-bottom: 1rem;">These cycle behind the graded card graphic on your landing page.</p>
                                     <div style="display: flex; gap: 1rem; align-items: center; margin-bottom: 1rem;">
-                                        <button type="button" class="btn btn-primary btn-sm" onclick="document.getElementById('upload-hero-slide-file').click()">📸 Add Hero Slide</button>
-                                        <input type="file" id="upload-hero-slide-file" accept="image/*" multiple style="display: none;" onchange="uploadSlideshowImage(this, 'hero')">
+                                        <button type="button" class="btn btn-primary btn-sm" onclick="document.getElementById('upload-hero-slide-file').click()">📸 Add Homepage Slide</button>
+                                        <input type="file" id="upload-hero-slide-file" accept="image/*" multiple style="display: none;" onchange="uploadSlideshowImage(this, 'homepage')">
                                     </div>
                                     <div id="admin-hero-slides-list" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 0.75rem;">
                                         <!-- Rendered dynamically -->
@@ -1180,7 +1180,7 @@
                                     <h4 style="font-size: 1rem; margin-bottom: 0.5rem; color: var(--accent-cyan); text-transform: uppercase; font-family: var(--font-title); letter-spacing: 0.05em;">About Us Slides</h4>
                                     <p style="color: var(--text-muted); font-size: 0.78rem; margin-bottom: 1rem;">These rotate and cross-fade on your public About Us team profile section.</p>
                                     <div style="display: flex; gap: 1rem; align-items: center; margin-bottom: 1rem;">
-                                        <button type="button" class="btn btn-primary btn-sm" onclick="document.getElementById('upload-about-slide-file').click()">📸 Add About Slide</button>
+                                        <button type="button" class="btn btn-primary btn-sm" onclick="document.getElementById('upload-about-slide-file').click()">📸 Add About Us Slide</button>
                                         <input type="file" id="upload-about-slide-file" accept="image/*" multiple style="display: none;" onchange="uploadSlideshowImage(this, 'about')">
                                     </div>
                                     <div id="admin-about-slides-list" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 0.75rem;">
@@ -1714,6 +1714,6 @@ const firebaseConfig = {
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 
-    <script src="/app.js?v=48"></script>
+    <script src="/app.js?v=49"></script>
 </body>
 </html>

@@ -91,10 +91,14 @@ let inquiriesListener = null;
 let usersListener = null;
 let recentPurchasesListener = null;
 let upcomingShowsListener = null;
+let homepageSlideshowListener = null;
+let aboutSlideshowListener = null;
 let slideshowImagesListener = null;
 let users = [];
 let recentPurchases = [];
 let upcomingShows = [];
+let homepageSlides = [];
+let aboutSlides = [];
 let slideshowImages = [];
 let isRegisteringUser = false; // Flag to prevent auto-login flash during sign-up
 
@@ -838,26 +842,26 @@ function initDatabase() {
                 renderAdminRecentPurchasesList();
             });
 
-            // Sync public slideshow images from Firestore in real-time
-            slideshowImagesListener = db.collection("slideshow_images").onSnapshot(snapshot => {
+            // Sync Homepage Slideshow from Firestore database collection "homepage_slideshow"
+            homepageSlideshowListener = db.collection("homepage_slideshow").onSnapshot(snapshot => {
                 if (!snapshot.empty) {
-                    slideshowImages = [];
+                    homepageSlides = [];
                     snapshot.forEach(doc => {
-                        slideshowImages.push({ id: doc.id, ...doc.data() });
+                        homepageSlides.push({ id: doc.id, ...doc.data() });
                     });
-                    localStorage.setItem('v28_slideshow_images', JSON.stringify(slideshowImages));
+                    localStorage.setItem('v28_homepage_slides', JSON.stringify(homepageSlides));
                 } else {
-                    const cached = localStorage.getItem('v28_slideshow_images');
+                    const cached = localStorage.getItem('v28_homepage_slides');
                     if (cached) {
                         try {
                             const parsed = JSON.parse(cached);
                             if (Array.isArray(parsed) && parsed.length > 0) {
-                                slideshowImages = parsed;
+                                homepageSlides = parsed;
                                 const user = firebase.auth().currentUser;
                                 if (user && checkIsOwner(user.email)) {
                                     parsed.forEach(slide => {
                                         if (!slide.id.startsWith('def-')) {
-                                            db.collection("slideshow_images").doc(slide.id).set(slide).catch(e => console.warn(e));
+                                            db.collection("homepage_slideshow").doc(slide.id).set(slide).catch(e => console.warn(e));
                                         }
                                     });
                                 }
@@ -865,17 +869,59 @@ function initDatabase() {
                         } catch(e) {}
                     }
                 }
-                renderPublicSlideshows();
-                renderAdminSlideshowLists();
+                renderHomepageSlideshow();
+                renderAdminHomepageSlidesList();
             }, (error) => {
-                console.warn("Error listening to slideshow_images:", error);
-                const cached = localStorage.getItem('v28_slideshow_images');
+                console.warn("Error listening to homepage_slideshow:", error);
+                const cached = localStorage.getItem('v28_homepage_slides');
                 if (cached) {
-                    try { slideshowImages = JSON.parse(cached); } catch(e) {}
+                    try { homepageSlides = JSON.parse(cached); } catch(e) {}
                 }
-                renderPublicSlideshows();
-                renderAdminSlideshowLists();
+                renderHomepageSlideshow();
+                renderAdminHomepageSlidesList();
             });
+
+            // Sync About Us Slideshow from Firestore database collection "about_slideshow"
+            aboutSlideshowListener = db.collection("about_slideshow").onSnapshot(snapshot => {
+                if (!snapshot.empty) {
+                    aboutSlides = [];
+                    snapshot.forEach(doc => {
+                        aboutSlides.push({ id: doc.id, ...doc.data() });
+                    });
+                    localStorage.setItem('v28_about_slides', JSON.stringify(aboutSlides));
+                } else {
+                    const cached = localStorage.getItem('v28_about_slides');
+                    if (cached) {
+                        try {
+                            const parsed = JSON.parse(cached);
+                            if (Array.isArray(parsed) && parsed.length > 0) {
+                                aboutSlides = parsed;
+                                const user = firebase.auth().currentUser;
+                                if (user && checkIsOwner(user.email)) {
+                                    parsed.forEach(slide => {
+                                        if (!slide.id.startsWith('def-')) {
+                                            db.collection("about_slideshow").doc(slide.id).set(slide).catch(e => console.warn(e));
+                                        }
+                                    });
+                                }
+                            }
+                        } catch(e) {}
+                    }
+                }
+                renderAboutSlideshow();
+                renderAdminAboutSlidesList();
+            }, (error) => {
+                console.warn("Error listening to about_slideshow:", error);
+                const cached = localStorage.getItem('v28_about_slides');
+                if (cached) {
+                    try { aboutSlides = JSON.parse(cached); } catch(e) {}
+                }
+                renderAboutSlideshow();
+                renderAdminAboutSlidesList();
+            });
+
+            // Automatically migrate any legacy slides from slideshow_images or localStorage
+            migrateLegacySlideshows();
 
             // Sync upcoming shows from Firestore in real-time
             upcomingShowsListener = db.collection("upcoming_shows").onSnapshot(snapshot => {
@@ -967,14 +1013,14 @@ function initDatabase() {
         }
 
         // Initialize sandbox slideshow images
-        const storedSlideshow = localStorage.getItem('v28_slideshow_images');
-        if (storedSlideshow) {
-            slideshowImages = JSON.parse(storedSlideshow);
-        } else {
-            slideshowImages = [];
-        }
-        renderPublicSlideshows();
-        renderAdminSlideshowLists();
+        const storedHomeSlides = localStorage.getItem('v28_homepage_slides');
+        homepageSlides = storedHomeSlides ? JSON.parse(storedHomeSlides) : [];
+        const storedAboutSlides = localStorage.getItem('v28_about_slides');
+        aboutSlides = storedAboutSlides ? JSON.parse(storedAboutSlides) : [];
+        renderHomepageSlideshow();
+        renderAboutSlideshow();
+        renderAdminHomepageSlidesList();
+        renderAdminAboutSlidesList();
 
         // Mark local tester user as active
         recordUserActivity('sandbox-user', 'lshaver@vault28cards.com', 'Local Tester', false);
@@ -5500,37 +5546,72 @@ function initAboutSlideshow() {
     }, 4500);
 }
 
-function renderPublicSlideshows() {
-    // Sort slideshow images by order first, then fallback to createdAt
-    slideshowImages.sort((a, b) => (a.order ?? 999) - (b.order ?? 999) || new Date(a.createdAt || 0) - new Date(b.createdAt || 0));
+// Auto-check and migrate any legacy slides from slideshow_images or localStorage
+function migrateLegacySlideshows() {
+    if (!isFirebaseActive || typeof db === 'undefined' || !db) return;
+    
+    // Check if legacy collection 'slideshow_images' has any documents
+    db.collection("slideshow_images").get().then(snapshot => {
+        if (!snapshot.empty) {
+            snapshot.forEach(doc => {
+                const data = doc.data();
+                const isAbout = (data.type === 'about');
+                const targetCol = isAbout ? "about_slideshow" : "homepage_slideshow";
+                db.collection(targetCol).doc(doc.id).set(data).catch(() => {});
+            });
+        }
+    }).catch(() => {});
+    
+    // Check local storage legacy cache 'v28_slideshow_images'
+    const legacy = localStorage.getItem('v28_slideshow_images');
+    if (legacy) {
+        try {
+            const parsed = JSON.parse(legacy);
+            if (Array.isArray(parsed) && parsed.length > 0) {
+                const homeLegacy = parsed.filter(s => s.type === 'hero' || s.type === 'homepage');
+                const aboutLegacy = parsed.filter(s => s.type === 'about');
+                
+                if (homeLegacy.length > 0) {
+                    const existingHome = localStorage.getItem('v28_homepage_slides');
+                    if (!existingHome || JSON.parse(existingHome).length === 0) {
+                        localStorage.setItem('v28_homepage_slides', JSON.stringify(homeLegacy));
+                        homepageSlides = homeLegacy;
+                        renderHomepageSlideshow();
+                        renderAdminHomepageSlidesList();
+                    }
+                }
+                
+                if (aboutLegacy.length > 0) {
+                    const existingAbout = localStorage.getItem('v28_about_slides');
+                    if (!existingAbout || JSON.parse(existingAbout).length === 0) {
+                        localStorage.setItem('v28_about_slides', JSON.stringify(aboutLegacy));
+                        aboutSlides = aboutLegacy;
+                        renderAboutSlideshow();
+                        renderAdminAboutSlidesList();
+                    }
+                }
+            }
+        } catch(e) {}
+    }
+}
 
-    // 1. Homepage Hero Slideshow
+function renderHomepageSlideshow() {
+    homepageSlides.sort((a, b) => (a.order ?? 999) - (b.order ?? 999) || new Date(a.createdAt || 0) - new Date(b.createdAt || 0));
     const heroContainer = document.getElementById('hero-slides-container');
     if (heroContainer) {
-        const customHeroSlides = slideshowImages.filter(img => img.type === 'hero');
-        const activeHeroSlides = customHeroSlides.length > 0 ? customHeroSlides : DEFAULT_HERO_SLIDES;
-        
+        const activeHeroSlides = homepageSlides.length > 0 ? homepageSlides : DEFAULT_HERO_SLIDES;
         heroContainer.innerHTML = activeHeroSlides.map((slide, idx) => `
             <img src="${slide.image}" class="hero-slide ${idx === 0 ? 'active' : ''}" alt="Vault 28 Slideshow Image" />
         `).join('');
     }
+    initHeroSlider();
+}
 
-    // 2. About Us Page Slideshow
+function renderAboutSlideshow() {
+    aboutSlides.sort((a, b) => (a.order ?? 999) - (b.order ?? 999) || new Date(a.createdAt || 0) - new Date(b.createdAt || 0));
     const aboutContainer = document.getElementById('about-slideshow-container');
     if (aboutContainer) {
-        const customAboutSlides = slideshowImages.filter(img => img.type === 'about');
-        const customHeroSlides = slideshowImages.filter(img => img.type === 'hero' && !img.isDefault);
-        
-        // Show custom about slides, or custom hero slides, or default about slides
-        let activeAboutSlides = [];
-        if (customAboutSlides.length > 0) {
-            activeAboutSlides = customAboutSlides;
-        } else if (customHeroSlides.length > 0) {
-            activeAboutSlides = customHeroSlides;
-        } else {
-            activeAboutSlides = DEFAULT_ABOUT_SLIDES;
-        }
-        
+        const activeAboutSlides = aboutSlides.length > 0 ? aboutSlides : DEFAULT_ABOUT_SLIDES;
         aboutContainer.innerHTML = activeAboutSlides.map((slide, idx) => `
             <img src="${slide.image}" class="about-slide ${idx === 0 ? 'active' : ''}" alt="Vault 28 Journey" />
         `).join('') + `
@@ -5547,228 +5628,221 @@ function renderPublicSlideshows() {
             </div>
         `;
     }
-    
-    // Re-initialize the slideshow loops
-    initHeroSlider();
     initAboutSlideshow();
 }
 
-function renderAdminSlideshowLists() {
-    // Sort slideshow images by order first, then fallback to createdAt
-    slideshowImages.sort((a, b) => (a.order ?? 999) - (b.order ?? 999) || new Date(a.createdAt) - new Date(b.createdAt));
+function renderPublicSlideshows() {
+    renderHomepageSlideshow();
+    renderAboutSlideshow();
+}
 
+function renderAdminHomepageSlidesList() {
+    homepageSlides.sort((a, b) => (a.order ?? 999) - (b.order ?? 999) || new Date(a.createdAt || 0) - new Date(b.createdAt || 0));
     const heroList = document.getElementById('admin-hero-slides-list');
+    if (!heroList) return;
+    heroList.innerHTML = '';
+    
+    const isCustom = homepageSlides.length > 0;
+    const activeHeroSlides = isCustom ? homepageSlides : DEFAULT_HERO_SLIDES;
+    
+    activeHeroSlides.forEach((img, idx) => {
+        const item = document.createElement('div');
+        item.style.position = 'relative';
+        item.style.width = '80px';
+        item.style.height = '80px';
+        item.style.borderRadius = '6px';
+        item.style.border = '1px solid var(--border-color)';
+        item.style.overflow = 'hidden';
+        item.style.background = 'rgba(0,0,0,0.1)';
+        item.style.transition = 'all 0.2s ease';
+        
+        let deleteBtnHtml = `<button type="button" style="position: absolute; top: 4px; right: 4px; background: rgba(239, 68, 68, 0.85); border: none; color: white; border-radius: 50%; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; font-size: 10px; cursor: pointer; font-weight: bold; line-height: 1; z-index: 10;" onclick="deleteSlideshowImage('${img.id}', 'homepage')">✕</button>`;
+        let badgeHtml = '';
+        
+        if (img.isDefault) {
+            deleteBtnHtml = '';
+            badgeHtml = `<div style="position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.7); color: var(--accent-gold); font-size: 0.65rem; text-align: center; padding: 2px 0; font-weight: 700;">DEFAULT</div>`;
+        } else {
+            badgeHtml = `<div style="position: absolute; bottom: 0; left: 0; right: 0; background: rgba(16,185,129,0.85); color: #fff; font-size: 0.58rem; text-align: center; padding: 1px 0; font-weight: 700; letter-spacing: 0.03em;">FIRESTORE</div>`;
+            item.setAttribute('draggable', 'true');
+            item.style.cursor = 'grab';
+            
+            item.addEventListener('dragstart', (e) => {
+                e.dataTransfer.setData('text/plain', idx);
+                e.dataTransfer.effectAllowed = 'move';
+                item.style.opacity = '0.4';
+            });
+            item.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                e.dataTransfer.dropEffect = 'move';
+            });
+            item.addEventListener('dragenter', () => {
+                item.style.borderColor = 'var(--accent-cyan)';
+                item.style.background = 'rgba(6,182,212,0.15)';
+            });
+            item.addEventListener('dragleave', () => {
+                item.style.borderColor = 'var(--border-color)';
+                item.style.background = 'rgba(0,0,0,0.1)';
+            });
+            item.addEventListener('drop', (e) => {
+                e.preventDefault();
+                const sourceIdx = parseInt(e.dataTransfer.getData('text/plain'), 10);
+                const targetIdx = idx;
+                if (sourceIdx === targetIdx) return;
+                reorderSlideshowImages('homepage', sourceIdx, targetIdx);
+            });
+            item.addEventListener('dragend', () => {
+                item.style.opacity = '1';
+                item.style.borderColor = 'var(--border-color)';
+                item.style.background = 'rgba(0,0,0,0.1)';
+            });
+        }
+        
+        item.innerHTML = `
+            <img src="${img.image}" style="width: 100%; height: 100%; object-fit: cover; pointer-events: none;">
+            ${deleteBtnHtml}
+            ${badgeHtml}
+        `;
+        heroList.appendChild(item);
+    });
+}
+
+function renderAdminAboutSlidesList() {
+    aboutSlides.sort((a, b) => (a.order ?? 999) - (b.order ?? 999) || new Date(a.createdAt || 0) - new Date(b.createdAt || 0));
     const aboutList = document.getElementById('admin-about-slides-list');
+    if (!aboutList) return;
+    aboutList.innerHTML = '';
     
-    const defaultHeroImages = [
-        { id: 'def-hero-1', image: '/assets/hero_cards.jpg', isDefault: true },
-        { id: 'def-hero-2', image: '/assets/hero_cards_2.jpg', isDefault: true },
-        { id: 'def-hero-3', image: '/assets/hero_cards_3.jpg', isDefault: true }
-    ];
+    const isCustom = aboutSlides.length > 0;
+    const activeAboutSlides = isCustom ? aboutSlides : DEFAULT_ABOUT_SLIDES;
     
-    const defaultAboutImages = [
-        { id: 'def-about-1', image: '/assets/vending_booth_1.png', isDefault: true },
-        { id: 'def-about-2', image: '/assets/vending_booth_2.png', isDefault: true },
-        { id: 'def-about-3', image: '/assets/vending_booth_3.png', isDefault: true },
-        { id: 'def-about-4', image: '/assets/show_poster_hhi.png', isDefault: true }
-    ];
-    
-    if (heroList) {
-        heroList.innerHTML = '';
-        const heroSlides = slideshowImages.filter(img => img.type === 'hero');
-        const isCustom = heroSlides.length > 0;
-        const activeHeroSlides = isCustom ? heroSlides : defaultHeroImages;
+    activeAboutSlides.forEach((img, idx) => {
+        const item = document.createElement('div');
+        item.style.position = 'relative';
+        item.style.width = '80px';
+        item.style.height = '80px';
+        item.style.borderRadius = '6px';
+        item.style.border = '1px solid var(--border-color)';
+        item.style.overflow = 'hidden';
+        item.style.background = 'rgba(0,0,0,0.1)';
+        item.style.transition = 'all 0.2s ease';
         
-        activeHeroSlides.forEach((img, idx) => {
-            const item = document.createElement('div');
-            item.style.position = 'relative';
-            item.style.width = '80px';
-            item.style.height = '80px';
-            item.style.borderRadius = '6px';
-            item.style.border = '1px solid var(--border-color)';
-            item.style.overflow = 'hidden';
-            item.style.background = 'rgba(0,0,0,0.1)';
-            item.style.transition = 'all 0.2s ease';
-            
-            let deleteBtnHtml = `<button type="button" style="position: absolute; top: 4px; right: 4px; background: rgba(239, 68, 68, 0.85); border: none; color: white; border-radius: 50%; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; font-size: 10px; cursor: pointer; font-weight: bold; line-height: 1; z-index: 10;" onclick="deleteSlideshowImage('${img.id}')">✕</button>`;
-            let badgeHtml = '';
-            
-            if (img.isDefault) {
-                deleteBtnHtml = '';
-                badgeHtml = `<div style="position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.7); color: var(--accent-gold); font-size: 0.65rem; text-align: center; padding: 2px 0; font-weight: 700;">DEFAULT</div>`;
-            } else {
-                item.setAttribute('draggable', 'true');
-                item.style.cursor = 'grab';
-                
-                item.addEventListener('dragstart', (e) => {
-                    e.dataTransfer.setData('text/plain', idx);
-                    e.dataTransfer.effectAllowed = 'move';
-                    item.style.opacity = '0.4';
-                });
-                
-                item.addEventListener('dragover', (e) => {
-                    e.preventDefault();
-                    e.dataTransfer.dropEffect = 'move';
-                });
-                
-                item.addEventListener('dragenter', () => {
-                    item.style.borderColor = 'var(--accent-cyan)';
-                    item.style.background = 'rgba(6,182,212,0.15)';
-                });
-                
-                item.addEventListener('dragleave', () => {
-                    item.style.borderColor = 'var(--border-color)';
-                    item.style.background = 'rgba(0,0,0,0.1)';
-                });
-                
-                item.addEventListener('drop', (e) => {
-                    e.preventDefault();
-                    const sourceIdx = parseInt(e.dataTransfer.getData('text/plain'), 10);
-                    const targetIdx = idx;
-                    if (sourceIdx === targetIdx) return;
-                    
-                    reorderSlideshowImages('hero', sourceIdx, targetIdx);
-                });
-                
-                item.addEventListener('dragend', () => {
-                    item.style.opacity = '1';
-                    item.style.borderColor = 'var(--border-color)';
-                    item.style.background = 'rgba(0,0,0,0.1)';
-                });
-            }
-            
-            item.innerHTML = `
-                <img src="${img.image}" style="width: 100%; height: 100%; object-fit: cover; pointer-events: none;">
-                ${deleteBtnHtml}
-                ${badgeHtml}
-            `;
-            heroList.appendChild(item);
-        });
-    }
-    
-    if (aboutList) {
-        aboutList.innerHTML = '';
-        const aboutSlides = slideshowImages.filter(img => img.type === 'about');
-        const isCustom = aboutSlides.length > 0;
-        const activeAboutSlides = isCustom ? aboutSlides : defaultAboutImages;
+        let deleteBtnHtml = `<button type="button" style="position: absolute; top: 4px; right: 4px; background: rgba(239, 68, 68, 0.85); border: none; color: white; border-radius: 50%; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; font-size: 10px; cursor: pointer; font-weight: bold; line-height: 1; z-index: 10;" onclick="deleteSlideshowImage('${img.id}', 'about')">✕</button>`;
+        let badgeHtml = '';
         
-        activeAboutSlides.forEach((img, idx) => {
-            const item = document.createElement('div');
-            item.style.position = 'relative';
-            item.style.width = '80px';
-            item.style.height = '80px';
-            item.style.borderRadius = '6px';
-            item.style.border = '1px solid var(--border-color)';
-            item.style.overflow = 'hidden';
-            item.style.background = 'rgba(0,0,0,0.1)';
-            item.style.transition = 'all 0.2s ease';
+        if (img.isDefault) {
+            deleteBtnHtml = '';
+            badgeHtml = `<div style="position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.7); color: var(--accent-gold); font-size: 0.65rem; text-align: center; padding: 2px 0; font-weight: 700;">DEFAULT</div>`;
+        } else {
+            badgeHtml = `<div style="position: absolute; bottom: 0; left: 0; right: 0; background: rgba(16,185,129,0.85); color: #fff; font-size: 0.58rem; text-align: center; padding: 1px 0; font-weight: 700; letter-spacing: 0.03em;">FIRESTORE</div>`;
+            item.setAttribute('draggable', 'true');
+            item.style.cursor = 'grab';
             
-            let deleteBtnHtml = `<button type="button" style="position: absolute; top: 4px; right: 4px; background: rgba(239, 68, 68, 0.85); border: none; color: white; border-radius: 50%; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; font-size: 10px; cursor: pointer; font-weight: bold; line-height: 1; z-index: 10;" onclick="deleteSlideshowImage('${img.id}')">✕</button>`;
-            let badgeHtml = '';
-            
-            if (img.isDefault) {
-                deleteBtnHtml = '';
-                badgeHtml = `<div style="position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.7); color: var(--accent-gold); font-size: 0.65rem; text-align: center; padding: 2px 0; font-weight: 700;">DEFAULT</div>`;
-            } else {
-                item.setAttribute('draggable', 'true');
-                item.style.cursor = 'grab';
-                
-                item.addEventListener('dragstart', (e) => {
-                    e.dataTransfer.setData('text/plain', idx);
-                    e.dataTransfer.effectAllowed = 'move';
-                    item.style.opacity = '0.4';
-                });
-                
-                item.addEventListener('dragover', (e) => {
-                    e.preventDefault();
-                    e.dataTransfer.dropEffect = 'move';
-                });
-                
-                item.addEventListener('dragenter', () => {
-                    item.style.borderColor = 'var(--accent-cyan)';
-                    item.style.background = 'rgba(6,182,212,0.15)';
-                });
-                
-                item.addEventListener('dragleave', () => {
-                    item.style.borderColor = 'var(--border-color)';
-                    item.style.background = 'rgba(0,0,0,0.1)';
-                });
-                
-                item.addEventListener('drop', (e) => {
-                    e.preventDefault();
-                    const sourceIdx = parseInt(e.dataTransfer.getData('text/plain'), 10);
-                    const targetIdx = idx;
-                    if (sourceIdx === targetIdx) return;
-                    
-                    reorderSlideshowImages('about', sourceIdx, targetIdx);
-                });
-                
-                item.addEventListener('dragend', () => {
-                    item.style.opacity = '1';
-                    item.style.borderColor = 'var(--border-color)';
-                    item.style.background = 'rgba(0,0,0,0.1)';
-                });
-            }
-            
-            item.innerHTML = `
-                <img src="${img.image}" style="width: 100%; height: 100%; object-fit: cover; pointer-events: none;">
-                ${deleteBtnHtml}
-                ${badgeHtml}
-            `;
-            aboutList.appendChild(item);
-        });
-    }
+            item.addEventListener('dragstart', (e) => {
+                e.dataTransfer.setData('text/plain', idx);
+                e.dataTransfer.effectAllowed = 'move';
+                item.style.opacity = '0.4';
+            });
+            item.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                e.dataTransfer.dropEffect = 'move';
+            });
+            item.addEventListener('dragenter', () => {
+                item.style.borderColor = 'var(--accent-cyan)';
+                item.style.background = 'rgba(6,182,212,0.15)';
+            });
+            item.addEventListener('dragleave', () => {
+                item.style.borderColor = 'var(--border-color)';
+                item.style.background = 'rgba(0,0,0,0.1)';
+            });
+            item.addEventListener('drop', (e) => {
+                e.preventDefault();
+                const sourceIdx = parseInt(e.dataTransfer.getData('text/plain'), 10);
+                const targetIdx = idx;
+                if (sourceIdx === targetIdx) return;
+                reorderSlideshowImages('about', sourceIdx, targetIdx);
+            });
+            item.addEventListener('dragend', () => {
+                item.style.opacity = '1';
+                item.style.borderColor = 'var(--border-color)';
+                item.style.background = 'rgba(0,0,0,0.1)';
+            });
+        }
+        
+        item.innerHTML = `
+            <img src="${img.image}" style="width: 100%; height: 100%; object-fit: cover; pointer-events: none;">
+            ${deleteBtnHtml}
+            ${badgeHtml}
+        `;
+        aboutList.appendChild(item);
+    });
+}
+
+function renderAdminSlideshowLists() {
+    renderAdminHomepageSlidesList();
+    renderAdminAboutSlidesList();
 }
 
 window.uploadSlideshowImage = function(input, type) {
     const files = Array.from(input.files);
     if (files.length === 0) return;
     
-    showToast(`Processing ${files.length} image(s)...`, "info");
+    const isAbout = (type === 'about');
+    const targetCollection = isAbout ? "about_slideshow" : "homepage_slideshow";
+    const targetArray = isAbout ? aboutSlides : homepageSlides;
+    const storageKey = isAbout ? 'v28_about_slides' : 'v28_homepage_slides';
+    const typeLabel = isAbout ? "About Us" : "Homepage";
     
-    const typeSlidesCount = slideshowImages.filter(img => img.type === type).length;
+    showToast(`Processing ${files.length} ${typeLabel} image(s)...`, "info");
+    
+    const currentCount = targetArray.length;
     
     const compressionPromises = files.map((file, idx) => {
         return compressImage(file, 900, 900, 0.72)
             .then(base64Data => {
-                const id = 'slide-' + Date.now() + '-' + Math.random().toString(36).substr(2, 6);
+                const id = 'slide-' + (isAbout ? 'about-' : 'home-') + Date.now() + '-' + Math.random().toString(36).substr(2, 6);
                 return {
                     id,
-                    type,
+                    type: isAbout ? 'about' : 'hero',
                     image: base64Data,
                     createdAt: new Date().toISOString(),
-                    order: typeSlidesCount + idx
+                    order: currentCount + idx
                 };
             });
     });
 
     Promise.all(compressionPromises)
         .then(newSlides => {
-            // ALWAYS save to local state and localStorage first so the image is NEVER lost!
-            newSlides.forEach(slide => slideshowImages.push(slide));
-            localStorage.setItem('v28_slideshow_images', JSON.stringify(slideshowImages));
+            // ALWAYS save to local state and localStorage immediately
+            newSlides.forEach(slide => targetArray.push(slide));
+            localStorage.setItem(storageKey, JSON.stringify(targetArray));
             
-            // Re-render immediately so the slideshow and admin panel display the new photo(s) right away!
-            renderPublicSlideshows();
-            renderAdminSlideshowLists();
+            // Re-render immediately so the slideshow and admin panel display right away!
+            if (isAbout) {
+                renderAboutSlideshow();
+                renderAdminAboutSlidesList();
+            } else {
+                renderHomepageSlideshow();
+                renderAdminHomepageSlidesList();
+            }
             input.value = '';
 
-            // Save directly to Firestore database collection "slideshow_images"
+            // Save directly to its respective Firestore database
             if (isFirebaseActive) {
-                const batchPromises = newSlides.map(slide => {
-                    return db.collection("slideshow_images").doc(slide.id).set(slide);
+                const savePromises = newSlides.map(slide => {
+                    return db.collection(targetCollection).doc(slide.id).set(slide);
                 });
                 
-                Promise.all(batchPromises)
+                Promise.all(savePromises)
                     .then(() => {
-                        showToast(`Added ${newSlides.length} photo(s) & saved to Firestore database!`, "success");
+                        showToast(`Saved ${newSlides.length} photo(s) to ${targetCollection} database!`, "success");
                     })
                     .catch(firestoreErr => {
-                        console.error("Firestore cloud sync notice:", firestoreErr);
+                        console.error(`Firestore ${targetCollection} sync notice:`, firestoreErr);
                         showToast(`Photo saved locally. Cloud sync: ` + (firestoreErr.message || "check rules"), "warning");
                     });
             } else {
-                showToast(`Added ${newSlides.length} photo(s) to slideshow!`, "success");
+                showToast(`Added ${newSlides.length} photo(s) to ${typeLabel} slideshow!`, "success");
             }
         })
         .catch(err => {
@@ -5778,50 +5852,77 @@ window.uploadSlideshowImage = function(input, type) {
         });
 };
 
-window.deleteSlideshowImage = function(id) {
+window.deleteSlideshowImage = function(id, type) {
     if (!confirm("Permanently delete this slideshow image?")) return;
     
-    slideshowImages = slideshowImages.filter(img => img.id !== id);
-    localStorage.setItem('v28_slideshow_images', JSON.stringify(slideshowImages));
-    renderPublicSlideshows();
-    renderAdminSlideshowLists();
+    let isAbout = (type === 'about');
+    if (!type) {
+        if (aboutSlides.some(img => img.id === id)) isAbout = true;
+    }
+    
+    const targetCollection = isAbout ? "about_slideshow" : "homepage_slideshow";
+    const storageKey = isAbout ? 'v28_about_slides' : 'v28_homepage_slides';
+    
+    if (isAbout) {
+        aboutSlides = aboutSlides.filter(img => img.id !== id);
+        localStorage.setItem(storageKey, JSON.stringify(aboutSlides));
+        renderAboutSlideshow();
+        renderAdminAboutSlidesList();
+    } else {
+        homepageSlides = homepageSlides.filter(img => img.id !== id);
+        localStorage.setItem(storageKey, JSON.stringify(homepageSlides));
+        renderHomepageSlideshow();
+        renderAdminHomepageSlidesList();
+    }
     showToast("Slideshow image removed.", "success");
     
     if (isFirebaseActive && !id.startsWith('def-')) {
-        db.collection("slideshow_images").doc(id).delete()
-            .catch(err => console.warn("Firestore delete slide notice:", err));
+        db.collection(targetCollection).doc(id).delete()
+            .then(() => {
+                db.collection("slideshow_images").doc(id).delete().catch(() => {});
+            })
+            .catch(err => console.warn(`Firestore delete slide notice (${targetCollection}):`, err));
     }
 };
 
 window.reorderSlideshowImages = function(type, sourceIdx, targetIdx) {
-    const typeSlides = slideshowImages.filter(img => img.type === type);
-    typeSlides.forEach((slide, idx) => {
+    const isAbout = (type === 'about');
+    const targetArray = isAbout ? aboutSlides : homepageSlides;
+    const targetCollection = isAbout ? "about_slideshow" : "homepage_slideshow";
+    const storageKey = isAbout ? 'v28_about_slides' : 'v28_homepage_slides';
+    
+    targetArray.forEach((slide, idx) => {
         if (slide.order === undefined) slide.order = idx;
     });
     
-    const [movedSlide] = typeSlides.splice(sourceIdx, 1);
-    typeSlides.splice(targetIdx, 0, movedSlide);
+    const [movedSlide] = targetArray.splice(sourceIdx, 1);
+    targetArray.splice(targetIdx, 0, movedSlide);
     
     const updates = [];
-    typeSlides.forEach((slide, idx) => {
+    targetArray.forEach((slide, idx) => {
         slide.order = idx;
         updates.push(slide);
     });
     
-    localStorage.setItem('v28_slideshow_images', JSON.stringify(slideshowImages));
-    renderPublicSlideshows();
-    renderAdminSlideshowLists();
+    localStorage.setItem(storageKey, JSON.stringify(targetArray));
+    if (isAbout) {
+        renderAboutSlideshow();
+        renderAdminAboutSlidesList();
+    } else {
+        renderHomepageSlideshow();
+        renderAdminHomepageSlidesList();
+    }
     showToast("Slideshow reordered!", "success");
     
     if (isFirebaseActive) {
         const batch = db.batch();
         updates.forEach(slide => {
             if (!slide.id.startsWith('def-')) {
-                batch.update(db.collection("slideshow_images").doc(slide.id), { order: slide.order });
+                batch.update(db.collection(targetCollection).doc(slide.id), { order: slide.order });
             }
         });
         batch.commit()
-            .catch(err => console.warn("Firestore reorder notice:", err));
+            .catch(err => console.warn(`Firestore reorder notice (${targetCollection}):`, err));
     }
 };
 

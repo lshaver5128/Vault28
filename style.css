@@ -1619,6 +1619,9 @@ input:-webkit-autofill:active {
     pointer-events: none;
 }
 .hero-slide.active {
+    opacity: 1 !important;
+    z-index: 3 !important;
+}
 
 /* About Slide Crossfader */
 .about-slide {
@@ -1635,10 +1638,6 @@ input:-webkit-autofill:active {
     pointer-events: none;
 }
 .about-slide.active {
-    opacity: 1 !important;
-    z-index: 3 !important;
-}
-
     opacity: 1 !important;
     z-index: 3 !important;
 }

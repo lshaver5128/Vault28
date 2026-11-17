@@ -31,6 +31,12 @@ service cloud.firestore {
     match /slideshow_images/{docId} {
       allow write: if true;
     }
+    match /homepage_slideshow/{docId} {
+      allow write: if true;
+    }
+    match /about_slideshow/{docId} {
+      allow write: if true;
+    }
     match /upcoming_shows/{docId} {
       allow write: if true;
     }
