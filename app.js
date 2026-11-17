@@ -98,108 +98,8 @@ let upcomingShows = [];
 let slideshowImages = [];
 let isRegisteringUser = false; // Flag to prevent auto-login flash during sign-up
 
-// Default Mock Collections Data
-const DEFAULT_COLLECTIONS = [
-    {
-        id: "col-charizard-base",
-        title: "Base Set Holo Collection & WOTC Lot",
-        description: "Classic WOTC era collection. Includes a Base Set Charizard Holo #4, Blastoise Holo, and Venusaur Holo in great raw condition, plus a full binder of 1st Edition Jungle holos.",
-        sport: "Pokémon Cards - Vintage WOTC Era",
-        sellerName: "Luke S.",
-        sellerEmail: "luke.s@gmail.com",
-        sellerPhone: "(843) 555-9876",
-        sellerPref: "Text Message",
-        sellerLocation: "Summerville, SC",
-        sellerUid: "sandbox-luke-uid",
-        qty: 150,
-        estVal: 5400,
-        askingPrice: 5400,
-        offerPrice: 4800,
-        deliveryPref: "Local Pickup",
-        status: "Offer Made",
-        createdAt: new Date(Date.now() - 3600000 * 24).toISOString(),
-        cards: [
-            {
-                player: "Charizard Holo",
-                brand: "Base Set #4",
-                year: 1999,
-                grade: "Raw (Near Mint or Better)",
-                image: ""
-            },
-            {
-                player: "Blastoise Holo",
-                brand: "Base Set #2",
-                year: 1999,
-                grade: "PSA 9 Mint",
-                image: ""
-            }
-        ],
-        generalImages: [],
-        messages: [
-            {
-                sender: "seller",
-                senderName: "Luke S.",
-                text: "Hey! Submitted my Base Set Pokémon collection. The Charizard is in really clean condition.",
-                timestamp: new Date(Date.now() - 3600000 * 20).toISOString()
-            },
-            {
-                sender: "buyer",
-                senderName: "V28 Buying Desk",
-                text: "Hi Luke, thanks for submitting! Based on recent sales for a raw NM Charizard Base Set plus the full Jungle holo binder, we can make you a package offer of $4,800 for the whole collection.",
-                timestamp: new Date(Date.now() - 3600000 * 16).toISOString()
-            },
-            {
-                sender: "system",
-                senderName: "System",
-                text: "Vault 28 Buying Desk made a counter offer of $4,800.",
-                timestamp: new Date(Date.now() - 3600000 * 16).toISOString()
-            }
-        ]
-    },
-    {
-        id: "col-modern-alts",
-        title: "Modern Alt Art Binder Collection",
-        description: "Childhood binder recently pulled from storage. Features a Rayquaza VMAX Alt Art, Umbreon VMAX Alt Art, and several full art Trainers from Crown Zenith. Looking for a fair offer.",
-        sport: "Pokémon Cards - Modern Singles",
-        sellerName: "Marcus T.",
-        sellerEmail: "marcus.t@gmail.com",
-        sellerPhone: "(843) 555-4321",
-        sellerPref: "Email",
-        sellerLocation: "Charleston, SC",
-        sellerUid: "sandbox-marcus-uid",
-        qty: 240,
-        estVal: 2000,
-        askingPrice: 1800,
-        offerPrice: 0,
-        deliveryPref: "Shipping Accepted",
-        status: "Pending Review",
-        createdAt: new Date(Date.now() - 3600000 * 2).toISOString(),
-        cards: [
-            {
-                player: "Rayquaza VMAX Alt Art",
-                brand: "Evolving Skies #218",
-                year: 2021,
-                grade: "Raw (Near Mint or Better)",
-                image: ""
-            }
-        ],
-        generalImages: [],
-        messages: [
-            {
-                sender: "seller",
-                senderName: "Marcus T.",
-                text: "Submitted my modern alt art binder. Let me know what you guys think about condition on the Rayquaza.",
-                timestamp: new Date(Date.now() - 3600000 * 2).toISOString()
-            },
-            {
-                sender: "system",
-                senderName: "System",
-                text: "Marcus T. submitted this collection for review.",
-                timestamp: new Date(Date.now() - 3600000 * 2).toISOString()
-            }
-        ]
-    }
-];
+// Default Mock Collections Data (Empty - Real Submissions Only)
+const DEFAULT_COLLECTIONS = [];
 
 
 // Default Mock Upcoming Shows / Events Data
@@ -340,33 +240,8 @@ const DEFAULT_REVIEWS = [
     }
 ];
 
-// Default Mock Registered Users
-const DEFAULT_USERS = [
-    {
-        uid: "user-1",
-        email: "john.doe@gmail.com",
-        displayName: "John Doe",
-        registeredAt: new Date(Date.now() - 3600000 * 24 * 18).toISOString(),
-        lastSeenAt: new Date(Date.now() - 3600000 * 1.5).toISOString(),
-        isOnline: true
-    },
-    {
-        uid: "user-2",
-        email: "sarah.smith@yahoo.com",
-        displayName: "Sarah Smith",
-        registeredAt: new Date(Date.now() - 3600000 * 24 * 32).toISOString(),
-        lastSeenAt: new Date(Date.now() - 3600000 * 24 * 2).toISOString(),
-        isOnline: false
-    },
-    {
-        uid: "user-3",
-        email: "michael.b@hotmail.com",
-        displayName: "Michael Brown",
-        registeredAt: new Date(Date.now() - 3600000 * 24 * 8).toISOString(),
-        lastSeenAt: new Date(Date.now() - 60000 * 12).toISOString(),
-        isOnline: true
-    }
-];
+// Default Mock Registered Users (Empty - Real Firestore Users Only)
+const DEFAULT_USERS = [];
 
 // Helper to generate dynamic canvas card mockup image
 function generateCardMockupImage(player, year, brand, sport) {
@@ -460,13 +335,9 @@ function generateCardMockupImage(player, year, brand, sport) {
 // Database Seeding function for Cloud Firestore
 function seedCloudDatabase() {
     if (!isFirebaseActive) return;
-    // Seed collections
-    DEFAULT_COLLECTIONS.forEach(col => {
-        col.cards = col.cards.map(card => {
-            if (!card.image) card.image = generateCardMockupImage(card.player, card.year, card.brand, col.sport);
-            return card;
-        });
-        db.collection("collections").doc(col.id).set(col);
+    // Clean up any legacy dummy mock collections
+    ['col-charizard-base', 'col-modern-alts'].forEach(id => {
+        db.collection("collections").doc(id).delete().catch(() => {});
     });
 
     // Seed products
@@ -851,8 +722,6 @@ function clearSessionUI() {
     if (toolbar) toolbar.style.display = 'none';
     
     updateContactFormPreFill(null);
-    collections = [];
-    users = [];
     setRole('seller', false);
     switchView('seller-landing', false);
     triggerUIRefresh();
@@ -877,6 +746,37 @@ function initDatabase() {
                 clearSessionUI();
             }
         });
+
+            // Clean up legacy dummy mock collections from Firestore
+            ['col-charizard-base', 'col-modern-alts'].forEach(id => {
+                db.collection("collections").doc(id).delete().catch(() => {});
+            });
+
+            // Sync registered users directly from Firestore in real-time
+            usersListener = db.collection("users").onSnapshot((snapshot) => {
+                users = [];
+                snapshot.forEach(doc => {
+                    users.push({ id: doc.id, uid: doc.id, ...doc.data() });
+                });
+                users.sort((a, b) => new Date(b.registeredAt || 0) - new Date(a.registeredAt || 0));
+                renderAdminUsersTable();
+            }, (error) => {
+                console.warn("Firestore users listener notice:", error);
+            });
+
+            // Sync inquiries directly from Firestore in real-time
+            inquiriesListener = db.collection("inquiries").onSnapshot((snapshot) => {
+                inquiries = [];
+                snapshot.forEach(doc => {
+                    inquiries.push({ id: doc.id, ...doc.data() });
+                });
+                inquiries.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+                updateInquiriesBadge();
+                renderAdminInquiriesList();
+                renderCustomerDashboardInquiries();
+            }, (error) => {
+                console.warn("Firestore inquiries listener notice:", error);
+            });
 
             // Sync public products
             productsListener = db.collection("products").onSnapshot(snapshot => {
@@ -3130,8 +3030,9 @@ function renderBuyerDashboard() {
             <td style="padding: 1rem 0.5rem;">$${col.askingPrice.toLocaleString()}</td>
             <td style="padding: 1rem 0.5rem; font-weight: 700; color:var(--accent-cyan);">$${(col.offerPrice || 0).toLocaleString()}</td>
             <td style="padding: 1rem 0.5rem;"><span class="badge ${badgeClass}">${col.status}</span></td>
-            <td style="padding: 1rem 0.5rem; text-align:right;">
+            <td style="padding: 1rem 0.5rem; text-align:right; white-space: nowrap;">
                 <button class="btn btn-outline-cyan btn-sm" onclick="openAdminReview('${col.id}')">Inspect & Value</button>
+                <button class="btn btn-secondary btn-sm" style="color:var(--accent-red); border-color: rgba(239,68,68,0.3); margin-left: 0.4rem;" onclick="deleteCollectionFromDashboard('${col.id}')" title="Delete submission">🗑️</button>
             </td>
         `;
         tableBody.appendChild(row);
@@ -3175,10 +3076,10 @@ function renderBuyerDetail(id) {
     if (col.status === 'Bought' || col.status === 'Purchased' || col.status === 'Accepted') badge.classList.add('badge-bought');
     if (col.status === 'Declined') badge.classList.add('badge-declined');
     
-    // Toggle delete button visibility based on status
+    // Delete button visible on all submissions for owner
     const deleteBtn = document.getElementById('btn-buyer-delete-submission');
     if (deleteBtn) {
-        deleteBtn.style.display = col.status === 'Declined' ? 'flex' : 'none';
+        deleteBtn.style.display = 'flex';
     }
     
     document.getElementById('buyer-val-asking').value = `$${col.askingPrice.toLocaleString()}`;
