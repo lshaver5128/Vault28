@@ -94,6 +94,8 @@ let upcomingShowsListener = null;
 let homepageSlideshowListener = null;
 let aboutSlideshowListener = null;
 let slideshowImagesListener = null;
+var heroSliderInterval = null;
+var aboutSlideshowInterval = null;
 let users = [];
 let recentPurchases = [];
 let upcomingShows = [];
@@ -5502,9 +5504,8 @@ function checkEmailVerificationParam() {
 }
 
 // Hero image slideshow logic
-let heroSliderInterval = null;
 function initHeroSlider() {
-    if (heroSliderInterval) clearInterval(heroSliderInterval);
+    if (typeof heroSliderInterval !== 'undefined' && heroSliderInterval) clearInterval(heroSliderInterval);
     
     let currentIndex = 0;
     heroSliderInterval = setInterval(() => {
@@ -5520,9 +5521,8 @@ function initHeroSlider() {
 }
 
 // About Us page image slideshow logic
-let aboutSlideshowInterval = null;
 function initAboutSlideshow() {
-    if (aboutSlideshowInterval) clearInterval(aboutSlideshowInterval);
+    if (typeof aboutSlideshowInterval !== 'undefined' && aboutSlideshowInterval) clearInterval(aboutSlideshowInterval);
     
     const slides = document.querySelectorAll('.about-slide');
     if (!slides || slides.length === 0) return;
