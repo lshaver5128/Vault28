@@ -591,10 +591,7 @@ function updateNavigationLinks(activeViewId) {
             { label: 'Home', view: 'seller-landing' }
         ];
         
-        const isUserLoggedIn = isFirebaseActive ? !!firebase.auth().currentUser : (document.getElementById('user-profile-widget').style.display === 'flex');
-        if (isUserLoggedIn) {
-            links.push({ label: 'My Dashboard', view: 'seller-dashboard' });
-        }
+        // My Dashboard removed from seller navigation per user request
         
         links.push(
             { label: 'Sell Your Collection', view: 'seller-submit' },
@@ -5535,8 +5532,9 @@ function renderPublicSlideshows() {
             `).join('');
         } else {
             heroContainer.innerHTML = `
-                <img src="/assets/logo_new.png" class="hero-slide active" alt="Vault 28 Pokémon Cards Emblem" style="position: absolute; top: 0.5rem; left: 0.5rem; width: calc(100% - 1rem); height: calc(100% - 1rem); object-fit: cover; border-radius: 12px; transition: opacity 1.5s ease-in-out; opacity: 1; z-index: 1;" />
-                <img src="/assets/vault28_banner.png" class="hero-slide" alt="Vault 28 Pokémon Banner" style="position: absolute; top: 0.5rem; left: 0.5rem; width: calc(100% - 1rem); height: calc(100% - 1rem); object-fit: cover; border-radius: 12px; transition: opacity 1.5s ease-in-out; opacity: 0; z-index: 1;" />
+                <img src="/assets/vending_booth_1.png" class="hero-slide active" alt="Vault 28 Vending Booth" style="position: absolute; top: 0.5rem; left: 0.5rem; width: calc(100% - 1rem); height: calc(100% - 1rem); object-fit: cover; border-radius: 12px; transition: opacity 1.5s ease-in-out; opacity: 1; z-index: 1;" />
+                <img src="/assets/vending_booth_2.png" class="hero-slide" alt="Vault 28 Cards Showcase" style="position: absolute; top: 0.5rem; left: 0.5rem; width: calc(100% - 1rem); height: calc(100% - 1rem); object-fit: cover; border-radius: 12px; transition: opacity 1.5s ease-in-out; opacity: 0; z-index: 1;" />
+                <img src="/assets/vending_booth_3.png" class="hero-slide" alt="Vault 28 Card Inventory" style="position: absolute; top: 0.5rem; left: 0.5rem; width: calc(100% - 1rem); height: calc(100% - 1rem); object-fit: cover; border-radius: 12px; transition: opacity 1.5s ease-in-out; opacity: 0; z-index: 1;" />
             `;
         }
     }
