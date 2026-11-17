@@ -1642,6 +1642,59 @@ input:-webkit-autofill:active {
     z-index: 3 !important;
 }
 
+/* Slideshow Interactive Controls & Badges */
+.slide-nav-btn {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 10;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: rgba(5, 7, 12, 0.78);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(223, 183, 80, 0.45);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 16px;
+    line-height: 1;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.6);
+    opacity: 0.8;
+}
+.slide-nav-btn:hover {
+    opacity: 1;
+    background: rgba(10, 13, 20, 0.95);
+    border-color: var(--accent-gold);
+    transform: translateY(-50%) scale(1.1);
+}
+.slide-nav-btn.prev { left: 10px; }
+.slide-nav-btn.next { right: 10px; }
+
+.hero-dot, .about-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    border: none;
+    padding: 0;
+    background: rgba(255, 255, 255, 0.35);
+    cursor: pointer;
+    transition: all 0.25s ease;
+}
+.hero-dot:hover, .about-dot:hover {
+    background: rgba(255, 255, 255, 0.75);
+    transform: scale(1.25);
+}
+.hero-dot.active, .about-dot.active {
+    background: var(--accent-gold) !important;
+    transform: scale(1.35) !important;
+    box-shadow: 0 0 8px rgba(223, 183, 80, 0.7);
+}
+
+
 /* Trust Bar Styling */
 .trust-bar-row {
     display: flex;
