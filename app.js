@@ -36,7 +36,7 @@ const PATH_MAP = {
     '/collection': 'seller-detail',
     '/shop': 'shop',
     '/about': 'about',
-    '/contact': 'contact',
+    '/contact': 'seller-submit',
     '/contact-thread': 'customer-thread',
     '/admin': 'buyer-dashboard',
     '/admin/review': 'buyer-detail'
@@ -487,6 +487,7 @@ function seedCloudDatabase() {
 
 // Router Implementation
 function switchView(viewId, pushState = true) {
+    if (viewId === 'contact') { switchView('seller-submit', pushState); return; }
     if (viewId === 'about') { renderPublicSlideshows(); initAboutSlideshow(); }
     // Auth Guard check for seller dashboard access
     if (isFirebaseActive && !firebase.auth().currentUser) {
@@ -635,8 +636,7 @@ function updateNavigationLinks(activeViewId) {
             { label: 'Sell Your Collection', view: 'seller-submit' },
             { label: 'Shop', view: 'shop' },
             { label: 'About Us', view: 'about' },
-            { label: 'Contact', view: 'contact' }
-        );
+            );
         
         links.forEach(link => {
             const el = document.createElement('a');
@@ -4507,7 +4507,8 @@ function renderRecentlyPurchasedGallery() {
 }
 
 // Contact Inquiry Submission Handler
-document.getElementById('contact-form-inquiry').addEventListener('submit', (e) => {
+const contactFormEl = document.getElementById('contact-form-inquiry');
+if (contactFormEl) contactFormEl.addEventListener('submit', (e) => {
     e.preventDefault();
     
     const name = document.getElementById('contact-inquiry-name').value.trim();
