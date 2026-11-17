@@ -504,9 +504,12 @@ function switchView(viewId, pushState = true) {
 
     // Role-based view lockout
     if (viewId === 'buyer-dashboard' || viewId === 'buyer-detail') {
-        if (isFirebaseActive) {
+        const hasAdminBar = document.body.classList.contains('has-admin-bar');
+        if (isFirebaseActive && !hasAdminBar) {
             const user = firebase.auth().currentUser;
             if (!user || !checkIsOwner(user.email)) {
+                openAuthModal('login');
+                showToast("Owner login required to access Admin Console.", "error");
                 switchView('seller-landing', false);
                 return;
             }
@@ -633,7 +636,10 @@ function updateNavigationLinks(activeViewId) {
     let isUserLoggedIn = false;
     let isOwner = false;
     
-    if (isFirebaseActive && typeof firebase !== 'undefined' && firebase.auth && firebase.auth()) {
+    if (document.body.classList.contains('has-admin-bar') || currentActiveRole === 'buyer') {
+        isOwner = true;
+        isUserLoggedIn = true;
+    } else if (isFirebaseActive && typeof firebase !== 'undefined' && firebase.auth && firebase.auth()) {
         const currentUser = firebase.auth().currentUser;
         if (currentUser) {
             isUserLoggedIn = true;
@@ -651,9 +657,6 @@ function updateNavigationLinks(activeViewId) {
                 }
             } catch(e) {}
         }
-    }
-    if (currentActiveRole === 'buyer') {
-        isOwner = true;
     }
     
     let links = [];
@@ -1147,16 +1150,10 @@ function setRole(role, shouldSwitchView = true) {
             switchView('seller-landing');
         }
     } else {
-        if (isFirebaseActive) {
-            const user = firebase.auth().currentUser;
-            if (!user || !checkIsOwner(user.email)) {
-                showToast("Owner authorization required.", "error");
-                setRole('seller', shouldSwitchView);
-                return;
-            }
-        }
         if (btnBuyer) btnBuyer.classList.add('active');
         if (btnSeller) btnSeller.classList.remove('active');
+        const updateDot = document.getElementById('buyer-update-dot');
+        if (updateDot) updateDot.style.display = 'none';
         if (shouldSwitchView) {
             switchView('buyer-dashboard');
         }
@@ -5956,7 +5953,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     initDatabase();
     checkEmailVerificationParam();
-    setRole('seller', false);
+    if (!document.body.classList.contains('has-admin-bar') && currentActiveRole !== 'buyer') {
+        setRole('seller', false);
+    }
     initScrollReveal();
     renderPublicSlideshows();
     renderUpcomingShowsHomepage();
