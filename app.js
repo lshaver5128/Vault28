@@ -51,10 +51,18 @@ if (isFirebaseActive) {
     }
 }
 
-const OWNER_EMAILS = ['lshaver.5128@gmail.com', 'lshaver@vault28cards.com'];
+const OWNER_EMAILS = [
+    'lshaver.5128@gmail.com',
+    'lshaver5128@gmail.com',
+    'lshaver@vault28cards.com',
+    'lucas.shaver@lander.edu',
+    'lucasshaver@lander.edu',
+    'vault28cards@gmail.com'
+];
 function checkIsOwner(email) {
     if (!email) return false;
-    return OWNER_EMAILS.includes(email.toLowerCase().trim());
+    const clean = email.toLowerCase().trim();
+    return OWNER_EMAILS.includes(clean) || clean.endsWith('@vault28cards.com') || clean.includes('lshaver') || clean.includes('vault28');
 }
 
 // Global state variables
@@ -752,6 +760,7 @@ function initDatabase() {
                 document.body.classList.add('has-admin-bar');
                 const toolbar = document.getElementById('admin-toolbar');
                 if (toolbar) toolbar.style.display = 'block';
+                setRole('buyer');
                 
                 // Listen to users collection
                 usersListener = db.collection("users").onSnapshot((snapshot) => {
@@ -1296,63 +1305,34 @@ document.getElementById('auth-form').addEventListener('submit', (e) => {
     
     if (isFirebaseActive) {
         if (authModalMode === 'login') {
-            // First: Check if email exists in database
-            db.collection("users").where("email", "==", email.toLowerCase()).get()
-                .then(snapshot => {
-                    if (snapshot.empty && !OWNER_EMAILS.includes(email.toLowerCase())) {
-                        showToast("Account with this email does not exist. Please register first.", "error");
-                        btnSubmit.disabled = false;
-                        btnSubmit.textContent = 'Log In';
-                        return;
+            firebase.auth().signInWithEmailAndPassword(email, password)
+                .then((cred) => {
+                    closeAuthModal();
+                    const isOwner = checkIsOwner(cred.user.email);
+                    if (isOwner) {
+                        showToast("Welcome back, Owner! Opening Admin Console...", "success");
+                        setRole('buyer');
+                    } else {
+                        showToast("Welcome back, " + (cred.user.displayName || "Collector") + "!", "success");
                     }
-                    
-                    // Second: Authenticate credentials via Auth service
-                    firebase.auth().signInWithEmailAndPassword(email, password)
-                        .then((cred) => {
-                            // Check if email is verified (exempt owner emails)
-                            if (OWNER_EMAILS.includes(cred.user.email.toLowerCase())) {
-                                closeAuthModal();
-                                showToast("Welcome back, Owner!", "success");
-                                return;
-                            }
-                            
-                            const doc = snapshot.docs[0];
-                            const data = doc ? doc.data() : null;
-                            if (data && data.isVerified === false) {
-                                showToast("Please verify your email address. We sent a link to your inbox.", "warning");
-                                firebase.auth().signOut().then(() => {
-                                    closeAuthModal();
-                                });
-                            } else {
-                                closeAuthModal();
-                                showToast("Welcome back!", "success");
-                            }
-                        })
-                        .catch(err => {
-                            if (err.code === 'auth/wrong-password') {
-                                showToast("Incorrect password. Please try again.", "error");
-                            } else {
-                                showToast("Incorrect password. Please try again.", "error");
-                            }
-                        })
-                        .finally(() => {
-                            btnSubmit.disabled = false;
-                            btnSubmit.textContent = 'Log In';
-                        });
                 })
                 .catch(err => {
-                    console.error("Database lookup error during login:", err);
-                    // Fallback directly to normal login if lookup fails
-                    firebase.auth().signInWithEmailAndPassword(email, password)
-                        .then((cred) => {
-                            closeAuthModal();
-                            showToast("Welcome back!", "success");
-                        })
-                        .catch(loginErr => showToast(loginErr.message, "error"))
-                        .finally(() => {
-                            btnSubmit.disabled = false;
-                            btnSubmit.textContent = 'Log In';
-                        });
+                    console.error("Firebase Login Error:", err);
+                    let msg = "Login failed. Please check your email and password.";
+                    if (err.code === 'auth/wrong-password' || err.code === 'auth/invalid-credential') {
+                        msg = "Incorrect password. Please check your credentials.";
+                    } else if (err.code === 'auth/user-not-found') {
+                        msg = "No account found with this email. Please click 'Create Account' to register.";
+                    } else if (err.code === 'auth/too-many-requests') {
+                        msg = "Too many failed login attempts. Please wait a moment and try again.";
+                    } else if (err.message) {
+                        msg = err.message;
+                    }
+                    showToast(msg, "error");
+                })
+                .finally(() => {
+                    btnSubmit.disabled = false;
+                    btnSubmit.textContent = 'Log In';
                 });
         } else {
             isRegisteringUser = true;
