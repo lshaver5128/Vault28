@@ -533,7 +533,7 @@ function updateNavigationLinks(activeViewId) {
     }
     
     // When currentActiveRole is 'buyer', show Owner admin links.
-    // When currentActiveRole is 'seller', show full Seller links (Home, My Dashboard, Sell Your Collection, Shop, About Us)!
+    // When currentActiveRole is 'seller', show public customer links (Home, Sell Your Collection, Shop, About Us)!
     const isOwnerMode = (currentActiveRole === 'buyer');
     
     let links = [];
@@ -541,14 +541,6 @@ function updateNavigationLinks(activeViewId) {
         links = [
             { label: 'Admin Dashboard', view: 'buyer-dashboard' },
             { label: 'Home View', view: 'seller-landing' },
-            { label: 'Shop', view: 'shop' },
-            { label: 'About Us', view: 'about' }
-        ];
-    } else if (isUserLoggedIn) {
-        links = [
-            { label: 'Home', view: 'seller-landing' },
-            { label: 'My Dashboard', view: 'seller-dashboard' },
-            { label: 'Sell Your Collection', view: 'seller-submit' },
             { label: 'Shop', view: 'shop' },
             { label: 'About Us', view: 'about' }
         ];
@@ -1086,38 +1078,29 @@ function setRole(role, shouldSwitchView = true) {
     currentActiveRole = role;
     const btnSeller = document.getElementById('btn-role-seller');
     const btnBuyer = document.getElementById('btn-role-buyer');
-    const roleLabel = document.getElementById('user-display-role');
     
     if (role === 'seller') {
         if (btnSeller) btnSeller.classList.add('active');
         if (btnBuyer) btnBuyer.classList.remove('active');
         const updateDot = document.getElementById('buyer-update-dot');
         if (updateDot) updateDot.style.display = 'none';
-        if (roleLabel) {
-            roleLabel.textContent = "Seller View";
-            roleLabel.style.color = "var(--text-secondary)";
-        }
         if (shouldSwitchView) {
-            switchView('seller-dashboard');
+            switchView('seller-landing');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         } else {
-            updateNavigationLinks(document.querySelector('.view-state.active')?.id || 'seller-dashboard');
+            updateNavigationLinks('seller-landing');
         }
-        showToast("Switched to Seller View", "info");
     } else {
         if (btnBuyer) btnBuyer.classList.add('active');
         if (btnSeller) btnSeller.classList.remove('active');
         const updateDot = document.getElementById('buyer-update-dot');
         if (updateDot) updateDot.style.display = 'none';
-        if (roleLabel) {
-            roleLabel.textContent = "Vault 28 Owner";
-            roleLabel.style.color = "var(--accent-cyan)";
-        }
         if (shouldSwitchView) {
             switchView('buyer-dashboard');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         } else {
             updateNavigationLinks('buyer-dashboard');
         }
-        showToast("Switched to Owner View", "info");
     }
 }
 window.setRole = setRole;
