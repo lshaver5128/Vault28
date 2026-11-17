@@ -1013,10 +1013,14 @@ function initDatabase() {
         }
 
         // Initialize sandbox slideshow images
-        const storedHomeSlides = localStorage.getItem('v28_homepage_slides');
-        homepageSlides = storedHomeSlides ? JSON.parse(storedHomeSlides) : [];
-        const storedAboutSlides = localStorage.getItem('v28_about_slides');
-        aboutSlides = storedAboutSlides ? JSON.parse(storedAboutSlides) : [];
+        try {
+            const storedHomeSlides = localStorage.getItem('v28_homepage_slides');
+            homepageSlides = storedHomeSlides ? JSON.parse(storedHomeSlides) : [];
+        } catch(e) { homepageSlides = []; }
+        try {
+            const storedAboutSlides = localStorage.getItem('v28_about_slides');
+            aboutSlides = storedAboutSlides ? JSON.parse(storedAboutSlides) : [];
+        } catch(e) { aboutSlides = []; }
         renderHomepageSlideshow();
         renderAboutSlideshow();
         renderAdminHomepageSlidesList();
@@ -5783,7 +5787,7 @@ function renderAdminSlideshowLists() {
     renderAdminAboutSlidesList();
 }
 
-window.uploadSlideshowImage = function(input, type) {
+function uploadSlideshowImage(input, type) {
     const files = Array.from(input.files);
     if (files.length === 0) return;
     
@@ -5850,9 +5854,10 @@ window.uploadSlideshowImage = function(input, type) {
             showToast("Failed to process one or more images.", "error");
             input.value = '';
         });
-};
+}
+window.uploadSlideshowImage = uploadSlideshowImage;
 
-window.deleteSlideshowImage = function(id, type) {
+function deleteSlideshowImage(id, type) {
     if (!confirm("Permanently delete this slideshow image?")) return;
     
     let isAbout = (type === 'about');
@@ -5883,9 +5888,10 @@ window.deleteSlideshowImage = function(id, type) {
             })
             .catch(err => console.warn(`Firestore delete slide notice (${targetCollection}):`, err));
     }
-};
+}
+window.deleteSlideshowImage = deleteSlideshowImage;
 
-window.reorderSlideshowImages = function(type, sourceIdx, targetIdx) {
+function reorderSlideshowImages(type, sourceIdx, targetIdx) {
     const isAbout = (type === 'about');
     const targetArray = isAbout ? aboutSlides : homepageSlides;
     const targetCollection = isAbout ? "about_slideshow" : "homepage_slideshow";
@@ -5924,7 +5930,8 @@ window.reorderSlideshowImages = function(type, sourceIdx, targetIdx) {
         batch.commit()
             .catch(err => console.warn(`Firestore reorder notice (${targetCollection}):`, err));
     }
-};
+}
+window.reorderSlideshowImages = reorderSlideshowImages;
 
 
 // DOM Init
@@ -5964,6 +5971,20 @@ document.addEventListener('DOMContentLoaded', () => {
     initAboutSlideshow();
     updateWizardUI();
     initUpcomingShowsManager();
+
+    // Bind slideshow file upload inputs directly
+    const heroUploadInput = document.getElementById('upload-hero-slide-file');
+    if (heroUploadInput) {
+        heroUploadInput.addEventListener('change', function() {
+            uploadSlideshowImage(this, 'homepage');
+        });
+    }
+    const aboutUploadInput = document.getElementById('upload-about-slide-file');
+    if (aboutUploadInput) {
+        aboutUploadInput.addEventListener('change', function() {
+            uploadSlideshowImage(this, 'about');
+        });
+    }
 });
 
 
