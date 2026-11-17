@@ -929,14 +929,69 @@ function initDatabase() {
                 renderAdminRecentPurchasesList();
             });
 
-            // Sync public slideshow images
+            // Sync public slideshow images from Firestore in real-time
             slideshowImagesListener = db.collection("slideshow_images").onSnapshot(snapshot => {
-                slideshowImages = [];
-                snapshot.forEach(doc => {
-                    slideshowImages.push({ id: doc.id, ...doc.data() });
-                });
+                if (!snapshot.empty) {
+                    slideshowImages = [];
+                    snapshot.forEach(doc => {
+                        slideshowImages.push({ id: doc.id, ...doc.data() });
+                    });
+                    localStorage.setItem('v28_slideshow_images', JSON.stringify(slideshowImages));
+                } else {
+                    const cached = localStorage.getItem('v28_slideshow_images');
+                    if (cached) {
+                        try {
+                            const parsed = JSON.parse(cached);
+                            if (Array.isArray(parsed) && parsed.length > 0) {
+                                slideshowImages = parsed;
+                                const user = firebase.auth().currentUser;
+                                if (user && checkIsOwner(user.email)) {
+                                    parsed.forEach(slide => {
+                                        if (!slide.id.startsWith('def-')) {
+                                            db.collection("slideshow_images").doc(slide.id).set(slide).catch(e => console.warn(e));
+                                        }
+                                    });
+                                }
+                            }
+                        } catch(e) {}
+                    }
+                }
                 renderPublicSlideshows();
                 renderAdminSlideshowLists();
+            }, (error) => {
+                console.warn("Error listening to slideshow_images:", error);
+                const cached = localStorage.getItem('v28_slideshow_images');
+                if (cached) {
+                    try { slideshowImages = JSON.parse(cached); } catch(e) {}
+                }
+                renderPublicSlideshows();
+                renderAdminSlideshowLists();
+            });
+
+            // Sync upcoming shows from Firestore in real-time
+            upcomingShowsListener = db.collection("upcoming_shows").onSnapshot(snapshot => {
+                if (!snapshot.empty) {
+                    upcomingShows = [];
+                    snapshot.forEach(doc => {
+                        upcomingShows.push({ id: doc.id, ...doc.data() });
+                    });
+                    upcomingShows.sort((a, b) => new Date(a.date || 0) - new Date(b.date || 0));
+                    saveLocalUpcomingShows();
+                } else {
+                    const cachedShows = localStorage.getItem('v28_upcoming_shows');
+                    if (cachedShows) {
+                        try {
+                            const parsed = JSON.parse(cachedShows);
+                            if (Array.isArray(parsed) && parsed.length > 0) {
+                                upcomingShows = parsed;
+                            }
+                        } catch(e) {}
+                    }
+                }
+                renderUpcomingShowsHomepage();
+                renderAdminUpcomingShowsList();
+            }, (error) => {
+                console.warn("Error listening to upcoming_shows:", error);
             });
     } else {
         // Local Sandbox Fallback
@@ -5766,11 +5821,6 @@ window.uploadSlideshowImage = function(input, type) {
     
     showToast(`Processing ${files.length} image(s)...`, "info");
     
-    // If hero slides are empty, seed with the default booth photos so user photos are added alongside
-    if (type === 'hero' && slideshowImages.filter(img => img.type === 'hero').length === 0) {
-        slideshowImages.push(...DEFAULT_HERO_SLIDES);
-    }
-    
     const typeSlidesCount = slideshowImages.filter(img => img.type === type).length;
     
     const compressionPromises = files.map((file, idx) => {
@@ -5798,7 +5848,7 @@ window.uploadSlideshowImage = function(input, type) {
             renderAdminSlideshowLists();
             input.value = '';
 
-            // Now attempt Firestore cloud sync if Firebase is active
+            // Save directly to Firestore database collection "slideshow_images"
             if (isFirebaseActive) {
                 const batchPromises = newSlides.map(slide => {
                     return db.collection("slideshow_images").doc(slide.id).set(slide);
@@ -5806,12 +5856,11 @@ window.uploadSlideshowImage = function(input, type) {
                 
                 Promise.all(batchPromises)
                     .then(() => {
-                        showToast(`Successfully added ${newSlides.length} photo(s) & synced to cloud!`, "success");
+                        showToast(`Added ${newSlides.length} photo(s) & saved to Firestore database!`, "success");
                     })
                     .catch(firestoreErr => {
-                        console.warn("Firestore cloud sync notice:", firestoreErr);
-                        // Still active and working on the site via localStorage!
-                        showToast(`Photo added to slideshow! (Saved locally — see Firestore rules for cloud sync)`, "warning");
+                        console.error("Firestore cloud sync notice:", firestoreErr);
+                        showToast(`Photo saved locally. Cloud sync: ` + (firestoreErr.message || "check rules"), "warning");
                     });
             } else {
                 showToast(`Added ${newSlides.length} photo(s) to slideshow!`, "success");
