@@ -6,7 +6,7 @@
     <title>Vault 28 Trading Co. | Buy & Sell Pokémon Card Collections</title>
     <meta name="description" content="Sell your Pokémon card collections — vintage Base Set, WOTC, modern secret rares, sealed products, and complete binders. Based near Summerville, SC. Fast cash offers.">
     <meta name="google-site-verification" content="QYIy_EZy3nVUwvhrjrVTm0CM_KEltQ9HQjpMEuQ2eIw" />
-    <link rel="stylesheet" href="/style.css?v=71">
+    <link rel="stylesheet" href="/style.css?v=72">
     <!-- Browser Tab Icon (Favicon) -->
     <link rel="icon" type="image/png" href="/assets/logo_new.png">
 </head>
@@ -934,7 +934,7 @@
                 <div class="content-header" style="margin-bottom: 2rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
                     <div>
                         <h2 style="font-size: 2rem; font-family: var(--font-title); letter-spacing: 0.02em;">Admin Console</h2>
-                        <p style="color: var(--text-secondary); margin-top: 0.25rem;">Manage upcoming card shows, slideshow photos, customer reviews, inquiries, and registered user accounts.</p>
+                        <p style="color: var(--text-secondary); margin-top: 0.25rem;">Manage upcoming card shows, slideshow photos, customer reviews, and registered user accounts.</p>
                     </div>
                 </div>
                 
@@ -943,8 +943,6 @@
                     <button class="admin-tab-btn active" id="tab-btn-content">🖼️ Page Content &amp; Media</button>
                     <button class="admin-tab-btn" id="tab-btn-events">🎪 Upcoming Shows (<span id="admin-badge-events">0</span>)</button>
                     <button class="admin-tab-btn" id="tab-btn-users">👥 Registered Users (<span id="admin-badge-users">0</span>)</button>
-                    <button class="admin-tab-btn" id="tab-btn-inquiries">💬 Inquiries (<span id="admin-badge-inquiries">0</span>)</button>
-                    <button class="admin-tab-btn" id="tab-btn-submissions">📋 Submissions (<span id="admin-badge-submissions">0</span>)</button>
                 </div>
 
                 <!-- ==================== TAB 1: PAGE CONTENT & MEDIA ==================== -->
@@ -1201,102 +1199,36 @@
                     </div>
                 </div>
 
-                <!-- ==================== TAB 4: INQUIRIES ==================== -->
-                <div class="admin-tab-panel" id="panel-inquiries">
-                    <div class="glass-card" style="padding: 2rem;">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
-                            <div>
-                                <h3 style="font-size: 1.3rem; margin: 0; font-family: var(--font-title);">💬 Contact Inquiries</h3>
-                                <p style="color: var(--text-secondary); font-size: 0.85rem; margin-top: 0.25rem;">View, reply to, and resolve messages submitted via the Contact Us form.</p>
-                            </div>
-                            <div style="display: flex; gap: 0.75rem;">
-                                <div style="display: flex; align-items: center; gap: 0.5rem; background: rgba(0,0,0,0.25); border: 1px solid var(--border-color); padding: 6px 14px; border-radius: 8px; font-size: 0.85rem;">
-                                    <span>Total Messages: <strong id="admin-stat-inquiries-total" style="color: var(--accent-gold);">0</strong></span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Inquiry Filters Bar -->
-                        <div style="display: flex; gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap; background: rgba(255,255,255,0.02); padding: 1rem; border-radius: 8px; border: 1px solid var(--border-color);">
-                            <div style="display: flex; flex-direction: column; gap: 0.25rem; min-width: 180px;">
-                                <label style="font-size: 0.72rem; color: var(--text-secondary); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">Status Filter</label>
-                                <select id="inquiry-filter-status" onchange="renderAdminInquiriesList()" style="padding: 0.5rem; background: rgba(0,0,0,0.4); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-primary); font-size: 0.85rem; cursor: pointer; outline: none;">
-                                    <option value="all">All Inquiries</option>
-                                    <option value="Pending Response">Pending Response</option>
-                                    <option value="Waiting for Customer">Waiting for Customer</option>
-                                    <option value="Resolved">Resolved</option>
-                                </select>
-                            </div>
-                            <div style="display: flex; flex-direction: column; gap: 0.25rem; min-width: 150px;">
-                                <label style="font-size: 0.72rem; color: var(--text-secondary); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">Sort Order</label>
-                                <select id="inquiry-sort-order" onchange="renderAdminInquiriesList()" style="padding: 0.5rem; background: rgba(0,0,0,0.4); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-primary); font-size: 0.85rem; cursor: pointer; outline: none;">
-                                    <option value="newest">Newest First</option>
-                                    <option value="oldest">Oldest First</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <!-- Inquiries List -->
-                        <div id="admin-inquiries-list" style="display: flex; flex-direction: column; gap: 1.5rem;">
-                            <!-- Dynamic inquiry cards loaded via app.js -->
-                        </div>
-                    </div>
-                </div>
-
-                <!-- ==================== TAB 5: SUBMISSIONS ==================== -->
-                <div class="admin-tab-panel" id="panel-submissions">
-                    <!-- Valuation summary statistics -->
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 2rem;">
-                        <div class="glass-card" style="padding: 1.25rem; text-align: center;">
-                            <div style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase;">Total Submissions</div>
-                            <div style="font-size: 1.75rem; font-weight: 700; margin-top: 0.25rem;" id="stat-total-submissions">0</div>
-                        </div>
-                        <div class="glass-card" style="padding: 1.25rem; text-align: center;">
-                            <div style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase;">Pending Review</div>
-                            <div style="font-size: 1.75rem; font-weight: 700; color: var(--accent-orange); margin-top: 0.25rem;" id="stat-pending-valuations">0</div>
-                        </div>
-                        <div class="glass-card" style="padding: 1.25rem; text-align: center;">
-                            <div style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase;">Active Negotiations</div>
-                            <div style="font-size: 1.75rem; font-weight: 700; color: var(--accent-cyan); margin-top: 0.25rem;" id="stat-active-negotiations">0</div>
-                        </div>
-                        <div class="glass-card" style="padding: 1.25rem; text-align: center;">
-                            <div style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase;">Deals Purchased</div>
-                            <div style="font-size: 1.75rem; font-weight: 700; color: var(--accent-emerald); margin-top: 0.25rem;" id="stat-deals-closed">0</div>
-                        </div>
-                    </div>
-
-                    <div class="glass-card" style="padding: 1.5rem; overflow-x: auto;">
-                        <table style="width: 100%; border-collapse: collapse; text-align: left;">
-                            <thead>
-                                <tr style="border-bottom: 2px solid var(--border-color); color: var(--text-primary); font-size: 0.85rem; text-transform: uppercase; font-family: var(--font-title);">
-                                    <th style="padding: 0.75rem 0.5rem;">Collection Name</th>
-                                    <th style="padding: 0.75rem 0.5rem;">Seller</th>
-                                    <th style="padding: 0.75rem 0.5rem;">Category</th>
-                                    <th style="padding: 0.75rem 0.5rem;">Count</th>
-                                    <th style="padding: 0.75rem 0.5rem;">Asking Price</th>
-                                    <th style="padding: 0.75rem 0.5rem;">Offer Value</th>
-                                    <th style="padding: 0.75rem 0.5rem;">Status</th>
-                                    <th style="padding: 0.75rem 0.5rem; text-align: right;">Action</th>
-                                </tr>
-                            </thead>
-                            <tbody id="buyer-submissions-list-rows">
-                                <!-- Loaded dynamically via app.js -->
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <!-- Hidden stubs for backwards compatibility -->
-                <div style="display: none;" id="panel-inventory">
-                    <span id="admin-badge-inventory">0</span>
-                    <form id="admin-product-form"><input id="admin-prod-id"></form>
-                    <table id="admin-inventory-list-rows"></table>
+                <!-- Hidden stubs for backwards compatibility with legacy listeners -->
+                <div style="display: none;">
+                    <button id="tab-btn-inquiries"></button>
+                    <button id="tab-btn-submissions"></button>
                     <button id="tab-btn-inventory"></button>
-                    <form id="admin-purchase-form"><input id="admin-pur-photo-base64"></form>
-                    <button id="btn-admin-pur-photo-upload"></button>
-                    <input id="admin-pur-photo-file" type="file">
-                    <span id="admin-pur-photo-status"></span>
-                    <div id="admin-purchases-list"></div>
+                    <div class="admin-tab-panel" id="panel-inquiries">
+                        <span id="admin-badge-inquiries">0</span>
+                        <strong id="admin-stat-inquiries-total">0</strong>
+                        <select id="inquiry-filter-status"></select>
+                        <select id="inquiry-sort-order"></select>
+                        <div id="admin-inquiries-list"></div>
+                    </div>
+                    <div class="admin-tab-panel" id="panel-submissions">
+                        <span id="admin-badge-submissions">0</span>
+                        <div id="stat-total-submissions">0</div>
+                        <div id="stat-pending-valuations">0</div>
+                        <div id="stat-active-negotiations">0</div>
+                        <div id="stat-deals-closed">0</div>
+                        <table><tbody id="buyer-submissions-list-rows"></tbody></table>
+                    </div>
+                    <div id="panel-inventory">
+                        <span id="admin-badge-inventory">0</span>
+                        <form id="admin-product-form"><input id="admin-prod-id"></form>
+                        <table id="admin-inventory-list-rows"></table>
+                        <form id="admin-purchase-form"><input id="admin-pur-photo-base64"></form>
+                        <button id="btn-admin-pur-photo-upload"></button>
+                        <input id="admin-pur-photo-file" type="file">
+                        <span id="admin-pur-photo-status"></span>
+                        <div id="admin-purchases-list"></div>
+                    </div>
                 </div>
             </div>
         </section>
@@ -1739,6 +1671,6 @@ const firebaseConfig = {
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 
-    <script src="/app.js?v=71"></script>
+    <script src="/app.js?v=72"></script>
 </body>
 </html>

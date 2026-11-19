@@ -82,7 +82,7 @@ let selectedInquiryId = null;
 let uploadedCardImageBase64 = null;
 let uploadedGeneralFiles = []; // Base64 strings of uploaded files
 let currentActiveRole = 'seller'; // 'seller' or 'buyer' (admin)
-let activeAdminTab = 'submissions'; // 'submissions', 'inventory', 'content'
+let activeAdminTab = 'content'; // 'content', 'events', 'users'
 let currentEditingProductId = null;
 let selectedProductId = null; // Shop modal product ID
 let initialAdminTab = new URLSearchParams(window.location.search).get('adminTab');
@@ -443,7 +443,7 @@ function switchView(viewId, pushState = true) {
     } else if (viewId === 'seller-dashboard') {
         renderSellerDashboard();
     } else if (viewId === 'buyer-dashboard') {
-        renderBuyerDashboard();
+        setAdminTab(activeAdminTab || 'content');
     }
     
     // HTML5 History pushState URL update
@@ -1060,8 +1060,10 @@ function saveLocalRecentPurchases() { localStorage.setItem('v28_recent_purchases
 function saveLocalUpcomingShows() { localStorage.setItem('v28_upcoming_shows', JSON.stringify(upcomingShows)); }
 
 function triggerUIRefresh() {
-    document.getElementById('admin-badge-submissions').textContent = collections.length;
-    document.getElementById('admin-badge-inventory').textContent = products.length;
+    const badgeSubmissions = document.getElementById('admin-badge-submissions');
+    if (badgeSubmissions) badgeSubmissions.textContent = collections.length;
+    const badgeInventory = document.getElementById('admin-badge-inventory');
+    if (badgeInventory) badgeInventory.textContent = products.length;
     
     const badgeUsers = document.getElementById('admin-badge-users');
     if (badgeUsers) badgeUsers.textContent = users.length;
@@ -3042,13 +3044,18 @@ window.addEventListener('beforeunload', () => {
 // Render Admin submissions list
 function renderBuyerDashboard() {
     const tableBody = document.getElementById('buyer-submissions-list-rows');
+    if (!tableBody) return;
     tableBody.innerHTML = '';
     
     // Stats calculations
-    document.getElementById('stat-total-submissions').textContent = collections.length;
-    document.getElementById('stat-pending-valuations').textContent = collections.filter(c => c.status === 'New' || c.status === 'Reviewing').length;
-    document.getElementById('stat-active-negotiations').textContent = collections.filter(c => c.status === 'Offer Made' || c.status === 'Negotiating').length;
-    document.getElementById('stat-deals-closed').textContent = collections.filter(c => c.status === 'Accepted' || c.status === 'Purchased' || c.status === 'Bought').length;
+    const statTotal = document.getElementById('stat-total-submissions');
+    if (statTotal) statTotal.textContent = collections.length;
+    const statPending = document.getElementById('stat-pending-valuations');
+    if (statPending) statPending.textContent = collections.filter(c => c.status === 'New' || c.status === 'Reviewing').length;
+    const statActive = document.getElementById('stat-active-negotiations');
+    if (statActive) statActive.textContent = collections.filter(c => c.status === 'Offer Made' || c.status === 'Negotiating').length;
+    const statDeals = document.getElementById('stat-deals-closed');
+    if (statDeals) statDeals.textContent = collections.filter(c => c.status === 'Accepted' || c.status === 'Purchased' || c.status === 'Bought').length;
     
     if (collections.length === 0) {
         tableBody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding:3rem; color:var(--text-muted);">No submissions received yet.</td></tr>`;
