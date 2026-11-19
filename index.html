@@ -6,7 +6,7 @@
     <title>Vault 28 Trading Co. | Buy & Sell Pokémon Card Collections</title>
     <meta name="description" content="Sell your Pokémon card collections — vintage Base Set, WOTC, modern secret rares, sealed products, and complete binders. Based near Summerville, SC. Fast cash offers.">
     <meta name="google-site-verification" content="QYIy_EZy3nVUwvhrjrVTm0CM_KEltQ9HQjpMEuQ2eIw" />
-    <link rel="stylesheet" href="/style.css?v=68">
+    <link rel="stylesheet" href="/style.css?v=69">
     <!-- Browser Tab Icon (Favicon) -->
     <link rel="icon" type="image/png" href="/assets/logo_new.png">
 </head>
@@ -933,172 +933,155 @@
             <div style="max-width: 1300px; margin: 0 auto; text-align: left;">
                 <div class="content-header" style="margin-bottom: 2rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
                     <div>
-                        <h2 style="font-size: 2rem;">Admin Console</h2>
-                        <p style="color: var(--text-secondary);">Manage collections submissions, store inventory, and public website content.</p>
+                        <h2 style="font-size: 2rem; font-family: var(--font-title); letter-spacing: 0.02em;">Admin Console</h2>
+                        <p style="color: var(--text-secondary); margin-top: 0.25rem;">Manage upcoming card shows, slideshow photos, customer reviews, inquiries, and registered user accounts.</p>
                     </div>
                 </div>
                 
                 <!-- Admin tab buttons -->
                 <div class="admin-tabs-nav">
-                    <button class="admin-tab-btn active" id="tab-btn-submissions">Submissions (<span id="admin-badge-submissions">0</span>)</button>
-                    <button class="admin-tab-btn" id="tab-btn-inventory">Shop Inventory (<span id="admin-badge-inventory">0</span>)</button>
+                    <button class="admin-tab-btn active" id="tab-btn-content">🖼️ Page Content &amp; Media</button>
                     <button class="admin-tab-btn" id="tab-btn-events">🎪 Upcoming Shows (<span id="admin-badge-events">0</span>)</button>
-                    <button class="admin-tab-btn" id="tab-btn-content">Page Content</button>
-                    <button class="admin-tab-btn" id="tab-btn-users">Registered Users (<span id="admin-badge-users">0</span>)</button>
-                    <button class="admin-tab-btn" id="tab-btn-inquiries">Inquiries (<span id="admin-badge-inquiries">0</span>)</button>
+                    <button class="admin-tab-btn" id="tab-btn-users">👥 Registered Users (<span id="admin-badge-users">0</span>)</button>
+                    <button class="admin-tab-btn" id="tab-btn-inquiries">💬 Inquiries (<span id="admin-badge-inquiries">0</span>)</button>
+                    <button class="admin-tab-btn" id="tab-btn-submissions">📋 Submissions (<span id="admin-badge-submissions">0</span>)</button>
                 </div>
 
-                <!-- Admin Tab 1: Submissions Manager -->
-                <div class="admin-tab-panel active" id="panel-submissions">
-                    <!-- Valuation summary statistics -->
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 2rem;">
-                        <div class="glass-card" style="padding: 1rem; text-align: center;">
-                            <div style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase;">Total Submissions</div>
-                            <div style="font-size: 1.75rem; font-weight: 700; margin-top: 0.25rem;" id="stat-total-submissions">0</div>
-                        </div>
-                        <div class="glass-card" style="padding: 1rem; text-align: center;">
-                            <div style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase;">Pending Review</div>
-                            <div style="font-size: 1.75rem; font-weight: 700; color: var(--accent-orange); margin-top: 0.25rem;" id="stat-pending-valuations">0</div>
-                        </div>
-                        <div class="glass-card" style="padding: 1rem; text-align: center;">
-                            <div style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase;">Active Negotiations</div>
-                            <div style="font-size: 1.75rem; font-weight: 700; color: var(--accent-cyan); margin-top: 0.25rem;" id="stat-active-negotiations">0</div>
-                        </div>
-                        <div class="glass-card" style="padding: 1rem; text-align: center;">
-                            <div style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase;">Deals Purchased</div>
-                            <div style="font-size: 1.75rem; font-weight: 700; color: var(--accent-emerald); margin-top: 0.25rem;" id="stat-deals-closed">0</div>
-                        </div>
-                    </div>
-
-                    <div class="glass-card" style="padding: 1.5rem; overflow-x: auto;">
-                        <table style="width: 100%; border-collapse: collapse; text-align: left;">
-                            <thead>
-                                <tr style="border-bottom: 2px solid var(--border-color); color: var(--text-primary); font-size: 0.85rem; text-transform: uppercase; font-family: var(--font-title);">
-                                    <th style="padding: 0.75rem 0.5rem;">Collection Name</th>
-                                    <th style="padding: 0.75rem 0.5rem;">Seller</th>
-                                    <th style="padding: 0.75rem 0.5rem;">Category</th>
-                                    <th style="padding: 0.75rem 0.5rem;">Count</th>
-                                    <th style="padding: 0.75rem 0.5rem;">Asking Price</th>
-                                    <th style="padding: 0.75rem 0.5rem;">Offer Value</th>
-                                    <th style="padding: 0.75rem 0.5rem;">Status</th>
-                                    <th style="padding: 0.75rem 0.5rem; text-align: right;">Action</th>
-                                </tr>
-                            </thead>
-                            <tbody id="buyer-submissions-list-rows">
-                                <!-- Loaded dynamically via app.js -->
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <!-- Admin Tab 2: Inventory Manager (Manage Shop Listings) -->
-                <div class="admin-tab-panel" id="panel-inventory">
-                    <div style="display: grid; grid-template-columns: 1fr 1.5fr; gap: 2rem; align-items: start;">
-                        <!-- Add Product Form -->
-                        <div class="glass-card" style="padding: 1.5rem;">
-                            <h3 style="font-size: 1.2rem; margin-bottom: 1.25rem;" id="admin-inventory-form-title">Add New Shop Product</h3>
-                            
-                            <form id="admin-product-form" style="display: flex; flex-direction: column; gap: 1rem;">
-                                <input type="hidden" id="admin-prod-id">
-                                
-                                <div class="form-group">
-                                    <label for="admin-prod-title">Product Title</label>
-                                    <input type="text" id="admin-prod-title" placeholder="e.g. 1999 Base Set Charizard Holo #4" required>
-                                </div>
-
-                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
-                                    <div class="form-group">
-                                        <label for="admin-prod-price">Price ($)</label>
-                                        <input type="number" id="admin-prod-price" placeholder="e.g. 350" required min="1">
-                                    </div>
-                                    <div class="form-group">
-                                        <label for="admin-prod-condition">Condition / Grade</label>
-                                        <input type="text" id="admin-prod-condition" placeholder="e.g. PSA 8 / Near Mint" required>
-                                    </div>
-                                </div>
-
-                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
-                                    <div class="form-group">
-                                        <label for="admin-prod-category">Category</label>
-                                        <select id="admin-prod-category">
-                                        <option value="Pokémon - Vintage WOTC">Pokémon — Vintage WOTC Era</option>
-                                        <option value="Pokémon - Modern Singles">Pokémon — Modern Singles</option>
-                                        <option value="Pokémon - Graded Slabs">Pokémon — Graded Slabs (PSA / BGS)</option>
-                                        <option value="Pokémon - Sealed Products">Pokémon — Sealed Boxes &amp; Packs</option>
-                                        <option value="Pokémon - Complete Sets">Pokémon — Complete Sets &amp; Binders</option>
-                                        <option value="Pokémon - Bulk Lots">Pokémon — Bulk Lots</option>
-                                        </select>
-                                    </div>
-                                    <div class="form-group">
-                                        <label for="admin-prod-availability">Availability</label>
-                                        <select id="admin-prod-availability">
-                                            <option value="Available">Available (Active)</option>
-                                            <option value="Sold">Sold</option>
-                                        </select>
-                                    </div>
-                                </div>
-
-                                <div class="form-group">
-                                    <label for="admin-prod-desc">Description</label>
-                                    <textarea id="admin-prod-desc" rows="3" placeholder="Card highlights, features, or shipping notes..." required></textarea>
-                                </div>
-
-                                <div class="form-group">
-                                    <label for="admin-prod-shipping">Shipping / Local Pickup Info</label>
-                                    <input type="text" id="admin-prod-shipping" placeholder="e.g. $5.00 Insured Shipping / Free Summerville SC Pickup" required>
-                                </div>
-
-                                <!-- Product Image Upload -->
-                                <div class="form-group">
-                                    <label>Product Image</label>
-                                    <div class="upload-dropzone" id="admin-prod-dropzone">
-                                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-bottom: 0.5rem; color: var(--text-muted);"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
-                                        <span>Drag & Drop image, or <strong style="color: var(--accent-cyan);">Browse</strong></span>
-                                        <input type="file" id="admin-prod-file-input" accept="image/*" style="display: none;">
-                                    </div>
-                                    <div id="admin-prod-image-preview" style="margin-top: 0.75rem;"></div>
-                                </div>
-
-                                <button type="submit" class="btn btn-primary" style="margin-top: 0.5rem;" id="btn-admin-prod-submit">Save Product Listing</button>
-                                <button type="button" class="btn btn-secondary btn-sm" id="btn-admin-prod-cancel" style="display: none;">Cancel Edit</button>
-                            </form>
-                        </div>
+                <!-- ==================== TAB 1: PAGE CONTENT & MEDIA ==================== -->
+                <div class="admin-tab-panel active" id="panel-content">
+                    <div style="display: flex; flex-direction: column; gap: 2rem;">
                         
-                        <!-- Product Listings Table -->
-                        <div class="glass-card" style="padding: 1.5rem; overflow-x: auto;">
-                            <h3 style="font-size: 1.2rem; margin-bottom: 1.25rem;">Active Inventory Listings</h3>
-                            <table style="width: 100%; border-collapse: collapse; text-align: left;">
-                                <thead>
-                                    <tr style="border-bottom: 1px solid var(--border-color); color: var(--text-primary); font-size: 0.8rem; text-transform: uppercase;">
-                                        <th style="padding: 0.5rem;">Preview</th>
-                                        <th style="padding: 0.5rem;">Title</th>
-                                        <th style="padding: 0.5rem;">Price</th>
-                                        <th style="padding: 0.5rem;">Category</th>
-                                        <th style="padding: 0.5rem;">Status</th>
-                                        <th style="padding: 0.5rem; text-align: right;">Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="admin-inventory-list-rows">
-                                    <!-- Loaded dynamically via app.js -->
-                                </tbody>
-                            </table>
+                        <!-- Top Showcase: Manage Slideshow Images -->
+                        <div class="glass-card" style="padding: 2rem; border: 1.5px solid rgba(223, 183, 80, 0.35); background: rgba(10, 13, 20, 0.85); box-shadow: 0 15px 35px rgba(0,0,0,0.5);">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; flex-wrap: wrap; gap: 1rem;">
+                                <div style="display: flex; align-items: center; gap: 0.75rem;">
+                                    <h3 style="font-size: 1.35rem; font-family: var(--font-title); color: #fff; margin: 0;">🖼️ Slideshow Images &amp; Hero Banners</h3>
+                                    <span class="badge" style="background: rgba(16,185,129,0.15); border: 1px solid rgba(16,185,129,0.4); color: #34d399; font-size: 0.75rem; padding: 3px 10px; border-radius: 20px;">
+                                        Cloud Firestore Synced
+                                    </span>
+                                </div>
+                                <button type="button" class="btn btn-secondary btn-sm" style="font-size: 0.8rem; padding: 6px 14px; border-color: var(--accent-gold); color: var(--accent-gold);" onclick="syncSlideshowsToFirestore()">
+                                    🔄 Push Slides to Firestore
+                                </button>
+                            </div>
+                            <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 1.5rem; border-bottom: 1px solid var(--border-color); padding-bottom: 1rem; line-height: 1.6;">
+                                Manage live photos displayed across your website. Homepage slides rotate in the hero section and sync directly to your <code>homepage_slideshow</code> collection. About Us slides rotate on your public team profile and sync to <code>about_slideshow</code>.
+                            </p>
+                            
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 2rem; align-items: start;">
+                                <!-- Homepage Hero Slides -->
+                                <div class="glass-card" style="padding: 1.5rem; border: 1px solid rgba(223, 183, 80, 0.2); background: rgba(0,0,0,0.25);">
+                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+                                        <h4 style="font-size: 1.05rem; margin: 0; color: var(--accent-gold); text-transform: uppercase; font-family: var(--font-title); letter-spacing: 0.05em;">Homepage Hero Slides</h4>
+                                        <button type="button" class="btn btn-primary btn-sm" onclick="document.getElementById('upload-hero-slide-file').click()" style="padding: 5px 12px; font-size: 0.8rem;">
+                                            📸 Add Slide
+                                        </button>
+                                        <input type="file" id="upload-hero-slide-file" accept="image/*" multiple style="display: none;" onchange="window.uploadSlideshowImage(this, 'homepage')">
+                                    </div>
+                                    <p style="color: var(--text-muted); font-size: 0.82rem; margin-bottom: 1rem;">These images cross-fade automatically behind the card frame in your top hero section.</p>
+                                    <div id="admin-hero-slides-list" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(85px, 1fr)); gap: 0.75rem;">
+                                        <!-- Rendered dynamically via app.js -->
+                                    </div>
+                                </div>
+                                
+                                <!-- About Us Slideshow -->
+                                <div class="glass-card" style="padding: 1.5rem; border: 1px solid rgba(56, 189, 248, 0.2); background: rgba(0,0,0,0.25);">
+                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+                                        <h4 style="font-size: 1.05rem; margin: 0; color: var(--accent-blue-neon); text-transform: uppercase; font-family: var(--font-title); letter-spacing: 0.05em;">About Us Profile Slides</h4>
+                                        <button type="button" class="btn btn-outline-cyan btn-sm" onclick="document.getElementById('upload-about-slide-file').click()" style="padding: 5px 12px; font-size: 0.8rem;">
+                                            📸 Add Slide
+                                        </button>
+                                        <input type="file" id="upload-about-slide-file" accept="image/*" multiple style="display: none;" onchange="window.uploadSlideshowImage(this, 'about')">
+                                    </div>
+                                    <p style="color: var(--text-muted); font-size: 0.82rem; margin-bottom: 1rem;">These rotate and cross-fade in your public About Us card booth profile.</p>
+                                    <div id="admin-about-slides-list" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(85px, 1fr)); gap: 0.75rem;">
+                                        <!-- Rendered dynamically via app.js -->
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 2-Column Grid: Reviews & Settings -->
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 2rem; align-items: start;">
+                            
+                            <!-- Customer Testimonials Manager -->
+                            <div class="glass-card" style="padding: 1.75rem;">
+                                <h3 style="font-size: 1.25rem; font-family: var(--font-title); color: #fff; margin-bottom: 1.25rem;">⭐ Customer Reviews &amp; Testimonials</h3>
+                                <form id="admin-review-form" style="display: flex; flex-direction: column; gap: 1rem;">
+                                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                                        <div class="form-group">
+                                            <label for="admin-rev-name">Customer Name</label>
+                                            <input type="text" id="admin-rev-name" placeholder="e.g. Mike T." required>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="admin-rev-location">Location</label>
+                                            <input type="text" id="admin-rev-location" placeholder="e.g. Summerville, SC" required>
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="admin-rev-stars">Rating (1 - 5 Stars)</label>
+                                        <select id="admin-rev-stars">
+                                            <option value="5">⭐⭐⭐⭐⭐ (5 Stars - Highly Recommended)</option>
+                                            <option value="4">⭐⭐⭐⭐ (4 Stars)</option>
+                                            <option value="3">⭐⭐⭐ (3 Stars)</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="admin-rev-text">Collector Review</label>
+                                        <textarea id="admin-rev-text" rows="3" placeholder="Sold my raw vintage Pokémon binder. Fast payout and very honest evaluation!" required></textarea>
+                                    </div>
+                                    <button type="submit" class="btn btn-primary btn-sm" style="padding: 0.65rem 1.2rem;">➕ Add Testimonial to Homepage</button>
+                                </form>
+                                
+                                <h4 style="font-size: 0.95rem; margin-top: 2rem; margin-bottom: 0.75rem; border-top: 1px solid var(--border-color); padding-top: 1.25rem; color: var(--accent-gold); text-transform: uppercase;">Active Homepage Reviews</h4>
+                                <div id="admin-reviews-list" style="display: flex; flex-direction: column; gap: 0.75rem; text-align: left;">
+                                    <!-- Managed dynamically via app.js -->
+                                </div>
+                            </div>
+
+                            <!-- Website Contact Details & Data Settings -->
+                            <div class="glass-card" style="padding: 1.75rem; display: flex; flex-direction: column; gap: 1.75rem;">
+                                <div>
+                                    <h3 style="font-size: 1.25rem; font-family: var(--font-title); color: #fff; margin-bottom: 1.25rem;">📞 Contact Info &amp; Settings</h3>
+                                    <form id="admin-settings-form" style="display: flex; flex-direction: column; gap: 1rem;">
+                                        <div class="form-group">
+                                            <label for="admin-set-email">Public Business Email</label>
+                                            <input type="email" id="admin-set-email" placeholder="lshaver@vault28cards.com" required>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="admin-set-area">Service Area Location Text</label>
+                                            <input type="text" id="admin-set-area" placeholder="Summerville, SC and surrounding areas" required>
+                                        </div>
+                                        <button type="submit" class="btn btn-primary btn-sm" style="padding: 0.65rem 1.2rem;">Save Contact Settings</button>
+                                    </form>
+                                </div>
+
+                                <div style="border-top: 1px solid var(--border-color); padding-top: 1.5rem;">
+                                    <h4 style="font-size: 1rem; margin-bottom: 0.5rem; color: var(--accent-red);">⚠️ Reset Local Sandbox Data</h4>
+                                    <p style="color: var(--text-secondary); font-size: 0.82rem; line-height: 1.5; margin-bottom: 1rem;">
+                                        Clears all local browser cache and restores default starter collections, reviews, and test data. Does not alter your live Firestore Cloud database.
+                                    </p>
+                                    <button class="btn btn-secondary btn-sm" id="btn-admin-reset-db" style="color: var(--accent-red); border-color: rgba(239,68,68,0.3); width: 100%;">
+                                        Reset Sandbox Cache to Defaults
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
 
-
-                <!-- Admin Tab: Upcoming Shows & Events Manager -->
+                <!-- ==================== TAB 2: UPCOMING SHOWS & EVENTS ==================== -->
                 <div class="admin-tab-panel" id="panel-events">
-                    <div style="display: grid; grid-template-columns: 1.15fr 1fr; gap: 2rem; align-items: start;">
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 2rem; align-items: start;">
                         <!-- Add Event Form -->
                         <div class="glass-card" style="padding: 1.75rem;">
-                            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.25rem;">
+                            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem;">
                                 <h3 style="font-size: 1.25rem; font-family: var(--font-title); text-transform: uppercase; color: var(--accent-gold); margin: 0;">
-                                    🎪 Add Upcoming Card Show / Event
+                                    🎪 Add Card Show / Event
                                 </h3>
                             </div>
                             <p style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 1.5rem; line-height: 1.5;">
-                                Add card conventions and vending appearances. Events and photos update live in your Firestore cloud database and immediately display on the homepage!
+                                Add card conventions and vending appearances. Events sync live to your Firestore cloud database and immediately appear on the homepage!
                             </p>
                             
                             <form id="admin-event-form" style="display: flex; flex-direction: column; gap: 1.15rem; text-align: left;">
@@ -1177,159 +1160,22 @@
                         </div>
                     </div>
                 </div>
-                <!-- Admin Tab 3: Website Content Editor -->
-                <div class="admin-tab-panel" id="panel-content">
-                    <div style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 2rem; align-items: start;">
-                        <!-- Manage Customer Testimonials -->
-                        <div class="glass-card" style="padding: 1.5rem;">
-                            <h3 style="font-size: 1.2rem; margin-bottom: 1.25rem;">Add Customer Testimonial</h3>
-                            <form id="admin-review-form" style="display: flex; flex-direction: column; gap: 1rem;">
-                                <div class="form-group">
-                                    <label for="admin-rev-name">Customer Name</label>
-                                    <input type="text" id="admin-rev-name" placeholder="e.g. Mike T." required>
-                                </div>
-                                <div class="form-group">
-                                    <label for="admin-rev-location">Customer Location</label>
-                                    <input type="text" id="admin-rev-location" placeholder="e.g. Summerville, SC" required>
-                                </div>
-                                <div class="form-group">
-                                    <label for="admin-rev-stars">Rating (1 - 5 Stars)</label>
-                                    <select id="admin-rev-stars">
-                                        <option value="5">⭐⭐⭐⭐⭐ (5 Stars)</option>
-                                        <option value="4">⭐⭐⭐⭐ (4 Stars)</option>
-                                        <option value="3">⭐⭐⭐ (3 Stars)</option>
-                                    </select>
-                                </div>
-                                <div class="form-group">
-                                    <label for="admin-rev-text">Review Comments</label>
-                                    <textarea id="admin-rev-text" rows="3" placeholder="Excellent experience selling my collection..." required></textarea>
-                                </div>
-                                <button type="submit" class="btn btn-primary btn-sm">Add Testimonial to Homepage</button>
-                            </form>
-                            
-                            <h4 style="font-size: 1rem; margin-top: 2rem; margin-bottom: 0.75rem; border-top: 1px solid var(--border-color); padding-top: 1.5rem;">Active Homepage Reviews</h4>
-                            <div id="admin-reviews-list" style="display: flex; flex-direction: column; gap: 0.75rem; text-align: left;">
-                                <!-- Managed dynamically -->
-                            </div>
-                        </div>
 
-                        <!-- Manage Recently Purchased Collections -->
-                        <div class="glass-card" style="padding: 1.5rem; margin-top: 2rem;">
-                            <h3 style="font-size: 1.2rem; margin-bottom: 1.25rem;">Add Recently Purchased Collection</h3>
-                            <form id="admin-purchase-form" style="display: flex; flex-direction: column; gap: 1rem;">
-                                <div class="form-group">
-                                    <label for="admin-pur-title">Collection Title</label>
-                                    <input type="text" id="admin-pur-title" placeholder="e.g. WOTC Base Set Holo Complete Run" required>
-                                </div>
-                                <div class="form-group">
-                                    <label for="admin-pur-location">Location</label>
-                                    <input type="text" id="admin-pur-location" placeholder="e.g. Mt. Pleasant, SC" required>
-                                </div>
-                                <div class="form-group">
-                                    <label for="admin-pur-desc">Description</label>
-                                    <textarea id="admin-pur-desc" rows="3" placeholder="A local buy of vintage Pokémon cards..." required></textarea>
-                                </div>
-                                <div class="form-group">
-                                    <label for="admin-pur-photo">Upload Cover Photo</label>
-                                    <div style="display: flex; gap: 1rem; align-items: center;">
-                                        <button type="button" class="btn btn-secondary btn-sm" id="btn-admin-pur-photo-upload" style="margin-top: 0.25rem;">
-                                            📸 Choose Photo
-                                        </button>
-                                        <span id="admin-pur-photo-status" style="font-size: 0.78rem; color: var(--text-secondary);">No photo selected</span>
-                                    </div>
-                                    <input type="file" id="admin-pur-photo-file" accept="image/*" style="display: none;">
-                                    <input type="hidden" id="admin-pur-photo-base64">
-                                </div>
-                                <button type="submit" class="btn btn-primary btn-sm">Add Collection to Homepage</button>
-                            </form>
-
-                            <h4 style="font-size: 1rem; margin-top: 2rem; margin-bottom: 0.75rem; border-top: 1px solid var(--border-color); padding-top: 1.5rem;">Active Purchased List</h4>
-                            <div id="admin-purchases-list" style="display: flex; flex-direction: column; gap: 0.75rem; text-align: left;">
-                                <!-- Managed dynamically -->
-                            </div>
-                        </div>
-
-                        <!-- Manage Contact Settings -->
-                        <div class="glass-card" style="padding: 1.5rem; display: flex; flex-direction: column; gap: 1.5rem;">
-                            <div>
-                                <h3 style="font-size: 1.2rem; margin-bottom: 1.25rem;">Manage Contact details & Settings</h3>
-                                <form id="admin-settings-form" style="display: flex; flex-direction: column; gap: 1rem;">
-                                    <div class="form-group">
-                                        <label for="admin-set-email">Public Business Email</label>
-                                        <input type="email" id="admin-set-email" placeholder="lshaver@vault28cards.com" required>
-                                    </div>
-                                    <div class="form-group">
-                                        <label for="admin-set-area">Service Area Location Text</label>
-                                        <input type="text" id="admin-set-area" placeholder="Summerville, SC and surrounding areas" required>
-                                    </div>
-                                    <button type="submit" class="btn btn-primary btn-sm">Save Website Settings</button>
-                                </form>
-                            </div>
-
-                            <div style="border-top: 1px solid var(--border-color); padding-top: 1.5rem;">
-                                <h3 style="font-size: 1.2rem; margin-bottom: 1rem;">Reset Website Data</h3>
-                                <p style="color: var(--text-secondary); font-size: 0.82rem; line-height: 1.5; margin-bottom: 1rem;">
-                                    Clicking the button below will clear all locally modified database entries and reseed the platform with default collections, reviews, and catalog products.
-                                </p>
-                                <button class="btn btn-secondary btn-sm" id="btn-admin-reset-db" style="color: var(--accent-red); border-color: rgba(239,68,68,0.2); width:100%;">
-                                    ⚠️ Reset Database to Defaults
-                                </button>
-                            </div>
-                        </div>
-
-                        <!-- Manage Slideshow Images -->
-                        <div class="glass-card" style="padding: 1.5rem; margin-top: 2rem; grid-column: 1 / -1;">
-                            <h3 style="font-size: 1.2rem; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;"><span>🖼️ Manage Slideshow Images</span><span class="badge" style="background: rgba(16,185,129,0.15); border: 1px solid rgba(16,185,129,0.4); color: #34d399; font-size: 0.72rem; padding: 2px 8px;">Firestore Cloud Synced</span><button type="button" class="btn btn-secondary btn-sm" style="font-size: 0.75rem; padding: 4px 10px; margin-left: auto;" onclick="syncSlideshowsToFirestore()">🔄 Push Slides to Firestore</button></h3>
-                            <p style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 1.5rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.75rem;">
-                                Upload custom photos for your slideshows. Homepage slides save to your <code>homepage_slideshow</code> database, and About Us slides save to your <code>about_slideshow</code> database. They are pulled and synced in real-time.
-                            </p>
-                            
-                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; align-items: start;">
-                                <!-- Hero Slideshow Section -->
-                                <div class="glass-card" style="padding: 1.25rem; border-color: rgba(255,255,255,0.04); background: rgba(0,0,0,0.08);">
-                                    <h4 style="font-size: 1rem; margin-bottom: 0.5rem; color: var(--accent-cyan); text-transform: uppercase; font-family: var(--font-title); letter-spacing: 0.05em;">Homepage Hero Slides</h4>
-                                    <p style="color: var(--text-muted); font-size: 0.78rem; margin-bottom: 1rem;">These cycle behind the graded card graphic on your landing page.</p>
-                                    <div style="display: flex; gap: 1rem; align-items: center; margin-bottom: 1rem;">
-                                        <button type="button" class="btn btn-primary btn-sm" onclick="document.getElementById('upload-hero-slide-file').click()">📸 Add Homepage Slide</button>
-                                        <input type="file" id="upload-hero-slide-file" accept="image/*" multiple style="display: none;" onchange="window.uploadSlideshowImage(this, 'homepage')">
-                                    </div>
-                                    <div id="admin-hero-slides-list" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 0.75rem;">
-                                        <!-- Rendered dynamically -->
-                                    </div>
-                                </div>
-                                
-                                <!-- About Us Slideshow Section -->
-                                <div class="glass-card" style="padding: 1.25rem; border-color: rgba(255,255,255,0.04); background: rgba(0,0,0,0.08);">
-                                    <h4 style="font-size: 1rem; margin-bottom: 0.5rem; color: var(--accent-cyan); text-transform: uppercase; font-family: var(--font-title); letter-spacing: 0.05em;">About Us Slides</h4>
-                                    <p style="color: var(--text-muted); font-size: 0.78rem; margin-bottom: 1rem;">These rotate and cross-fade on your public About Us team profile section.</p>
-                                    <div style="display: flex; gap: 1rem; align-items: center; margin-bottom: 1rem;">
-                                        <button type="button" class="btn btn-primary btn-sm" onclick="document.getElementById('upload-about-slide-file').click()">📸 Add About Us Slide</button>
-                                        <input type="file" id="upload-about-slide-file" accept="image/*" multiple style="display: none;" onchange="window.uploadSlideshowImage(this, 'about')">
-                                    </div>
-                                    <div id="admin-about-slides-list" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 0.75rem;">
-                                        <!-- Rendered dynamically -->
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Admin Tab 4: Registered Users Panel -->
+                <!-- ==================== TAB 3: REGISTERED USERS ==================== -->
                 <div class="admin-tab-panel" id="panel-users">
                     <div class="glass-card" style="padding: 2rem;">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
                             <div>
-                                <h3 style="font-size: 1.3rem; margin: 0;">Registered Accounts</h3>
-                                <p style="color: var(--text-secondary); font-size: 0.85rem; margin-top: 0.25rem;">Monitor registered users, registration dates, and their active status on the website.</p>
+                                <h3 style="font-size: 1.3rem; margin: 0; font-family: var(--font-title);">👥 Registered Accounts</h3>
+                                <p style="color: var(--text-secondary); font-size: 0.85rem; margin-top: 0.25rem;">Monitor collector accounts, active online sessions, and registration dates.</p>
                             </div>
                             <div style="display: flex; gap: 0.75rem;">
-                                <div style="display: flex; align-items: center; gap: 0.5rem; background: rgba(0,0,0,0.25); border: 1px solid var(--border-color); padding: 6px 12px; border-radius: 6px; font-size: 0.82rem;">
+                                <div style="display: flex; align-items: center; gap: 0.5rem; background: rgba(0,0,0,0.25); border: 1px solid var(--border-color); padding: 6px 14px; border-radius: 8px; font-size: 0.85rem;">
                                     <span style="display: inline-block; width: 8px; height: 8px; background: var(--accent-emerald); border-radius: 50%; box-shadow: 0 0 8px var(--accent-emerald);"></span>
-                                    <span>Online Now: <strong id="admin-stat-users-online">0</strong></span>
+                                    <span>Online Now: <strong id="admin-stat-users-online" style="color: var(--accent-emerald);">0</strong></span>
                                 </div>
-                                <div style="display: flex; align-items: center; gap: 0.5rem; background: rgba(0,0,0,0.25); border: 1px solid var(--border-color); padding: 6px 12px; border-radius: 6px; font-size: 0.82rem;">
-                                    <span>Total: <strong id="admin-stat-users-total">0</strong></span>
+                                <div style="display: flex; align-items: center; gap: 0.5rem; background: rgba(0,0,0,0.25); border: 1px solid var(--border-color); padding: 6px 14px; border-radius: 8px; font-size: 0.85rem;">
+                                    <span>Total Accounts: <strong id="admin-stat-users-total" style="color: var(--accent-gold);">0</strong></span>
                                 </div>
                             </div>
                         </div>
@@ -1348,24 +1194,24 @@
                                     </tr>
                                 </thead>
                                 <tbody id="admin-users-table-body">
-                                    <!-- Dynamic rows loaded from db -->
+                                    <!-- Dynamic rows loaded from db via app.js -->
                                 </tbody>
                             </table>
                         </div>
                     </div>
                 </div>
 
-                <!-- Admin Tab 5: Contact Inquiries Panel -->
+                <!-- ==================== TAB 4: INQUIRIES ==================== -->
                 <div class="admin-tab-panel" id="panel-inquiries">
                     <div class="glass-card" style="padding: 2rem;">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
                             <div>
-                                <h3 style="font-size: 1.3rem; margin: 0;">Contact Inquiries</h3>
-                                <p style="color: var(--text-secondary); font-size: 0.85rem; margin-top: 0.25rem;">View, reply to, resolve, or delete general inquiries submitted via the Contact Us form.</p>
+                                <h3 style="font-size: 1.3rem; margin: 0; font-family: var(--font-title);">💬 Contact Inquiries</h3>
+                                <p style="color: var(--text-secondary); font-size: 0.85rem; margin-top: 0.25rem;">View, reply to, and resolve messages submitted via the Contact Us form.</p>
                             </div>
                             <div style="display: flex; gap: 0.75rem;">
-                                <div style="display: flex; align-items: center; gap: 0.5rem; background: rgba(0,0,0,0.25); border: 1px solid var(--border-color); padding: 6px 12px; border-radius: 6px; font-size: 0.82rem;">
-                                    <span>Total Messages: <strong id="admin-stat-inquiries-total">0</strong></span>
+                                <div style="display: flex; align-items: center; gap: 0.5rem; background: rgba(0,0,0,0.25); border: 1px solid var(--border-color); padding: 6px 14px; border-radius: 8px; font-size: 0.85rem;">
+                                    <span>Total Messages: <strong id="admin-stat-inquiries-total" style="color: var(--accent-gold);">0</strong></span>
                                 </div>
                             </div>
                         </div>
@@ -1395,6 +1241,62 @@
                             <!-- Dynamic inquiry cards loaded via app.js -->
                         </div>
                     </div>
+                </div>
+
+                <!-- ==================== TAB 5: SUBMISSIONS ==================== -->
+                <div class="admin-tab-panel" id="panel-submissions">
+                    <!-- Valuation summary statistics -->
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 2rem;">
+                        <div class="glass-card" style="padding: 1.25rem; text-align: center;">
+                            <div style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase;">Total Submissions</div>
+                            <div style="font-size: 1.75rem; font-weight: 700; margin-top: 0.25rem;" id="stat-total-submissions">0</div>
+                        </div>
+                        <div class="glass-card" style="padding: 1.25rem; text-align: center;">
+                            <div style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase;">Pending Review</div>
+                            <div style="font-size: 1.75rem; font-weight: 700; color: var(--accent-orange); margin-top: 0.25rem;" id="stat-pending-valuations">0</div>
+                        </div>
+                        <div class="glass-card" style="padding: 1.25rem; text-align: center;">
+                            <div style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase;">Active Negotiations</div>
+                            <div style="font-size: 1.75rem; font-weight: 700; color: var(--accent-cyan); margin-top: 0.25rem;" id="stat-active-negotiations">0</div>
+                        </div>
+                        <div class="glass-card" style="padding: 1.25rem; text-align: center;">
+                            <div style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase;">Deals Purchased</div>
+                            <div style="font-size: 1.75rem; font-weight: 700; color: var(--accent-emerald); margin-top: 0.25rem;" id="stat-deals-closed">0</div>
+                        </div>
+                    </div>
+
+                    <div class="glass-card" style="padding: 1.5rem; overflow-x: auto;">
+                        <table style="width: 100%; border-collapse: collapse; text-align: left;">
+                            <thead>
+                                <tr style="border-bottom: 2px solid var(--border-color); color: var(--text-primary); font-size: 0.85rem; text-transform: uppercase; font-family: var(--font-title);">
+                                    <th style="padding: 0.75rem 0.5rem;">Collection Name</th>
+                                    <th style="padding: 0.75rem 0.5rem;">Seller</th>
+                                    <th style="padding: 0.75rem 0.5rem;">Category</th>
+                                    <th style="padding: 0.75rem 0.5rem;">Count</th>
+                                    <th style="padding: 0.75rem 0.5rem;">Asking Price</th>
+                                    <th style="padding: 0.75rem 0.5rem;">Offer Value</th>
+                                    <th style="padding: 0.75rem 0.5rem;">Status</th>
+                                    <th style="padding: 0.75rem 0.5rem; text-align: right;">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="buyer-submissions-list-rows">
+                                <!-- Loaded dynamically via app.js -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Hidden stubs for backwards compatibility -->
+                <div style="display: none;" id="panel-inventory">
+                    <span id="admin-badge-inventory">0</span>
+                    <form id="admin-product-form"><input id="admin-prod-id"></form>
+                    <table id="admin-inventory-list-rows"></table>
+                    <button id="tab-btn-inventory"></button>
+                    <form id="admin-purchase-form"><input id="admin-pur-photo-base64"></form>
+                    <button id="btn-admin-pur-photo-upload"></button>
+                    <input id="admin-pur-photo-file" type="file">
+                    <span id="admin-pur-photo-status"></span>
+                    <div id="admin-purchases-list"></div>
                 </div>
             </div>
         </section>
@@ -1837,6 +1739,6 @@ const firebaseConfig = {
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 
-    <script src="/app.js?v=68"></script>
+    <script src="/app.js?v=69"></script>
 </body>
 </html>

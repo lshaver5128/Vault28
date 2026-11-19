@@ -2768,54 +2768,43 @@ window.sellerDeclineOffer = function(id) {
 // Admin tab switcher
 function setAdminTab(tabName) {
     activeAdminTab = tabName;
-    const btnSub = document.getElementById('tab-btn-submissions');
-    const btnInv = document.getElementById('tab-btn-inventory');
-    const btnCon = document.getElementById('tab-btn-content');
-    const btnUsr = document.getElementById('tab-btn-users');
-    const btnInq = document.getElementById('tab-btn-inquiries');
+    const allTabs = ['content', 'events', 'users', 'inquiries', 'submissions', 'inventory'];
+    allTabs.forEach(t => {
+        const btn = document.getElementById('tab-btn-' + t);
+        const panel = document.getElementById('panel-' + t);
+        if (btn) btn.classList.remove('active');
+        if (panel) panel.classList.remove('active');
+    });
     
-    const panelSub = document.getElementById('panel-submissions');
-    const panelInv = document.getElementById('panel-inventory');
-    const panelCon = document.getElementById('panel-content');
-    const panelUsr = document.getElementById('panel-users');
-    const panelInq = document.getElementById('panel-inquiries');
+    const activeBtn = document.getElementById('tab-btn-' + tabName);
+    const activePanel = document.getElementById('panel-' + tabName);
+    if (activeBtn) activeBtn.classList.add('active');
+    if (activePanel) activePanel.classList.add('active');
     
-    [btnSub, btnInv, btnCon, btnUsr, btnInq].forEach(btn => btn && btn.classList.remove('active'));
-    [panelSub, panelInv, panelCon, panelUsr, panelInq].forEach(panel => panel && panel.classList.remove('active'));
-    
-    if (tabName === 'submissions') {
-        btnSub.classList.add('active');
-        panelSub.classList.add('active');
-    } else if (tabName === 'inventory') {
-        btnInv.classList.add('active');
-        panelInv.classList.add('active');
-        renderAdminInventoryTable();
-    } else if (tabName === 'content') {
-        btnCon.classList.add('active');
-        panelCon.classList.add('active');
+    if (tabName === 'content') {
         renderAdminReviewsList();
-        renderAdminRecentPurchasesList();
+        renderAdminHomepageSlidesList();
+        renderAdminAboutSlidesList();
+        renderSettingsDetails();
+    } else if (tabName === 'events') {
+        renderAdminUpcomingShowsList();
     } else if (tabName === 'users') {
-        if (btnUsr) btnUsr.classList.add('active');
-        if (panelUsr) panelUsr.classList.add('active');
         renderAdminUsersTable();
     } else if (tabName === 'inquiries') {
-        if (btnInq) btnInq.classList.add('active');
-        if (panelInq) panelInq.classList.add('active');
         renderAdminInquiriesList();
+    } else if (tabName === 'submissions') {
+        renderBuyerDashboard();
+    } else if (tabName === 'inventory') {
+        renderAdminInventoryTable();
     }
 }
 
-document.getElementById('tab-btn-submissions').addEventListener('click', () => setAdminTab('submissions'));
-document.getElementById('tab-btn-inventory').addEventListener('click', () => setAdminTab('inventory'));
-if (document.getElementById('tab-btn-events')) {
-    document.getElementById('tab-btn-events').addEventListener('click', () => setAdminTab('events'));
-}
-document.getElementById('tab-btn-content').addEventListener('click', () => setAdminTab('content'));
-document.getElementById('tab-btn-users').addEventListener('click', () => setAdminTab('users'));
-if (document.getElementById('tab-btn-inquiries')) {
-    document.getElementById('tab-btn-inquiries').addEventListener('click', () => setAdminTab('inquiries'));
-}
+safeAddListener('tab-btn-content', 'click', () => setAdminTab('content'));
+safeAddListener('tab-btn-events', 'click', () => setAdminTab('events'));
+safeAddListener('tab-btn-users', 'click', () => setAdminTab('users'));
+safeAddListener('tab-btn-inquiries', 'click', () => setAdminTab('inquiries'));
+safeAddListener('tab-btn-submissions', 'click', () => setAdminTab('submissions'));
+safeAddListener('tab-btn-inventory', 'click', () => setAdminTab('inventory'));
 
 // HTML Escaper Helper
 function escapeHTML(str) {
@@ -4049,11 +4038,11 @@ function renderSettingsDetails() {
 // --- Recently Purchased Collections Management ---
 
 // Photo Upload binding
-document.getElementById('btn-admin-pur-photo-upload').addEventListener('click', () => {
+safeAddListener('btn-admin-pur-photo-upload', 'click', () => {
     document.getElementById('admin-pur-photo-file').click();
 });
 
-document.getElementById('admin-pur-photo-file').addEventListener('change', (e) => {
+safeAddListener('admin-pur-photo-file', 'change', (e) => {
     const file = e.target.files[0];
     if (!file) return;
     
@@ -4072,7 +4061,7 @@ document.getElementById('admin-pur-photo-file').addEventListener('change', (e) =
 });
 
 // Submit handler
-document.getElementById('admin-purchase-form').addEventListener('submit', (e) => {
+safeAddListener('admin-purchase-form', 'submit', (e) => {
     e.preventDefault();
     const title = document.getElementById('admin-pur-title').value.trim();
     const location = document.getElementById('admin-pur-location').value.trim();
