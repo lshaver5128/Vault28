@@ -1,3 +1,8 @@
+function safeAddListener(id, event, handler) {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener(event, handler);
+}
+
 // Vault 28 Trading Co. - Application Logic Engine
 
 // --- FIREBASE CONFIGURATION ---
@@ -4684,10 +4689,7 @@ setTimeout(() => {
     }
 }, 500);
 
-const safeAddListener = (id, event, handler) => {
-    const el = document.getElementById(id);
-    if (el) el.addEventListener(event, handler);
-};
+// (safeAddListener hoisted to top of file)
 
 safeAddListener('brand-logo', 'click', (e) => {
     e.preventDefault();
@@ -4695,7 +4697,7 @@ safeAddListener('brand-logo', 'click', (e) => {
 });
 safeAddListener('btn-nav-free-offer', 'click', () => switchView('seller-submit'));
 safeAddListener('btn-hero-sell', 'click', () => switchView('seller-submit'));
-safeAddListener('btn-hero-browse', 'click', () => switchView('shop'));
+// btn-hero-browse opens DoubleHolo directly via href
 safeAddListener('btn-shop-coming-soon-sell', 'click', () => switchView('seller-submit'));
 
 safeAddListener('btn-dashboard-new', 'click', () => switchView('seller-submit'));
