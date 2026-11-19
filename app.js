@@ -4685,24 +4685,29 @@ setTimeout(() => {
     }
 }, 500);
 
-document.getElementById('brand-logo').addEventListener('click', (e) => {
+const safeAddListener = (id, event, handler) => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener(event, handler);
+};
+
+safeAddListener('brand-logo', 'click', (e) => {
     e.preventDefault();
     switchView('seller-landing');
 });
-document.getElementById('btn-nav-free-offer').addEventListener('click', () => switchView('seller-submit'));
-document.getElementById('btn-hero-sell').addEventListener('click', () => switchView('seller-submit'));
-document.getElementById('btn-hero-browse').addEventListener('click', () => switchView('shop'));
-document.getElementById('btn-shop-coming-soon-sell').addEventListener('click', () => switchView('seller-submit'));
+safeAddListener('btn-nav-free-offer', 'click', () => switchView('seller-submit'));
+safeAddListener('btn-hero-sell', 'click', () => switchView('seller-submit'));
+safeAddListener('btn-hero-browse', 'click', () => switchView('shop'));
+safeAddListener('btn-shop-coming-soon-sell', 'click', () => switchView('seller-submit'));
 
-document.getElementById('btn-dashboard-new').addEventListener('click', () => switchView('seller-submit'));
-document.getElementById('btn-seller-back-dashboard').addEventListener('click', () => switchView('seller-dashboard'));
-document.getElementById('btn-buyer-back-dashboard').addEventListener('click', () => {
+safeAddListener('btn-dashboard-new', 'click', () => switchView('seller-submit'));
+safeAddListener('btn-seller-back-dashboard', 'click', () => switchView('seller-dashboard'));
+safeAddListener('btn-buyer-back-dashboard', 'click', () => {
     renderBuyerDashboard();
     switchView('buyer-dashboard');
 });
 
-document.getElementById('btn-role-seller').addEventListener('click', () => setRole('seller'));
-document.getElementById('btn-role-buyer').addEventListener('click', () => setRole('buyer'));
+safeAddListener('btn-role-seller', 'click', () => setRole('seller'));
+safeAddListener('btn-role-buyer', 'click', () => setRole('buyer'));
 
 // Scroll Reveal observer
 function initScrollReveal() {
