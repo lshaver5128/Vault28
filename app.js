@@ -173,10 +173,10 @@ const DEFAULT_RECENT_PURCHASES = [
     },
     {
         id: "rp-3",
-        title: "Modern Sealed Booster Box Lot",
-        description: "A local buy of sealed Pokémon booster boxes and elite trainer boxes from recent Scarlet & Violet era sets.",
+        title: "Modern Alternate Art & Secret Rare Collection",
+        description: "A large local acquisition of raw modern alternate arts, illustration rares, and special illustration rares from recent Sword & Shield and Scarlet & Violet sets.",
         location: "Mt. Pleasant, SC",
-        image: "assets/inventory4.jpg",
+        image: "assets/inventory1.jpg",
         createdAt: "2026-07-18T10:00:00.000Z"
     }
 ];
@@ -822,11 +822,17 @@ function initDatabase() {
                 }
             });
 
-            // Sync recent purchases
+            // Sync recent purchases (Filter out legacy mock sports card items)
             recentPurchasesListener = db.collection("recent_purchases").onSnapshot(snapshot => {
                 recentPurchases = [];
                 snapshot.forEach(doc => {
-                    recentPurchases.push({ id: doc.id, ...doc.data() });
+                    const data = doc.data();
+                    const title = (data.title || '').toLowerCase();
+                    if (title.includes('baseball') || title.includes('basketball') || title.includes('bowman') || title.includes('football')) {
+                        db.collection("recent_purchases").doc(doc.id).delete().catch(() => {});
+                    } else {
+                        recentPurchases.push({ id: doc.id, ...data });
+                    }
                 });
                 recentPurchases.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
                 
