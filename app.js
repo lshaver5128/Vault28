@@ -4026,14 +4026,18 @@ document.getElementById('admin-settings-form').addEventListener('submit', (e) =>
 });
 
 function renderSettingsDetails() {
-    // Update contact settings forms
-    document.getElementById('admin-set-email').value = settings.email;
-    document.getElementById('admin-set-area').value = settings.area;
+    const setEmail = document.getElementById('admin-set-email');
+    if (setEmail) setEmail.value = settings.email;
+    const setArea = document.getElementById('admin-set-area');
+    if (setArea) setArea.value = settings.area;
     
-    // Update contact elements
-    document.getElementById('contact-info-email').textContent = settings.email;
-    document.getElementById('contact-info-email').href = `mailto:${settings.email}`;
-    document.getElementById('contact-info-area').textContent = settings.area;
+    const infoEmail = document.getElementById('contact-info-email');
+    if (infoEmail) {
+        infoEmail.textContent = settings.email;
+        infoEmail.href = `mailto:${settings.email}`;
+    }
+    const infoArea = document.getElementById('contact-info-area');
+    if (infoArea) infoArea.textContent = settings.area;
 }
 
 // --- Recently Purchased Collections Management ---
