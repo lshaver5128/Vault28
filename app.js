@@ -5500,48 +5500,9 @@ function checkEmailVerificationParam() {
     }
 }
 
-// ==================== HOMEPAGE & ABOUT US SLIDESHOW CONTROLLERS ====================
+// ==================== HOMEPAGE & ABOUT US AUTOMATIC SLIDESHOW CONTROLLERS ====================
 
-function stepHeroSlide(delta) {
-    const slides = document.querySelectorAll('#hero-slides-container .hero-slide');
-    if (!slides || slides.length === 0) return;
-    
-    slides.forEach(s => s.classList.remove('active'));
-    heroCurrentIndex = (heroCurrentIndex + delta + slides.length) % slides.length;
-    if (slides[heroCurrentIndex]) {
-        slides[heroCurrentIndex].classList.add('active');
-    }
-    updateHeroControls(heroCurrentIndex, slides.length);
-}
-window.stepHeroSlide = stepHeroSlide;
-
-function jumpToHeroSlide(index) {
-    const slides = document.querySelectorAll('#hero-slides-container .hero-slide');
-    if (!slides || !slides[index]) return;
-    
-    slides.forEach(s => s.classList.remove('active'));
-    heroCurrentIndex = index;
-    slides[heroCurrentIndex].classList.add('active');
-    updateHeroControls(heroCurrentIndex, slides.length);
-}
-window.jumpToHeroSlide = jumpToHeroSlide;
-
-function updateHeroControls(currentIdx, totalCount) {
-    const counter = document.getElementById('hero-slide-counter');
-    if (counter) {
-        counter.textContent = `${currentIdx + 1} / ${totalCount}`;
-    }
-    const dots = document.querySelectorAll('#hero-slides-container .hero-dot');
-    dots.forEach((dot, idx) => {
-        if (idx === currentIdx) {
-            dot.classList.add('active');
-        } else {
-            dot.classList.remove('active');
-        }
-    });
-}
-
-// Hero image slideshow logic
+// Hero image automatic slideshow logic
 function initHeroSlider() {
     if (typeof heroSliderInterval !== 'undefined' && heroSliderInterval) {
         clearInterval(heroSliderInterval);
@@ -5565,55 +5526,21 @@ function initHeroSlider() {
         heroCurrentIndex = 0;
     }
     
-    updateHeroControls(heroCurrentIndex, slides.length);
-    
     if (slides.length > 1) {
         heroSliderInterval = setInterval(() => {
-            stepHeroSlide(1);
-        }, 4500);
+            const currentSlides = document.querySelectorAll('#hero-slides-container .hero-slide');
+            if (!currentSlides || currentSlides.length < 2) return;
+            
+            currentSlides.forEach(s => s.classList.remove('active'));
+            heroCurrentIndex = (heroCurrentIndex + 1) % currentSlides.length;
+            if (currentSlides[heroCurrentIndex]) {
+                currentSlides[heroCurrentIndex].classList.add('active');
+            }
+        }, 4000);
     }
 }
 
-function stepAboutSlide(delta) {
-    const slides = document.querySelectorAll('#about-slideshow-container .about-slide');
-    if (!slides || slides.length === 0) return;
-    
-    slides.forEach(s => s.classList.remove('active'));
-    aboutCurrentIndex = (aboutCurrentIndex + delta + slides.length) % slides.length;
-    if (slides[aboutCurrentIndex]) {
-        slides[aboutCurrentIndex].classList.add('active');
-    }
-    updateAboutControls(aboutCurrentIndex, slides.length);
-}
-window.stepAboutSlide = stepAboutSlide;
-
-function jumpToAboutSlide(index) {
-    const slides = document.querySelectorAll('#about-slideshow-container .about-slide');
-    if (!slides || !slides[index]) return;
-    
-    slides.forEach(s => s.classList.remove('active'));
-    aboutCurrentIndex = index;
-    slides[aboutCurrentIndex].classList.add('active');
-    updateAboutControls(aboutCurrentIndex, slides.length);
-}
-window.jumpToAboutSlide = jumpToAboutSlide;
-
-function updateAboutControls(currentIdx, totalCount) {
-    const counter = document.getElementById('about-slide-counter');
-    if (counter) {
-        counter.textContent = `${currentIdx + 1} / ${totalCount}`;
-    }
-    const dots = document.querySelectorAll('#about-slideshow-container .about-dot');
-    dots.forEach((dot, idx) => {
-        if (idx === currentIdx) {
-            dot.classList.add('active');
-        } else {
-            dot.classList.remove('active');
-        }
-    });
-}
-
-// About Us page image slideshow logic
+// About Us page automatic image slideshow logic
 function initAboutSlideshow() {
     if (typeof aboutSlideshowInterval !== 'undefined' && aboutSlideshowInterval) {
         clearInterval(aboutSlideshowInterval);
@@ -5637,12 +5564,17 @@ function initAboutSlideshow() {
         aboutCurrentIndex = 0;
     }
     
-    updateAboutControls(aboutCurrentIndex, slides.length);
-    
     if (slides.length > 1) {
         aboutSlideshowInterval = setInterval(() => {
-            stepAboutSlide(1);
-        }, 4500);
+            const currentSlides = document.querySelectorAll('#about-slideshow-container .about-slide');
+            if (!currentSlides || currentSlides.length < 2) return;
+            
+            currentSlides.forEach(s => s.classList.remove('active'));
+            aboutCurrentIndex = (aboutCurrentIndex + 1) % currentSlides.length;
+            if (currentSlides[aboutCurrentIndex]) {
+                currentSlides[aboutCurrentIndex].classList.add('active');
+            }
+        }, 4000);
     }
 }
 
@@ -5659,37 +5591,12 @@ function renderHomepageSlideshow() {
     if (!heroContainer) return;
 
     const activeHeroSlides = homepageSlides.length > 0 ? homepageSlides : DEFAULT_HERO_SLIDES;
-    const total = activeHeroSlides.length;
 
-    let slidesHtml = activeHeroSlides.map((slide, idx) => {
+    heroContainer.innerHTML = activeHeroSlides.map((slide, idx) => {
         const imgSrc = slide.image || slide.url || slide.imageUrl || slide.src || '';
         return `<img src="${imgSrc}" class="hero-slide ${idx === 0 ? 'active' : ''}" alt="Vault 28 Slideshow Image" />`;
     }).join('');
 
-    let controlsHtml = '';
-    if (total > 1) {
-        const dotsHtml = activeHeroSlides.map((_, i) => `
-            <button type="button" class="hero-dot ${i === 0 ? 'active' : ''}" onclick="window.jumpToHeroSlide(${i})" title="Slide ${i + 1}" style="pointer-events: auto;"></button>
-        `).join('');
-
-        controlsHtml = `
-            <!-- Top Slide Counter Badge -->
-            <div style="position: absolute; top: 12px; right: 12px; z-index: 10; background: rgba(5,7,12,0.85); backdrop-filter: blur(8px); border: 1px solid rgba(223,183,80,0.5); border-radius: 20px; padding: 3px 10px; font-size: 0.72rem; font-weight: 700; color: var(--accent-gold); letter-spacing: 0.04em; pointer-events: none;">
-                📸 <span id="hero-slide-counter">1 / ${total}</span>
-            </div>
-
-            <!-- Left & Right Nav Arrows -->
-            <button type="button" class="slide-nav-btn prev" onclick="window.stepHeroSlide(-1)" title="Previous slide" style="pointer-events: auto;">‹</button>
-            <button type="button" class="slide-nav-btn next" onclick="window.stepHeroSlide(1)" title="Next slide" style="pointer-events: auto;">›</button>
-
-            <!-- Dots Indicator Row -->
-            <div style="position: absolute; bottom: 12px; left: 0; right: 0; z-index: 10; display: flex; justify-content: center; align-items: center; gap: 6px; pointer-events: auto;">
-                ${dotsHtml}
-            </div>
-        `;
-    }
-
-    heroContainer.innerHTML = slidesHtml + controlsHtml;
     initHeroSlider();
 }
 
@@ -5699,35 +5606,11 @@ function renderAboutSlideshow() {
     if (!aboutContainer) return;
 
     const activeAboutSlides = aboutSlides.length > 0 ? aboutSlides : DEFAULT_ABOUT_SLIDES;
-    const total = activeAboutSlides.length;
 
-    let slidesHtml = activeAboutSlides.map((slide, idx) => {
+    const slidesHtml = activeAboutSlides.map((slide, idx) => {
         const imgSrc = slide.image || slide.url || slide.imageUrl || slide.src || '';
         return `<img src="${imgSrc}" class="about-slide ${idx === 0 ? 'active' : ''}" alt="Vault 28 Journey" />`;
     }).join('');
-
-    let controlsHtml = '';
-    if (total > 1) {
-        const dotsHtml = activeAboutSlides.map((_, i) => `
-            <button type="button" class="about-dot ${i === 0 ? 'active' : ''}" onclick="window.jumpToAboutSlide(${i})" title="Slide ${i + 1}" style="pointer-events: auto;"></button>
-        `).join('');
-
-        controlsHtml = `
-            <!-- Top Slide Counter Badge -->
-            <div style="position: absolute; top: 12px; right: 12px; z-index: 10; background: rgba(5,7,12,0.85); backdrop-filter: blur(8px); border: 1px solid rgba(223,183,80,0.5); border-radius: 20px; padding: 3px 10px; font-size: 0.72rem; font-weight: 700; color: var(--accent-gold); letter-spacing: 0.04em; pointer-events: none;">
-                📸 <span id="about-slide-counter">1 / ${total}</span>
-            </div>
-
-            <!-- Left & Right Nav Arrows -->
-            <button type="button" class="slide-nav-btn prev" onclick="window.stepAboutSlide(-1)" title="Previous slide" style="top: 42%; pointer-events: auto;">‹</button>
-            <button type="button" class="slide-nav-btn next" onclick="window.stepAboutSlide(1)" title="Next slide" style="top: 42%; pointer-events: auto;">›</button>
-
-            <!-- Dots Indicator Row -->
-            <div style="position: absolute; bottom: 74px; left: 0; right: 0; z-index: 10; display: flex; justify-content: center; align-items: center; gap: 6px; pointer-events: auto;">
-                ${dotsHtml}
-            </div>
-        `;
-    }
 
     const floatingBadgeHtml = `
         <!-- Floating Badge -->
@@ -5743,7 +5626,7 @@ function renderAboutSlideshow() {
         </div>
     `;
 
-    aboutContainer.innerHTML = slidesHtml + controlsHtml + floatingBadgeHtml;
+    aboutContainer.innerHTML = slidesHtml + floatingBadgeHtml;
     initAboutSlideshow();
 }
 
