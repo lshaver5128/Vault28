@@ -6,7 +6,7 @@
     <title>Vault 28 Trading Co. | Buy & Sell Pokémon Card Collections</title>
     <meta name="description" content="Sell your Pokémon card collections — vintage Base Set, WOTC, modern secret rares, sealed products, and complete binders. Based near Summerville, SC. Fast cash offers.">
     <meta name="google-site-verification" content="QYIy_EZy3nVUwvhrjrVTm0CM_KEltQ9HQjpMEuQ2eIw" />
-    <link rel="stylesheet" href="/style.css?v=62">
+    <link rel="stylesheet" href="/style.css?v=63">
     <!-- Browser Tab Icon (Favicon) -->
     <link rel="icon" type="image/png" href="/assets/logo_new.png">
 </head>
@@ -328,55 +328,101 @@
 
         <!-- Seller View 2: Contact to Sell -->
         <section id="seller-submit" class="page-view">
-            <div style="max-width: 850px; margin: 0 auto;">
-                <div class="content-header" style="margin-bottom: 2rem; display: flex; justify-content: space-between; align-items: center;">
-                    <div>
-                        <h2 style="font-size: 2rem;">Reach Out to Sell</h2>
-                        <p style="color: var(--text-secondary);">We're currently buying <strong>raw Pok&eacute;mon cards only</strong>. Get in touch via text, email, or Instagram and we'll get back to you fast!</p>
+            <div style="max-width: 860px; margin: 0 auto; text-align: center;">
+                
+                <!-- Header -->
+                <div style="margin-bottom: 2rem;">
+                    <div style="display: inline-block; background: rgba(223, 183, 80, 0.12); color: var(--accent-gold); border: 1px solid rgba(223, 183, 80, 0.35); border-radius: 20px; padding: 4px 16px; font-size: 0.8rem; font-weight: 700; letter-spacing: 0.05em; margin-bottom: 0.75rem;">
+                        📬 DIRECT BUYING DESK
                     </div>
-                    <button class="btn btn-secondary btn-sm" onclick="switchView('seller-landing')" style="white-space: nowrap;">&larr; Back</button>
+                    <h2 style="font-size: 2.25rem; font-family: var(--font-title); text-transform: uppercase; margin-bottom: 0.5rem; letter-spacing: 0.02em;">
+                        Contact Us to <span style="color: var(--accent-gold);">Sell</span>
+                    </h2>
+                    <p style="color: var(--text-secondary); max-width: 600px; margin: 0 auto; font-size: 0.95rem; line-height: 1.6;">
+                        We specialize in <strong>raw Pokémon cards</strong>. Send clear photos of your cards, binders, or collections through any of our direct channels below for a fast, no-pressure cash offer!
+                    </p>
                 </div>
 
-                <!-- Rates Image -->
-                <div class="reveal" style="text-align: center; margin-bottom: 2.5rem;">
-                    <img src="/assets/buying_rates.jpg?v=48" alt="Vault 28 Trading Co. Buying &amp; Trading Rates" style="max-width: 480px; width: 100%; border-radius: 16px; box-shadow: 0 8px 40px rgba(0,0,0,0.5);">
-                </div>
+                <!-- Direct Contact Details (Phone, Email, Instagram - No generic buttons) -->
+                <div class="reveal" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.25rem; margin-bottom: 2.5rem; text-align: left;">
 
-                <!-- Contact Cards -->
-                <div class="reveal" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1.5rem; margin-bottom: 2.5rem;">
-
-                    <!-- Text Message -->
-                    <div class="glass-card" style="padding: 2rem; text-align: center; border-color: rgba(223,183,80,0.3);">
-                        <div style="font-size: 2.5rem; margin-bottom: 0.75rem;">💬</div>
-                        <h3 style="font-family: var(--font-title); font-size: 1.1rem; text-transform: uppercase; color: var(--accent-gold); margin-bottom: 0.5rem;">Text Message</h3>
-                        <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 1rem;">Send us a text with photos of your collection for a quick quote.</p>
-                        <a href="sms:+17744243561" class="btn btn-primary" style="display: inline-block; font-size: 0.9rem; padding: 0.6rem 1.2rem;">Text Us Now</a>
+                    <!-- Phone / Text -->
+                    <div class="glass-card" style="padding: 1.5rem; border: 1.5px solid rgba(223, 183, 80, 0.35); background: rgba(10, 13, 20, 0.75); display: flex; flex-direction: column; gap: 0.5rem;">
+                        <div style="display: flex; align-items: center; gap: 0.6rem;">
+                            <span style="font-size: 1.5rem;">💬</span>
+                            <span style="font-size: 0.75rem; text-transform: uppercase; color: var(--accent-gold); font-weight: 700; letter-spacing: 0.05em;">Text or Call</span>
+                        </div>
+                        <a href="tel:774-424-3561" style="font-size: 1.35rem; font-weight: 800; color: #fff; text-decoration: none; font-family: var(--font-title); letter-spacing: 0.03em; transition: color 0.2s;" onmouseover="this.style.color='var(--accent-gold)'" onmouseout="this.style.color='#fff'">
+                            (774) 424-3561
+                        </a>
+                        <p style="color: var(--text-muted); font-size: 0.8rem; margin: 0; line-height: 1.4;">
+                            Fastest response. Text photos of your cards anytime.
+                        </p>
                     </div>
 
                     <!-- Email -->
-                    <div class="glass-card" style="padding: 2rem; text-align: center; border-color: rgba(223,183,80,0.3);">
-                        <div style="font-size: 2.5rem; margin-bottom: 0.75rem;">📧</div>
-                        <h3 style="font-family: var(--font-title); font-size: 1.1rem; text-transform: uppercase; color: var(--accent-gold); margin-bottom: 0.5rem;">Email</h3>
-                        <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 1rem;">Drop us an email with details and photos of what you're looking to sell.</p>
-                        <a href="mailto:vault28tradingco@gmail.com" class="btn btn-primary" style="display: inline-block; font-size: 0.9rem; padding: 0.6rem 1.2rem;">Email Us</a>
+                    <div class="glass-card" style="padding: 1.5rem; border: 1.5px solid rgba(223, 183, 80, 0.35); background: rgba(10, 13, 20, 0.75); display: flex; flex-direction: column; gap: 0.5rem;">
+                        <div style="display: flex; align-items: center; gap: 0.6rem;">
+                            <span style="font-size: 1.5rem;">📧</span>
+                            <span style="font-size: 0.75rem; text-transform: uppercase; color: var(--accent-gold); font-weight: 700; letter-spacing: 0.05em;">Email Us</span>
+                        </div>
+                        <a href="mailto:lshaver@vault28cards.com" style="font-size: 1.15rem; font-weight: 700; color: #fff; text-decoration: none; word-break: break-all; transition: color 0.2s;" onmouseover="this.style.color='var(--accent-gold)'" onmouseout="this.style.color='#fff'">
+                            lshaver@vault28cards.com
+                        </a>
+                        <p style="color: var(--text-muted); font-size: 0.8rem; margin: 0; line-height: 1.4;">
+                            Ideal for large collections, card spreadsheets, or binder photos.
+                        </p>
                     </div>
 
                     <!-- Instagram -->
-                    <div class="glass-card" style="padding: 2rem; text-align: center; border-color: rgba(223,183,80,0.3);">
-                        <div style="font-size: 2.5rem; margin-bottom: 0.75rem;">📸</div>
-                        <h3 style="font-family: var(--font-title); font-size: 1.1rem; text-transform: uppercase; color: var(--accent-gold); margin-bottom: 0.5rem;">Instagram DM</h3>
-                        <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 1rem;">Slide into our DMs &mdash; send photos of your cards and we'll make you an offer.</p>
-                        <a href="https://instagram.com/Vault28Cards" target="_blank" rel="noopener" class="btn btn-primary" style="display: inline-block; font-size: 0.9rem; padding: 0.6rem 1.2rem;">@Vault28Cards</a>
+                    <div class="glass-card" style="padding: 1.5rem; border: 1.5px solid rgba(223, 183, 80, 0.35); background: rgba(10, 13, 20, 0.75); display: flex; flex-direction: column; gap: 0.5rem;">
+                        <div style="display: flex; align-items: center; gap: 0.6rem;">
+                            <span style="font-size: 1.5rem;">📸</span>
+                            <span style="font-size: 0.75rem; text-transform: uppercase; color: var(--accent-gold); font-weight: 700; letter-spacing: 0.05em;">Instagram DM</span>
+                        </div>
+                        <a href="https://instagram.com/Vault28Cards" target="_blank" rel="noopener" style="font-size: 1.35rem; font-weight: 800; color: #fff; text-decoration: none; font-family: var(--font-title); letter-spacing: 0.03em; transition: color 0.2s;" onmouseover="this.style.color='var(--accent-gold)'" onmouseout="this.style.color='#fff'">
+                            @Vault28Cards
+                        </a>
+                        <p style="color: var(--text-muted); font-size: 0.8rem; margin: 0; line-height: 1.4;">
+                            DM photos directly on Instagram &amp; view our latest drops.
+                        </p>
+                    </div>
+
+                </div>
+
+                <!-- Rates Image Section -->
+                <div class="reveal" style="margin-bottom: 2.5rem;">
+                    <div style="margin-bottom: 1rem;">
+                        <h3 style="font-family: var(--font-title); font-size: 1.25rem; text-transform: uppercase; color: var(--accent-gold); margin-bottom: 0.25rem;">
+                            Official Cash &amp; Trade Payout Rates
+                        </h3>
+                        <p style="color: var(--text-secondary); font-size: 0.85rem; margin: 0;">
+                            Fair, competitive offers based on current TCGPlayer market values.
+                        </p>
+                    </div>
+                    <div style="display: inline-block; max-width: 480px; width: 100%; border-radius: 18px; overflow: hidden; border: 2px solid rgba(223,183,80,0.35); box-shadow: 0 12px 35px rgba(0,0,0,0.7);">
+                        <img src="/assets/buying_rates.jpg?v=48" alt="Vault 28 Trading Co. Buying &amp; Trading Rates" style="width: 100%; height: auto; display: block;">
                     </div>
                 </div>
 
-                <!-- Trade / Inventory CTA -->
-                <div class="reveal glass-card" style="padding: 2rem; text-align: center; border-color: rgba(100,220,255,0.2);">
-                    <h3 style="font-family: var(--font-title); font-size: 1.3rem; text-transform: uppercase; color: var(--accent-cyan); margin-bottom: 0.75rem;">💱 Interested in a Trade?</h3>
-                    <p style="color: var(--text-secondary); font-size: 0.95rem; line-height: 1.6; max-width: 580px; margin: 0 auto 1.25rem auto;">
-                        Browse our current inventory and reach out if you see something you'd like to trade for. We're always open to fair trades!
+                <!-- Trade / Inventory Section -->
+                <div class="reveal glass-card" style="padding: 1.75rem 2rem; border-color: rgba(56, 189, 248, 0.25); background: rgba(10, 13, 20, 0.6); max-width: 720px; margin: 0 auto;">
+                    <h3 style="font-family: var(--font-title); font-size: 1.15rem; text-transform: uppercase; color: var(--accent-blue-neon); margin-bottom: 0.5rem;">
+                        💱 Prefer to Trade Instead of Cash?
+                    </h3>
+                    <p style="color: var(--text-secondary); font-size: 0.9rem; line-height: 1.5; margin-bottom: 1rem;">
+                        We offer higher payout percentages for trade value toward our inventory. Browse our current stock and let us know what you want!
                     </p>
-                    <a href="https://ebay.io/m/kn2rG0" target="_blank" rel="noopener" class="btn btn-secondary" style="display: inline-block; font-size: 0.95rem; padding: 0.75rem 1.5rem;">🛍️ Check Out Our Current Inventory (eBay) →</a>
+                    <a href="https://ebay.io/m/kn2rG0" target="_blank" rel="noopener" class="btn btn-secondary" style="font-size: 0.9rem; padding: 0.65rem 1.4rem;">
+                        🛍️ Current Inventory (eBay) →
+                    </a>
+                </div>
+
+                <!-- Back button at bottom for easy navigation -->
+                <div style="margin-top: 2rem;">
+                    <button class="btn btn-secondary btn-sm" onclick="switchView('seller-landing')" style="padding: 0.5rem 1.2rem;">
+                        &larr; Back to Home
+                    </button>
                 </div>
 
                 <!-- Hidden stubs to keep app.js happy -->
@@ -1714,6 +1760,6 @@ const firebaseConfig = {
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 
-    <script src="/app.js?v=62"></script>
+    <script src="/app.js?v=63"></script>
 </body>
 </html>
