@@ -3683,40 +3683,54 @@ const prodFileInput = document.getElementById('admin-prod-file-input');
 const prodPreview = document.getElementById('admin-prod-image-preview');
 let uploadedProductImageBase64 = null;
 
-prodDropzone.addEventListener('click', () => prodFileInput.click());
-prodFileInput.addEventListener('change', (e) => {
-    if (e.target.files.length > 0) {
-        const file = e.target.files[0];
-        const reader = new FileReader();
-        reader.onload = (el) => {
-            uploadedProductImageBase64 = el.target.result;
-            prodPreview.innerHTML = `
-                <div class="uploaded-preview-item" style="width: 120px; height: 120px;">
-                    <img src="${uploadedProductImageBase64}">
-                    <button type="button" class="uploaded-preview-remove" id="btn-remove-prod-img">×</button>
-                </div>
-            `;
-            document.getElementById('btn-remove-prod-img').addEventListener('click', () => {
-                uploadedProductImageBase64 = null;
-                prodPreview.innerHTML = '';
-            });
-        };
-        reader.readAsDataURL(file);
-    }
-});
+if (prodDropzone && prodFileInput) {
+    prodDropzone.addEventListener('click', () => prodFileInput.click());
+    prodFileInput.addEventListener('change', (e) => {
+        if (e.target.files.length > 0) {
+            const file = e.target.files[0];
+            const reader = new FileReader();
+            reader.onload = (el) => {
+                uploadedProductImageBase64 = el.target.result;
+                if (prodPreview) {
+                    prodPreview.innerHTML = `
+                        <div class="uploaded-preview-item" style="width: 120px; height: 120px;">
+                            <img src="${uploadedProductImageBase64}">
+                            <button type="button" class="uploaded-preview-remove" id="btn-remove-prod-img">×</button>
+                        </div>
+                    `;
+                    safeAddListener('btn-remove-prod-img', 'click', () => {
+                        uploadedProductImageBase64 = null;
+                        prodPreview.innerHTML = '';
+                    });
+                }
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+}
 
 // Add / Edit Product Submit
-document.getElementById('admin-product-form').addEventListener('submit', (e) => {
+safeAddListener('admin-product-form', 'submit', (e) => {
     e.preventDefault();
     
-    const id = document.getElementById('admin-prod-id').value;
-    const title = document.getElementById('admin-prod-title').value.trim();
-    const price = parseFloat(document.getElementById('admin-prod-price').value);
-    const condition = document.getElementById('admin-prod-condition').value.trim();
-    const category = document.getElementById('admin-prod-category').value;
-    const availability = document.getElementById('admin-prod-availability').value;
-    const desc = document.getElementById('admin-prod-desc').value.trim();
-    const shipping = document.getElementById('admin-prod-shipping').value.trim();
+    const idEl = document.getElementById('admin-prod-id');
+    const titleEl = document.getElementById('admin-prod-title');
+    const priceEl = document.getElementById('admin-prod-price');
+    const condEl = document.getElementById('admin-prod-condition');
+    const catEl = document.getElementById('admin-prod-category');
+    const availEl = document.getElementById('admin-prod-availability');
+    const descEl = document.getElementById('admin-prod-desc');
+    const shipEl = document.getElementById('admin-prod-shipping');
+    if (!titleEl || !priceEl) return;
+    
+    const id = idEl ? idEl.value : '';
+    const title = titleEl.value.trim();
+    const price = parseFloat(priceEl.value);
+    const condition = condEl ? condEl.value.trim() : '';
+    const category = catEl ? catEl.value : '';
+    const availability = availEl ? availEl.value : 'Available';
+    const desc = descEl ? descEl.value.trim() : '';
+    const shipping = shipEl ? shipEl.value.trim() : '';
     
     const fallbackImage = generateCardMockupImage(title, 2026, category, category);
     const image = uploadedProductImageBase64 || fallbackImage;
@@ -3744,7 +3758,6 @@ document.getElementById('admin-product-form').addEventListener('submit', (e) => 
     } else {
         const existingIdx = products.findIndex(p => p.id === prodId);
         if (existingIdx > -1) {
-            // Keep original image if no new image was uploaded
             if (!uploadedProductImageBase64) {
                 newProd.image = products[existingIdx].image;
             }
@@ -3763,17 +3776,22 @@ document.getElementById('admin-product-form').addEventListener('submit', (e) => 
 });
 
 function resetAdminProductForm() {
-    document.getElementById('admin-product-form').reset();
-    document.getElementById('admin-prod-id').value = '';
-    document.getElementById('admin-inventory-form-title').textContent = 'Add New Shop Product';
-    document.getElementById('btn-admin-prod-cancel').style.display = 'none';
-    document.getElementById('btn-admin-prod-submit').textContent = 'Save Product Listing';
+    const form = document.getElementById('admin-product-form');
+    if (form) form.reset();
+    const idEl = document.getElementById('admin-prod-id');
+    if (idEl) idEl.value = '';
+    const titleEl = document.getElementById('admin-inventory-form-title');
+    if (titleEl) titleEl.textContent = 'Add New Shop Product';
+    const cancelBtn = document.getElementById('btn-admin-prod-cancel');
+    if (cancelBtn) cancelBtn.style.display = 'none';
+    const submitBtn = document.getElementById('btn-admin-prod-submit');
+    if (submitBtn) submitBtn.textContent = 'Save Product Listing';
     uploadedProductImageBase64 = null;
-    prodPreview.innerHTML = '';
+    if (prodPreview) prodPreview.innerHTML = '';
     currentEditingProductId = null;
 }
 
-document.getElementById('btn-admin-prod-cancel').addEventListener('click', resetAdminProductForm);
+safeAddListener('btn-admin-prod-cancel', 'click', resetAdminProductForm);
 
 // Render Admin Product Listings Table
 function renderAdminInventoryTable() {
