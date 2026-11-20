@@ -1656,7 +1656,7 @@ input:-webkit-autofill:active {
     height: calc(100% - 1rem);
     object-fit: contain;
     border-radius: 12px;
-    transition: opacity 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: opacity 1.4s ease-in-out;
     opacity: 0;
     z-index: 1;
     pointer-events: none;
@@ -1675,7 +1675,7 @@ input:-webkit-autofill:active {
     height: 100%;
     object-fit: cover;
     border-radius: 18px;
-    transition: opacity 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: opacity 1.4s ease-in-out;
     opacity: 0;
     z-index: 1;
     pointer-events: none;

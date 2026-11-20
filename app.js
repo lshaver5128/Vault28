@@ -387,8 +387,22 @@ function seedCloudDatabase() {
 // Router Implementation
 function switchView(viewId, pushState = true) {
     if (viewId === 'contact') { switchView('seller-submit', pushState); return; }
-    if (viewId === 'about') { renderPublicSlideshows(); initAboutSlideshow(); }
-    if (viewId === 'seller-landing') { renderHomepageSlideshow(); }
+    if (viewId === 'about') {
+        renderAboutSlideshow();
+    } else {
+        if (typeof aboutSlideshowInterval !== 'undefined' && aboutSlideshowInterval) {
+            clearInterval(aboutSlideshowInterval);
+            aboutSlideshowInterval = null;
+        }
+    }
+    if (viewId === 'seller-landing') {
+        renderHomepageSlideshow();
+    } else {
+        if (typeof heroSliderInterval !== 'undefined' && heroSliderInterval) {
+            clearInterval(heroSliderInterval);
+            heroSliderInterval = null;
+        }
+    }
     // Auth Guard check for seller dashboard access
     if (isFirebaseActive && !firebase.auth().currentUser) {
         if (viewId === 'seller-dashboard' || viewId === 'seller-detail') {
@@ -5539,31 +5553,33 @@ function initHeroSlider() {
     const slides = document.querySelectorAll('#hero-slides-container .hero-slide');
     if (!slides || slides.length === 0) return;
     
-    if (heroCurrentIndex >= slides.length) heroCurrentIndex = 0;
-    
-    let hasActive = false;
+    let activeIdx = -1;
     slides.forEach((s, i) => {
         if (s.classList.contains('active')) {
-            hasActive = true;
-            heroCurrentIndex = i;
+            if (activeIdx === -1) activeIdx = i;
+            else s.classList.remove('active');
         }
     });
-    if (!hasActive && slides[0]) {
+    if (activeIdx === -1) {
         slides[0].classList.add('active');
-        heroCurrentIndex = 0;
+        activeIdx = 0;
     }
+    heroCurrentIndex = activeIdx;
     
     if (slides.length > 1) {
         heroSliderInterval = setInterval(() => {
             const currentSlides = document.querySelectorAll('#hero-slides-container .hero-slide');
             if (!currentSlides || currentSlides.length < 2) return;
             
-            currentSlides.forEach(s => s.classList.remove('active'));
             heroCurrentIndex = (heroCurrentIndex + 1) % currentSlides.length;
-            if (currentSlides[heroCurrentIndex]) {
-                currentSlides[heroCurrentIndex].classList.add('active');
-            }
-        }, 4000);
+            currentSlides.forEach((s, idx) => {
+                if (idx === heroCurrentIndex) {
+                    s.classList.add('active');
+                } else {
+                    s.classList.remove('active');
+                }
+            });
+        }, 4500);
     }
 }
 
@@ -5577,31 +5593,33 @@ function initAboutSlideshow() {
     const slides = document.querySelectorAll('#about-slideshow-container .about-slide');
     if (!slides || slides.length === 0) return;
     
-    if (aboutCurrentIndex >= slides.length) aboutCurrentIndex = 0;
-    
-    let hasActive = false;
+    let activeIdx = -1;
     slides.forEach((s, i) => {
         if (s.classList.contains('active')) {
-            hasActive = true;
-            aboutCurrentIndex = i;
+            if (activeIdx === -1) activeIdx = i;
+            else s.classList.remove('active');
         }
     });
-    if (!hasActive && slides[0]) {
+    if (activeIdx === -1) {
         slides[0].classList.add('active');
-        aboutCurrentIndex = 0;
+        activeIdx = 0;
     }
+    aboutCurrentIndex = activeIdx;
     
     if (slides.length > 1) {
         aboutSlideshowInterval = setInterval(() => {
             const currentSlides = document.querySelectorAll('#about-slideshow-container .about-slide');
             if (!currentSlides || currentSlides.length < 2) return;
             
-            currentSlides.forEach(s => s.classList.remove('active'));
             aboutCurrentIndex = (aboutCurrentIndex + 1) % currentSlides.length;
-            if (currentSlides[aboutCurrentIndex]) {
-                currentSlides[aboutCurrentIndex].classList.add('active');
-            }
-        }, 4000);
+            currentSlides.forEach((s, idx) => {
+                if (idx === aboutCurrentIndex) {
+                    s.classList.add('active');
+                } else {
+                    s.classList.remove('active');
+                }
+            });
+        }, 4500);
     }
 }
 
@@ -5656,7 +5674,7 @@ function renderAboutSlideshow() {
 
     const slidesHtml = aboutSlides.map((slide, idx) => {
         const imgSrc = slide.image || slide.url || slide.imageUrl || slide.src || '';
-        return `<img class="about-slide ${idx === 0 ? 'active' : ''}" src="${imgSrc}" alt="Vault 28 Journey" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; opacity: ${idx === 0 ? 1 : 0}; z-index: ${idx === 0 ? 1 : 0}; transition: opacity 1.2s ease-in-out;" />`;
+        return `<img class="about-slide ${idx === 0 ? 'active' : ''}" src="${imgSrc}" alt="Vault 28 Journey" />`;
     }).join('');
 
     aboutContainer.innerHTML = slidesHtml + floatingBadgeHtml;
@@ -6037,7 +6055,6 @@ document.addEventListener('DOMContentLoaded', () => {
     initScrollReveal();
     renderPublicSlideshows();
     renderUpcomingShowsHomepage();
-    initAboutSlideshow();
     updateWizardUI();
     initUpcomingShowsManager();
 
