@@ -2046,18 +2046,18 @@ input:-webkit-autofill:active {
 .about-story-grid {
     display: grid;
     grid-template-columns: 1.25fr 0.95fr;
-    gap: 2.5rem;
+    gap: 3.25rem;
     align-items: center;
-    margin-bottom: 2.75rem;
+    margin-bottom: 3.75rem;
 }
 
-@media (max-width: 850px) {
+@media (max-width: 900px) {
     .about-story-grid {
         grid-template-columns: 1fr !important;
-        gap: 2rem !important;
+        gap: 2.5rem !important;
     }
     #about-slideshow-container {
-        height: 320px !important;
+        height: 350px !important;
     }
 }
 
