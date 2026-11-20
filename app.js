@@ -1447,15 +1447,29 @@ document.getElementById('auth-form').addEventListener('submit', (e) => {
                             }
                         };
                         
-                        Promise.all([
-                            db.collection("mail").add(verifyMail),
-                            db.collection("mail").add(ownerSignUpMail)
-                        ])
+                        // Configure Firebase Auth verification redirect
+                        const actionCodeSettings = {
+                            url: `${window.location.origin}/?verified=true`,
+                            handleCodeInApp: false
+                        };
+
+                        // 1. Send native verification email via Firebase Auth (delivered directly by Google)
+                        const sendVerificationPromise = cred.user.sendEmailVerification(actionCodeSettings).catch(err => {
+                            console.warn("Firebase Auth sendEmailVerification notice:", err);
+                        });
+
+                        // 2. Also log mail records to Firestore mail collection (for Trigger Email extension if installed)
+                        const mailLogPromise = Promise.all([
+                            db.collection("mail").add(verifyMail).catch(err => console.warn("verifyMail log error:", err)),
+                            db.collection("mail").add(ownerSignUpMail).catch(err => console.warn("ownerSignUpMail log error:", err))
+                        ]);
+
+                        Promise.all([sendVerificationPromise, mailLogPromise])
                             .then(() => {
                                 return firebase.auth().signOut();
                             })
                             .catch(err => {
-                                console.warn("Failed to write sign up database entries:", err);
+                                console.warn("Notice during signup post-processing:", err);
                                 return firebase.auth().signOut();
                             })
                             .then(() => {
@@ -5564,6 +5578,16 @@ setTimeout(() => {
 function checkEmailVerificationParam() {
     const urlParams = new URLSearchParams(window.location.search);
     const verifyUid = urlParams.get('verifyUid');
+    const verified = urlParams.get('verified');
+
+    if (verified === 'true') {
+        const newUrl = window.location.origin + window.location.pathname;
+        window.history.replaceState({}, document.title, newUrl);
+        showToast("Email verified successfully! You can now log in.", "success");
+        openAuthModal('login');
+        return;
+    }
+
     if (verifyUid) {
         // Clear query parameters from URL without page reload
         const newUrl = window.location.origin + window.location.pathname;
