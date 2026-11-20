@@ -1410,23 +1410,7 @@ document.getElementById('auth-form').addEventListener('submit', (e) => {
                         const referral = document.getElementById('auth-referral').value;
                         recordUserActivity(cred.user.uid, cred.user.email, name, true, referral);
                         
-                        // Send our branded verification email
-                        const verifyUrl = `${window.location.origin}/?verifyUid=${cred.user.uid}`;
-                        const verifyMail = {
-                            to: cred.user.email,
-                            from: "Vault 28 <noreply@vault28cards.com>",
-                            message: {
-                                subject: "Verify Your Vault 28 Account!",
-                                html: generateStandardEmailHtml(
-                                    `Welcome to Vault 28, ${name}!`,
-                                    `
-                                    <p>Thank you for creating an account with Vault 28 Trading Co.!</p>
-                                    <p>To finalize your registration and start submitting your collectibles for valuation, please verify your email address by clicking the button below.</p>
-                                    `,
-                                    `<a href="${verifyUrl}" style="display: inline-block; background: linear-gradient(135deg, #f5d075 0%, #dfb750 100%); color: #0c0f19; font-weight: 700; font-size: 13px; padding: 12px 28px; text-decoration: none; border-radius: 25px; box-shadow: 0 4px 12px rgba(223, 183, 80, 0.25); text-transform: uppercase; letter-spacing: 0.08em;">Verify Email Address</a>`
-                                )
-                            }
-                        };
+                        // Notify owner of new user registration
                         const ownerSignUpMail = {
                             to: "lshaver@vault28cards.com",
                             from: "Vault 28 <noreply@vault28cards.com>",
@@ -1446,46 +1430,14 @@ document.getElementById('auth-form').addEventListener('submit', (e) => {
                                 )
                             }
                         };
+                        db.collection("mail").add(ownerSignUpMail).catch(err => console.warn("ownerSignUpMail notice:", err));
                         
-                        // Configure Firebase Auth verification redirect
-                        const actionCodeSettings = {
-                            url: `${window.location.origin}/?verified=true`,
-                            handleCodeInApp: false
-                        };
-
-                        // 1. Send native verification email via Firebase Auth (delivered directly by Google)
-                        const sendVerificationPromise = cred.user.sendEmailVerification(actionCodeSettings).catch(err => {
-                            console.warn("Firebase Auth sendEmailVerification notice:", err);
-                        });
-
-                        // 2. Also log mail records to Firestore mail collection (for Trigger Email extension if installed)
-                        const mailLogPromise = Promise.all([
-                            db.collection("mail").add(verifyMail).catch(err => console.warn("verifyMail log error:", err)),
-                            db.collection("mail").add(ownerSignUpMail).catch(err => console.warn("ownerSignUpMail log error:", err))
-                        ]);
-
-                        Promise.all([sendVerificationPromise, mailLogPromise])
-                            .then(() => {
-                                return firebase.auth().signOut();
-                            })
-                            .catch(err => {
-                                console.warn("Notice during signup post-processing:", err);
-                                return firebase.auth().signOut();
-                            })
-                            .then(() => {
-                                isRegisteringUser = false;
-                                // Display Registration Successful screen in modal
-                                const authForm = document.getElementById('auth-form');
-                                const tabsHeader = document.getElementById('auth-tabs-header');
-                                const successScreen = document.getElementById('auth-success-screen');
-                                const successEmail = document.getElementById('auth-success-email');
-                                if (authForm) authForm.style.display = 'none';
-                                if (tabsHeader) tabsHeader.style.display = 'none';
-                                if (successEmail) successEmail.textContent = email;
-                                if (successScreen) successScreen.style.display = 'block';
-                                
-                                showToast("Registration Successful! Please check your email to verify your account.", "success");
-                            });
+                        isRegisteringUser = false;
+                        closeAuthModal();
+                        setupUserSessionUI(cred.user);
+                        setRole('seller', false);
+                        showToast(`Registration Successful! Welcome to Vault 28, ${name}!`, "success");
+                        triggerUIRefresh();
                     });
                 })
                 .catch(err => {
@@ -1594,21 +1546,18 @@ document.getElementById('auth-form').addEventListener('submit', (e) => {
                 
                 const mockUid = 'mock-user-' + Math.random().toString(36).substr(2, 9);
                 const referral = document.getElementById('auth-referral').value;
-                localUsers.push({ uid: mockUid, email, displayName: name, password, referral, isOnline: false, isVerified: false });
+                localUsers.push({ uid: mockUid, email, displayName: name, password, referral, isOnline: false, isVerified: true });
                 localStorage.setItem('v28_users', JSON.stringify(localUsers));
                 recordUserActivity(mockUid, email, name, true, referral);
                 
-                // Show Registration Successful screen in modal
-                const authForm = document.getElementById('auth-form');
-                const tabsHeader = document.getElementById('auth-tabs-header');
-                const successScreen = document.getElementById('auth-success-screen');
-                const successEmail = document.getElementById('auth-success-email');
-                if (authForm) authForm.style.display = 'none';
-                if (tabsHeader) tabsHeader.style.display = 'none';
-                if (successEmail) successEmail.textContent = email;
-                if (successScreen) successScreen.style.display = 'block';
-                
-                showToast("Registration Successful! Please check your email to verify your account.", "success");
+                document.getElementById('auth-widget').style.display = 'none';
+                document.getElementById('user-profile-widget').style.display = 'flex';
+                document.getElementById('user-display-name').textContent = name;
+                document.getElementById('user-display-role').textContent = "Seller Account";
+                closeAuthModal();
+                setRole('seller', false);
+                showToast(`Registration Successful! Welcome to Vault 28, ${name}!`, "success");
+                triggerUIRefresh();
             }
         }, 500);
     }
@@ -2925,7 +2874,7 @@ function recordUserActivity(uid, email, displayName, isRegistering = false, refe
         };
         if (isRegistering) {
             data.registeredAt = timestamp;
-            data.isVerified = false; // Unverified by default until custom email link is clicked
+            data.isVerified = true;
             if (referralSource) {
                 data.referralSource = referralSource;
             }
@@ -2953,7 +2902,7 @@ function recordUserActivity(uid, email, displayName, isRegistering = false, refe
             };
             if (isRegistering) {
                 existingUser.registeredAt = timestamp;
-                existingUser.isVerified = false; // Sandbox default
+                existingUser.isVerified = true;
                 if (referralSource) {
                     existingUser.referralSource = referralSource;
                 }
