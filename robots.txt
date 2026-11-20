@@ -2,3 +2,5 @@ User-agent: *
 Allow: /
 Allow: /favicon.ico
 Allow: /assets/
+
+Sitemap: https://vault28cards.com/sitemap.xml
