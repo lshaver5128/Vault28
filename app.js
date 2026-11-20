@@ -116,8 +116,18 @@ window.safeSetStorage = safeSetStorage;
 let users = [];
 let recentPurchases = [];
 let upcomingShows = [];
-let homepageSlides = [];
-let aboutSlides = [];
+let homepageSlides = (() => {
+    try {
+        const cached = localStorage.getItem('v28_homepage_slides');
+        return cached ? JSON.parse(cached) : [];
+    } catch (e) { return []; }
+})();
+let aboutSlides = (() => {
+    try {
+        const cached = localStorage.getItem('v28_about_slides');
+        return cached ? JSON.parse(cached) : [];
+    } catch (e) { return []; }
+})();
 let slideshowImages = [];
 let isRegisteringUser = false; // Flag to prevent auto-login flash during sign-up
 
@@ -130,18 +140,9 @@ const DEFAULT_COLLECTIONS = [];
 // Default Hero Slides (Vending Booth & Showcase)
 
 // Default About Slides (Vending Booth & Showcase)
-const DEFAULT_ABOUT_SLIDES = [
-    { id: 'def-about-1', type: 'about', image: '/assets/vending_booth_1.png', order: 0, isDefault: true, createdAt: '2026-11-17T00:00:00.000Z' },
-    { id: 'def-about-2', type: 'about', image: '/assets/vending_booth_2.png', order: 1, isDefault: true, createdAt: '2026-11-17T00:01:00.000Z' },
-    { id: 'def-about-3', type: 'about', image: '/assets/vending_booth_3.png', order: 2, isDefault: true, createdAt: '2026-11-17T00:02:00.000Z' },
-    { id: 'def-about-4', type: 'about', image: '/assets/show_poster_hhi.png', order: 3, isDefault: true, createdAt: '2026-11-17T00:03:00.000Z' }
-];
+const DEFAULT_ABOUT_SLIDES = [];
 
-const DEFAULT_HERO_SLIDES = [
-    { id: 'def-hero-1', type: 'hero', image: '/assets/vending_booth_1.png', order: 0, isDefault: true, createdAt: '2026-11-17T00:00:00.000Z' },
-    { id: 'def-hero-2', type: 'hero', image: '/assets/vending_booth_2.png', order: 1, isDefault: true, createdAt: '2026-11-17T00:01:00.000Z' },
-    { id: 'def-hero-3', type: 'hero', image: '/assets/vending_booth_3.png', order: 2, isDefault: true, createdAt: '2026-11-17T00:02:00.000Z' }
-];
+const DEFAULT_HERO_SLIDES = [];
 
 const DEFAULT_UPCOMING_SHOWS = [
     {
@@ -5616,9 +5617,12 @@ function renderHomepageSlideshow() {
     const heroContainer = document.getElementById('hero-slides-container');
     if (!heroContainer) return;
 
-    const activeHeroSlides = homepageSlides.length > 0 ? homepageSlides : DEFAULT_HERO_SLIDES;
+    if (homepageSlides.length === 0) {
+        heroContainer.innerHTML = '';
+        return;
+    }
 
-    heroContainer.innerHTML = activeHeroSlides.map((slide, idx) => {
+    heroContainer.innerHTML = homepageSlides.map((slide, idx) => {
         const imgSrc = slide.image || slide.url || slide.imageUrl || slide.src || '';
         return `<img src="${imgSrc}" class="hero-slide ${idx === 0 ? 'active' : ''}" alt="Vault 28 Slideshow Image" />`;
     }).join('');
@@ -5631,26 +5635,29 @@ function renderAboutSlideshow() {
     const aboutContainer = document.getElementById('about-slideshow-container');
     if (!aboutContainer) return;
 
-    const activeAboutSlides = aboutSlides.length > 0 ? aboutSlides : DEFAULT_ABOUT_SLIDES;
-
-    const slidesHtml = activeAboutSlides.map((slide, idx) => {
-        const imgSrc = slide.image || slide.url || slide.imageUrl || slide.src || '';
-        return `<img src="${imgSrc}" class="about-slide ${idx === 0 ? 'active' : ''}" alt="Vault 28 Journey" />`;
-    }).join('');
-
     const floatingBadgeHtml = `
         <!-- Floating Badge -->
-        <div style="position: absolute; bottom: 16px; left: 16px; right: 16px; z-index: 5; background: rgba(5,7,12,0.88); backdrop-filter: blur(12px); border: 1px solid rgba(223,183,80,0.5); border-radius: 12px; padding: 10px 14px; display: flex; align-items: center; justify-content: space-between; pointer-events: none;">
+        <div style="position: absolute; bottom: 14px; left: 14px; right: 14px; z-index: 5; background: rgba(5,7,12,0.88); backdrop-filter: blur(12px); border: 1px solid rgba(223,183,80,0.45); border-radius: 10px; padding: 10px 14px; display: flex; align-items: center; justify-content: space-between;">
             <div style="display: flex; align-items: center; gap: 8px;">
-                <span style="font-size: 1.2rem;">🎪</span>
+                <span style="font-size: 1.25rem;">🎪</span>
                 <div>
-                    <div style="font-size: 0.82rem; font-weight: 700; color: #fff; line-height: 1.1;">Vault 28 Live</div>
-                    <div style="font-size: 0.72rem; color: var(--accent-gold);">On The Road &amp; In Person</div>
+                    <div style="font-size: 0.88rem; font-weight: 700; color: #fff; line-height: 1.1;">Vault 28 Live</div>
+                    <div style="font-size: 0.78rem; color: var(--accent-gold); font-weight: 600;">On The Road &amp; In Person</div>
                 </div>
             </div>
-            <span class="badge" style="background: rgba(56, 189, 248, 0.15); border: 1px solid rgba(56, 189, 248, 0.4); color: var(--accent-blue-neon); font-size: 0.72rem; padding: 3px 10px;">SUMMERVILLE, SC</span>
+            <span class="badge" style="background: rgba(56, 189, 248, 0.15); border: 1px solid rgba(56, 189, 248, 0.4); color: var(--accent-blue-neon); font-size: 0.78rem; font-weight: 700; padding: 3px 10px;">SUMMERVILLE, SC</span>
         </div>
     `;
+
+    if (aboutSlides.length === 0) {
+        aboutContainer.innerHTML = floatingBadgeHtml;
+        return;
+    }
+
+    const slidesHtml = aboutSlides.map((slide, idx) => {
+        const imgSrc = slide.image || slide.url || slide.imageUrl || slide.src || '';
+        return `<img class="about-slide ${idx === 0 ? 'active' : ''}" src="${imgSrc}" alt="Vault 28 Journey" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; opacity: ${idx === 0 ? 1 : 0}; z-index: ${idx === 0 ? 1 : 0}; transition: opacity 1.2s ease-in-out;" />`;
+    }).join('');
 
     aboutContainer.innerHTML = slidesHtml + floatingBadgeHtml;
     initAboutSlideshow();
@@ -5667,10 +5674,12 @@ function renderAdminHomepageSlidesList() {
     if (!heroList) return;
     heroList.innerHTML = '';
     
-    const isCustom = homepageSlides.length > 0;
-    const activeHeroSlides = isCustom ? homepageSlides : DEFAULT_HERO_SLIDES;
+    if (homepageSlides.length === 0) {
+        heroList.innerHTML = '<span style="color: var(--text-muted); font-size: 0.85rem; padding: 0.5rem 0;">No photos in homepage slideshow yet. Click above to add photos!</span>';
+        return;
+    }
     
-    activeHeroSlides.forEach((img, idx) => {
+    homepageSlides.forEach((img, idx) => {
         const item = document.createElement('div');
         item.style.position = 'relative';
         item.style.width = '80px';
@@ -5682,46 +5691,40 @@ function renderAdminHomepageSlidesList() {
         item.style.transition = 'all 0.2s ease';
         
         let deleteBtnHtml = `<button type="button" style="position: absolute; top: 4px; right: 4px; background: rgba(239, 68, 68, 0.85); border: none; color: white; border-radius: 50%; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; font-size: 10px; cursor: pointer; font-weight: bold; line-height: 1; z-index: 10;" onclick="deleteSlideshowImage('${img.id}', 'homepage')">✕</button>`;
-        let badgeHtml = '';
+        let badgeHtml = `<div style="position: absolute; bottom: 0; left: 0; right: 0; background: rgba(16,185,129,0.85); color: #fff; font-size: 0.58rem; text-align: center; padding: 1px 0; font-weight: 700; letter-spacing: 0.03em;">FIRESTORE</div>`;
         
-        if (img.isDefault) {
-            deleteBtnHtml = '';
-            badgeHtml = `<div style="position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.7); color: var(--accent-gold); font-size: 0.65rem; text-align: center; padding: 2px 0; font-weight: 700;">DEFAULT</div>`;
-        } else {
-            badgeHtml = `<div style="position: absolute; bottom: 0; left: 0; right: 0; background: rgba(16,185,129,0.85); color: #fff; font-size: 0.58rem; text-align: center; padding: 1px 0; font-weight: 700; letter-spacing: 0.03em;">FIRESTORE</div>`;
-            item.setAttribute('draggable', 'true');
-            item.style.cursor = 'grab';
-            
-            item.addEventListener('dragstart', (e) => {
-                e.dataTransfer.setData('text/plain', idx);
-                e.dataTransfer.effectAllowed = 'move';
-                item.style.opacity = '0.4';
-            });
-            item.addEventListener('dragover', (e) => {
-                e.preventDefault();
-                e.dataTransfer.dropEffect = 'move';
-            });
-            item.addEventListener('dragenter', () => {
-                item.style.borderColor = 'var(--accent-cyan)';
-                item.style.background = 'rgba(6,182,212,0.15)';
-            });
-            item.addEventListener('dragleave', () => {
-                item.style.borderColor = 'var(--border-color)';
-                item.style.background = 'rgba(0,0,0,0.1)';
-            });
-            item.addEventListener('drop', (e) => {
-                e.preventDefault();
-                const sourceIdx = parseInt(e.dataTransfer.getData('text/plain'), 10);
-                const targetIdx = idx;
-                if (sourceIdx === targetIdx) return;
-                reorderSlideshowImages('homepage', sourceIdx, targetIdx);
-            });
-            item.addEventListener('dragend', () => {
-                item.style.opacity = '1';
-                item.style.borderColor = 'var(--border-color)';
-                item.style.background = 'rgba(0,0,0,0.1)';
-            });
-        }
+        item.setAttribute('draggable', 'true');
+        item.style.cursor = 'grab';
+        
+        item.addEventListener('dragstart', (e) => {
+            e.dataTransfer.setData('text/plain', idx);
+            e.dataTransfer.effectAllowed = 'move';
+            item.style.opacity = '0.4';
+        });
+        item.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+        });
+        item.addEventListener('dragenter', () => {
+            item.style.borderColor = 'var(--accent-cyan)';
+            item.style.background = 'rgba(6,182,212,0.15)';
+        });
+        item.addEventListener('dragleave', () => {
+            item.style.borderColor = 'var(--border-color)';
+            item.style.background = 'rgba(0,0,0,0.1)';
+        });
+        item.addEventListener('drop', (e) => {
+            e.preventDefault();
+            const sourceIdx = parseInt(e.dataTransfer.getData('text/plain'), 10);
+            const targetIdx = idx;
+            if (sourceIdx === targetIdx) return;
+            reorderSlideshowImages('homepage', sourceIdx, targetIdx);
+        });
+        item.addEventListener('dragend', () => {
+            item.style.opacity = '1';
+            item.style.borderColor = 'var(--border-color)';
+            item.style.background = 'rgba(0,0,0,0.1)';
+        });
         
         const imgSrc = img.image || img.url || img.imageUrl || img.src || '';
         item.innerHTML = `
@@ -5739,10 +5742,12 @@ function renderAdminAboutSlidesList() {
     if (!aboutList) return;
     aboutList.innerHTML = '';
     
-    const isCustom = aboutSlides.length > 0;
-    const activeAboutSlides = isCustom ? aboutSlides : DEFAULT_ABOUT_SLIDES;
+    if (aboutSlides.length === 0) {
+        aboutList.innerHTML = '<span style="color: var(--text-muted); font-size: 0.85rem; padding: 0.5rem 0;">No photos in about slideshow yet. Click above to add photos!</span>';
+        return;
+    }
     
-    activeAboutSlides.forEach((img, idx) => {
+    aboutSlides.forEach((img, idx) => {
         const item = document.createElement('div');
         item.style.position = 'relative';
         item.style.width = '80px';
@@ -5754,46 +5759,40 @@ function renderAdminAboutSlidesList() {
         item.style.transition = 'all 0.2s ease';
         
         let deleteBtnHtml = `<button type="button" style="position: absolute; top: 4px; right: 4px; background: rgba(239, 68, 68, 0.85); border: none; color: white; border-radius: 50%; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; font-size: 10px; cursor: pointer; font-weight: bold; line-height: 1; z-index: 10;" onclick="deleteSlideshowImage('${img.id}', 'about')">✕</button>`;
-        let badgeHtml = '';
+        let badgeHtml = `<div style="position: absolute; bottom: 0; left: 0; right: 0; background: rgba(16,185,129,0.85); color: #fff; font-size: 0.58rem; text-align: center; padding: 1px 0; font-weight: 700; letter-spacing: 0.03em;">FIRESTORE</div>`;
         
-        if (img.isDefault) {
-            deleteBtnHtml = '';
-            badgeHtml = `<div style="position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.7); color: var(--accent-gold); font-size: 0.65rem; text-align: center; padding: 2px 0; font-weight: 700;">DEFAULT</div>`;
-        } else {
-            badgeHtml = `<div style="position: absolute; bottom: 0; left: 0; right: 0; background: rgba(16,185,129,0.85); color: #fff; font-size: 0.58rem; text-align: center; padding: 1px 0; font-weight: 700; letter-spacing: 0.03em;">FIRESTORE</div>`;
-            item.setAttribute('draggable', 'true');
-            item.style.cursor = 'grab';
-            
-            item.addEventListener('dragstart', (e) => {
-                e.dataTransfer.setData('text/plain', idx);
-                e.dataTransfer.effectAllowed = 'move';
-                item.style.opacity = '0.4';
-            });
-            item.addEventListener('dragover', (e) => {
-                e.preventDefault();
-                e.dataTransfer.dropEffect = 'move';
-            });
-            item.addEventListener('dragenter', () => {
-                item.style.borderColor = 'var(--accent-cyan)';
-                item.style.background = 'rgba(6,182,212,0.15)';
-            });
-            item.addEventListener('dragleave', () => {
-                item.style.borderColor = 'var(--border-color)';
-                item.style.background = 'rgba(0,0,0,0.1)';
-            });
-            item.addEventListener('drop', (e) => {
-                e.preventDefault();
-                const sourceIdx = parseInt(e.dataTransfer.getData('text/plain'), 10);
-                const targetIdx = idx;
-                if (sourceIdx === targetIdx) return;
-                reorderSlideshowImages('about', sourceIdx, targetIdx);
-            });
-            item.addEventListener('dragend', () => {
-                item.style.opacity = '1';
-                item.style.borderColor = 'var(--border-color)';
-                item.style.background = 'rgba(0,0,0,0.1)';
-            });
-        }
+        item.setAttribute('draggable', 'true');
+        item.style.cursor = 'grab';
+        
+        item.addEventListener('dragstart', (e) => {
+            e.dataTransfer.setData('text/plain', idx);
+            e.dataTransfer.effectAllowed = 'move';
+            item.style.opacity = '0.4';
+        });
+        item.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+        });
+        item.addEventListener('dragenter', () => {
+            item.style.borderColor = 'var(--accent-cyan)';
+            item.style.background = 'rgba(6,182,212,0.15)';
+        });
+        item.addEventListener('dragleave', () => {
+            item.style.borderColor = 'var(--border-color)';
+            item.style.background = 'rgba(0,0,0,0.1)';
+        });
+        item.addEventListener('drop', (e) => {
+            e.preventDefault();
+            const sourceIdx = parseInt(e.dataTransfer.getData('text/plain'), 10);
+            const targetIdx = idx;
+            if (sourceIdx === targetIdx) return;
+            reorderSlideshowImages('about', sourceIdx, targetIdx);
+        });
+        item.addEventListener('dragend', () => {
+            item.style.opacity = '1';
+            item.style.borderColor = 'var(--border-color)';
+            item.style.background = 'rgba(0,0,0,0.1)';
+        });
         
         const imgSrc = img.image || img.url || img.imageUrl || img.src || '';
         item.innerHTML = `
