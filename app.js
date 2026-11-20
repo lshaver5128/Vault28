@@ -1168,13 +1168,25 @@ function openAuthModal(mode = 'login') {
     const modal = document.getElementById('auth-modal');
     modal.style.display = 'flex';
     
+    // Reset view states
+    const authForm = document.getElementById('auth-form');
+    if (authForm) {
+        authForm.style.display = 'block';
+        authForm.reset();
+    }
+    const successScreen = document.getElementById('auth-success-screen');
+    if (successScreen) successScreen.style.display = 'none';
+    const errBanner = document.getElementById('auth-error-banner');
+    if (errBanner) errBanner.style.display = 'none';
+    const tabsHeader = document.getElementById('auth-tabs-header');
+    if (tabsHeader) tabsHeader.style.display = 'flex';
+    
     const tabLogin = document.getElementById('tab-login');
     const tabSignup = document.getElementById('tab-signup');
     const nameGroup = document.getElementById('auth-name-group');
     const referralGroup = document.getElementById('auth-referral-group');
     const btnSubmit = document.getElementById('btn-auth-submit');
     
-    document.getElementById('auth-form').reset();
     const reqBox = document.getElementById('auth-password-requirements');
     if (reqBox) reqBox.style.display = 'none';
     
@@ -1315,17 +1327,35 @@ document.getElementById('auth-form').addEventListener('submit', (e) => {
     const name = document.getElementById('auth-name').value.trim();
     const btnSubmit = document.getElementById('btn-auth-submit');
     
+    // Clear previous error banner
+    const errBanner = document.getElementById('auth-error-banner');
+    const errText = document.getElementById('auth-error-text');
+    if (errBanner) errBanner.style.display = 'none';
+
+    function showRegistrationError(errorMsg) {
+        if (errBanner && errText) {
+            errText.textContent = errorMsg;
+            errBanner.style.display = 'block';
+            errBanner.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+        showToast("Registration Failed: " + errorMsg, "error");
+    }
+    
     // Check form fields match validation requirements
     if (authModalMode === 'signup' && !name) {
-        showToast("Please fill in your full name.", "error");
+        showRegistrationError("Please fill in your full name.");
         return;
     }
     if (authModalMode === 'signup' && !document.getElementById('auth-referral').value) {
-        showToast("Please let us know how you heard about us.", "error");
+        showRegistrationError("Please select how you heard about us.");
         return;
     }
     if (!email || !email.includes('@') || email.indexOf('.') === -1) {
-        showToast("Please enter a valid email address.", "error");
+        if (authModalMode === 'signup') {
+            showRegistrationError("Please enter a valid email address.");
+        } else {
+            showToast("Please enter a valid email address.", "error");
+        }
         return;
     }
     
@@ -1333,7 +1363,7 @@ document.getElementById('auth-form').addEventListener('submit', (e) => {
     if (authModalMode === 'signup') {
         const passwordError = validatePasswordRequirements(password);
         if (passwordError) {
-            showToast(passwordError, "error");
+            showRegistrationError(passwordError);
             return;
         }
     }
@@ -1380,7 +1410,7 @@ document.getElementById('auth-form').addEventListener('submit', (e) => {
                         const referral = document.getElementById('auth-referral').value;
                         recordUserActivity(cred.user.uid, cred.user.email, name, true, referral);
                         
-                        // Send our own branded verification email
+                        // Send our branded verification email
                         const verifyUrl = `${window.location.origin}/?verifyUid=${cred.user.uid}`;
                         const verifyMail = {
                             to: cred.user.email,
@@ -1422,23 +1452,45 @@ document.getElementById('auth-form').addEventListener('submit', (e) => {
                             db.collection("mail").add(ownerSignUpMail)
                         ])
                             .then(() => {
-                                showToast("Verification email sent! Please check your inbox and verify to activate your account.", "success");
                                 return firebase.auth().signOut();
                             })
                             .catch(err => {
                                 console.warn("Failed to write sign up database entries:", err);
-                                showToast("Verification link sent, but database logging failed.", "warning");
                                 return firebase.auth().signOut();
                             })
                             .then(() => {
                                 isRegisteringUser = false;
-                                closeAuthModal();
+                                // Display Registration Successful screen in modal
+                                const authForm = document.getElementById('auth-form');
+                                const tabsHeader = document.getElementById('auth-tabs-header');
+                                const successScreen = document.getElementById('auth-success-screen');
+                                const successEmail = document.getElementById('auth-success-email');
+                                if (authForm) authForm.style.display = 'none';
+                                if (tabsHeader) tabsHeader.style.display = 'none';
+                                if (successEmail) successEmail.textContent = email;
+                                if (successScreen) successScreen.style.display = 'block';
+                                
+                                showToast("Registration Successful! Please check your email to verify your account.", "success");
                             });
                     });
                 })
                 .catch(err => {
                     isRegisteringUser = false;
-                    showToast(err.message, "error");
+                    console.error("Firebase Registration Error:", err);
+                    let userFriendlyMsg = "Registration failed. Please check your information and try again.";
+                    if (err.code === 'auth/email-already-in-use') {
+                        userFriendlyMsg = "This email address is already registered. Please click 'Log In' instead or use another email.";
+                    } else if (err.code === 'auth/invalid-email') {
+                        userFriendlyMsg = "The email address entered is invalid. Please check for typos.";
+                    } else if (err.code === 'auth/weak-password') {
+                        userFriendlyMsg = "The password is too weak. Please ensure it meets all the requirements below.";
+                    } else if (err.code === 'auth/network-request-failed') {
+                        userFriendlyMsg = "Network connection failed. Please check your internet connection.";
+                    } else if (err.message) {
+                        userFriendlyMsg = err.message;
+                    }
+                    
+                    showRegistrationError(userFriendlyMsg);
                 })
                 .finally(() => {
                     btnSubmit.disabled = false;
@@ -1514,33 +1566,35 @@ document.getElementById('auth-form').addEventListener('submit', (e) => {
                     triggerUIRefresh();
                 }
             } else {
-                const mockUid = 'mock-user-' + Math.random().toString(36).substr(2, 9);
-                
-                document.getElementById('auth-widget').style.display = 'none';
-                document.getElementById('user-profile-widget').style.display = 'flex';
-                document.getElementById('user-display-name').textContent = name;
-                document.getElementById('user-display-role').textContent = "Seller Account";
-                document.getElementById('role-switcher-wrapper').style.display = 'none';
-                document.body.classList.remove('has-admin-bar');
-                const toolbar = document.getElementById('admin-toolbar');
-                if (toolbar) toolbar.style.display = 'none';
-                
-                const referral = document.getElementById('auth-referral').value;
-                recordUserActivity(mockUid, email, name, true, referral);
-                
-                // Store password in local sandbox user profile
                 let localUsers = [];
                 const stored = localStorage.getItem('v28_users');
-                if (stored) localUsers = JSON.parse(stored);
-                const sandboxUser = localUsers.find(u => u.uid === mockUid);
-                if (sandboxUser) {
-                    sandboxUser.password = password;
-                    localStorage.setItem('v28_users', JSON.stringify(localUsers));
+                if (stored) {
+                    try { localUsers = JSON.parse(stored); } catch(e) {}
                 }
                 
-                closeAuthModal();
-                showToast(`Welcome, ${name}!`, "success");
-                triggerUIRefresh();
+                const existingUser = localUsers.find(u => u.email && u.email.toLowerCase() === email.toLowerCase());
+                if (existingUser) {
+                    showRegistrationError("This email address is already registered. Please click 'Log In' instead or use another email.");
+                    return;
+                }
+                
+                const mockUid = 'mock-user-' + Math.random().toString(36).substr(2, 9);
+                const referral = document.getElementById('auth-referral').value;
+                localUsers.push({ uid: mockUid, email, displayName: name, password, referral, isOnline: false, isVerified: false });
+                localStorage.setItem('v28_users', JSON.stringify(localUsers));
+                recordUserActivity(mockUid, email, name, true, referral);
+                
+                // Show Registration Successful screen in modal
+                const authForm = document.getElementById('auth-form');
+                const tabsHeader = document.getElementById('auth-tabs-header');
+                const successScreen = document.getElementById('auth-success-screen');
+                const successEmail = document.getElementById('auth-success-email');
+                if (authForm) authForm.style.display = 'none';
+                if (tabsHeader) tabsHeader.style.display = 'none';
+                if (successEmail) successEmail.textContent = email;
+                if (successScreen) successScreen.style.display = 'block';
+                
+                showToast("Registration Successful! Please check your email to verify your account.", "success");
             }
         }, 500);
     }
